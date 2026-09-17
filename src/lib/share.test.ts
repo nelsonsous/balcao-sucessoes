@@ -181,10 +181,15 @@ describe('partilha de dossier', () => {
 
   it('importa como novo dossier com identificadores novos e referências cruzadas mantidas', async () => {
     const c = await seed();
+    // Um anexo cujo id contém o id de um documento («d1») e um mapa de partilha em JSON que refere o interessado:
+    // o remapeamento tem de ser por valor completo, nunca por substring.
+    await db.files.add({ id: 'file-d1-tail', blob: new Blob(['segundo'], { type: 'text/plain' }), name: 'nota.txt', type: 'text/plain', size: 7, createdAt: T0 });
+    await db.documents.add(newDocument(c.id, { id: 'd2', name: 'Nota', category: 'outros', status: 'recebido', source: 'anexo', key: 'nota', fileId: 'file-d1-tail', fileName: 'nota.txt', fileType: 'text/plain', fileSize: 7, createdAt: T0, updatedAt: T0 }));
+    await db.cases.update(c.id, { partilhaJson: JSON.stringify({ heirs: [{ partyId: 'p1', assets: ['bem-desconhecido'], note: 'texto com p1 no meio' }] }) });
     const pkg = await packageFrom(c.id);
     const plan = await planDossierImport(pkg, 'copia');
     expect(plan.exists).toBe(false);
-    expect(plan.totals.added).toBe(4);
+    expect(plan.totals.added).toBe(5);
     expect(describePlan(plan)).toMatch(/dossier novo, com uma nova referência/);
     const r = await importDossier(pkg, 'copia');
     expect(r.created).toBe(true);
@@ -194,14 +199,21 @@ describe('partilha de dossier', () => {
     expect(copy.ref).not.toBe('BS-P-1');
     expect(copy.ref).toMatch(/^BS-\d{4}-\d{3}$/);
     expect(copy.name).toBe('Sucessão Partilha');
-    const docs = await db.documents.where('caseId').equals(r.caseId).toArray();
+    const docs = (await db.documents.where('caseId').equals(r.caseId).toArray()).sort((a, b) => a.name.localeCompare(b.name));
     const parties = await db.parties.where('caseId').equals(r.caseId).toArray();
-    expect(docs).toHaveLength(1);
-    expect(docs[0]!.id).not.toBe('d1');
-    expect(docs[0]!.partyId).toBe(parties[0]!.id); // referência cruzada remapeada
-    expect(docs[0]!.fileId).not.toBe((await db.documents.get('d1'))!.fileId);
-    expect(await db.files.get(docs[0]!.fileId)).toBeTruthy();
-    expect(await db.files.count()).toBe(2);
+    expect(docs).toHaveLength(2);
+    const [certidao, nota] = docs as [(typeof docs)[number], (typeof docs)[number]];
+    expect(certidao.id).not.toBe('d1');
+    expect(certidao.partyId).toBe(parties[0]!.id); // referência cruzada remapeada
+    expect(certidao.fileId).not.toBe((await db.documents.get('d1'))!.fileId);
+    expect(await db.files.get(certidao.fileId)).toBeTruthy();
+    expect(nota.fileId).not.toBe('file-d1-tail');
+    expect(await (await db.files.get(nota.fileId))!.blob.text()).toBe('segundo');
+    expect(await db.files.count()).toBe(4);
+    const partilha = JSON.parse(copy.partilhaJson!) as { heirs: Array<{ partyId: string; assets: string[]; note: string }> };
+    expect(partilha.heirs[0]!.partyId).toBe(parties[0]!.id);
+    expect(partilha.heirs[0]!.assets).toEqual(['bem-desconhecido']); // id desconhecido fica igual
+    expect(partilha.heirs[0]!.note).toBe('texto com p1 no meio'); // texto livre não é tocado
     // O original não foi tocado
     expect((await db.documents.get('d1'))!.partyId).toBe('p1');
     expect(await db.tasks.where('caseId').equals(c.id).count()).toBe(1);

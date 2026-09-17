@@ -279,14 +279,38 @@ function sortKeys(v: unknown): unknown {
 }
 const same = (a: unknown, b: unknown) => JSON.stringify(sortKeys(a)) === JSON.stringify(sortKeys(b));
 
-/** Cria uma cópia do ficheiro com identificadores novos (dossier, registos e anexos), mantendo as referências cruzadas. */
+/** Substitui, em profundidade, os valores de texto iguais a um identificador antigo pelo novo. */
+function remapValues(v: unknown, map: Map<string, string>): unknown {
+  if (typeof v === 'string') return map.get(v) ?? v;
+  if (Array.isArray(v)) return v.map((x) => remapValues(x, map));
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([k, x]) => [k, remapValues(x, map)]));
+  return v;
+}
+
+/** Campos da ficha guardados como JSON (podem referir interessados e bens por identificador). */
+const JSON_FIELDS = ['calcJson', 'partilhaJson', 'intlJson'] as const;
+
+/**
+ * Cria uma cópia do ficheiro com identificadores novos (dossier, registos e anexos), mantendo as
+ * referências cruzadas. A substituição é estrutural (valor completo igual ao id), nunca por
+ * substring — um id curto como «d1» podia aparecer dentro de outro id e corrompê-lo.
+ */
 async function remapAsNew(pkg: DossierPackage): Promise<DossierPackage> {
   const map = new Map<string, string>([[pkg.case.id, uid()]]);
   for (const t of CASE_TABLES) for (const r of tablesOf(pkg.tables)[t]) map.set(r.id, uid());
   for (const f of pkg.files) map.set(f.id, uid());
-  let json = JSON.stringify({ case: pkg.case, tables: pkg.tables });
-  for (const [from, to] of map) json = json.split(from).join(to);
-  const { case: c, tables } = JSON.parse(json) as { case: CaseRecord; tables: DossierTables };
+  const c = remapValues(pkg.case, map) as CaseRecord;
+  for (const f of JSON_FIELDS) {
+    const raw = c[f];
+    if (typeof raw !== 'string' || !raw) continue;
+    try {
+      c[f] = JSON.stringify(remapValues(JSON.parse(raw), map));
+    } catch {
+      /* não é JSON: fica como está */
+    }
+  }
+  const tables = {} as DossierTables;
+  for (const t of CASE_TABLES) tablesOf(tables)[t] = tablesOf(pkg.tables)[t].map((r) => remapValues(r, map) as Row);
   c.ref = await nextCaseRef();
   return { ...pkg, case: c, tables, files: pkg.files.map((f) => ({ ...f, id: map.get(f.id) ?? f.id })) };
 }
