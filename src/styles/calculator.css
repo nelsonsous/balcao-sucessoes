@@ -1,0 +1,568 @@
+/* ---------- Calculadora sucessória ---------- */
+/* Paleta categórica validada (ordem fixa; CVD e contraste verificados para as superfícies da app). */
+:root {
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #4a3aa7;
+  --series-8: #e34948;
+  --on-series: #0b0b0b;
+  --meter-track: #cde2fb;
+  --meter-fill: #2a78d6;
+  --viz-ink: #0b0b0b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --meter-track: #1c2c55;
+    --meter-fill: #3987e5;
+    --viz-ink: #ffffff;
+  }
+}
+
+:root[data-theme='dark'] {
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --meter-track: #1c2c55;
+  --meter-fill: #3987e5;
+  --viz-ink: #ffffff;
+}
+
+.calc-host {
+  container-type: inline-size;
+}
+
+.calc-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@container (min-width: 1040px) {
+  .calc-layout {
+    grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
+  }
+}
+
+@container (max-width: 1039px) {
+  .calc-result {
+    order: -1;
+  }
+}
+
+.calc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.calc-section-head {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.calc-section-head > svg {
+  width: 18px;
+  height: 18px;
+  color: var(--primary);
+  flex: none;
+  margin-top: 1px;
+}
+
+.calc-section-head h3 {
+  font-size: 14.5px;
+}
+
+.pe-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.pe-list > .pe-item {
+  width: 100%;
+}
+
+.pe-list.nested {
+  padding-left: 14px;
+  border-left: 2px dashed var(--border-strong);
+  margin-left: 6px;
+}
+
+.pe-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.pe-row .select {
+  width: auto;
+  height: 36px;
+  padding-right: 30px;
+}
+
+.pe-row .input {
+  height: 36px;
+}
+
+.pe-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+@container (max-width: 420px) {
+  .pe-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .pe-row .input {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Barra 100% empilhada */
+.share-bar-wrap {
+  position: relative;
+}
+
+.share-bar {
+  display: flex;
+  gap: 2px;
+  height: 30px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.share-seg {
+  flex-basis: 0;
+  min-width: 4px;
+  display: grid;
+  place-items: center;
+  color: var(--on-series);
+  font-size: 12px;
+  font-weight: 750;
+  cursor: default;
+  outline: none;
+  transition: filter 0.12s;
+}
+
+.share-seg:nth-child(8n + 6),
+.share-seg:nth-child(8n + 7) {
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .share-seg:nth-child(8n + 7) {
+    color: var(--on-series);
+  }
+}
+
+:root[data-theme='dark'] .share-seg:nth-child(8n + 7) {
+  color: var(--on-series);
+}
+
+.share-seg:hover,
+.share-seg:focus-visible {
+  filter: brightness(1.12) saturate(1.05);
+  box-shadow: inset 0 0 0 2px var(--surface);
+}
+
+.share-seg-label {
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+.viz-tip {
+  position: absolute;
+  z-index: 5;
+  transform: translate(-50%, calc(-100% - 8px));
+  min-width: 140px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.viz-tip-value {
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.viz-tip-value.sub {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.viz-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+.viz-tip-row i {
+  width: 12px;
+  height: 2px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.legend-key {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+  flex: none;
+  margin-top: 4px;
+}
+
+.share-table td {
+  padding: 10px 12px;
+}
+
+.meter {
+  height: 10px;
+  border-radius: 99px;
+  background: var(--meter-track);
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.meter-fill {
+  height: 100%;
+  background: var(--meter-fill);
+  border-radius: 99px 4px 4px 99px;
+  transition: width 0.4s var(--ease);
+}
+
+.calc-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@container (max-width: 560px) {
+  .calc-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.calc-big {
+  font-family: var(--font-serif);
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1.1;
+  margin: 4px 0 2px;
+}
+
+.calc-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.calc-steps li {
+  padding-left: 4px;
+}
+
+.calc-steps li > span:first-child {
+  display: block;
+  line-height: 1.5;
+}
+
+.calc-steps .legal-chip {
+  margin-top: 4px;
+}
+
+/* ---------- Árvore genealógica ---------- */
+.ftree-scroll {
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+}
+
+.ftree {
+  display: flex;
+  justify-content: center;
+  min-width: max-content;
+  --ft-line: var(--border-strong);
+}
+
+.ftree ul {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 0;
+  margin: 0;
+}
+
+.ftree > ul {
+  padding-top: 0;
+}
+
+.ftree li {
+  list-style: none;
+  position: relative;
+  padding: 18px 6px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ftree > ul > li {
+  padding-top: 0;
+}
+
+/* conectores horizontais e verticais */
+.ftree li::before,
+.ftree li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 50%;
+  width: 50%;
+  height: 18px;
+  border-top: 1.5px solid var(--ft-line);
+}
+
+.ftree li::after {
+  right: auto;
+  left: 50%;
+  border-left: 1.5px solid var(--ft-line);
+}
+
+.ftree li:only-child::before,
+.ftree li:only-child::after {
+  border-top: 0;
+}
+
+.ftree li:only-child::before {
+  display: none;
+}
+
+/* filho único: a linha vertical do pai liga diretamente ao nó */
+.ftree li:only-child {
+  padding-top: 0;
+}
+
+.ftree li:first-child::before,
+.ftree li:last-child::after {
+  border: 0 none;
+}
+
+.ftree li:last-child::before {
+  border-right: 1.5px solid var(--ft-line);
+  border-radius: 0 6px 0 0;
+}
+
+.ftree li:first-child::after {
+  border-radius: 6px 0 0 0;
+}
+
+.ftree > ul > li::before,
+.ftree > ul > li::after {
+  display: none;
+}
+
+.ftree ul ul::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 18px;
+  border-left: 1.5px solid var(--ft-line);
+}
+
+.ft-gp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ft-vline {
+  width: 0;
+  height: 16px;
+  border-left: 1.5px solid var(--ft-line);
+}
+
+.ft-couple {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 1px dashed var(--border-strong);
+}
+
+.ft-link {
+  color: var(--st-pendente);
+  display: grid;
+  place-items: center;
+}
+
+.ft-node {
+  min-width: 124px;
+  max-width: 170px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  text-align: center;
+}
+
+.ft-rel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.ft-name {
+  font-size: 12.5px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.ft-status {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.ft-share {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 750;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.ft-share i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.ft-node.deceased {
+  background: var(--navy-800);
+  border-color: var(--navy-800);
+}
+
+.ft-node.deceased .ft-rel,
+.ft-node.deceased .ft-name {
+  color: #fff;
+}
+
+.ft-node.deceased .ft-name::after {
+  content: ' ✝';
+  opacity: 0.7;
+}
+
+.ft-node.heir {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+
+.ft-node.muted {
+  opacity: 0.55;
+  box-shadow: none;
+  border-style: dashed;
+}
+
+.ft-collaterals {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---------- Atalhos de ferramentas ---------- */
+.tool-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.tool-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tool-link:hover {
+  text-decoration: none;
+}
+
+.tool-link strong {
+  display: block;
+}
+
+@media print {
+  .calc-editor {
+    display: none !important;
+  }
+
+  .calc-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ftree-scroll {
+    overflow: visible;
+  }
+}
+
+/* O editor é uma coluna estreita: formulários sempre numa coluna. */
+.calc-editor .form-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@container (max-width: 1039px) {
+  .calc-editor .form-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
