@@ -3,7 +3,7 @@
 Ciclo pedido: **10 iterações seguidas** para analisar o protótipo, perceber os conceitos e construir uma aplicação muito melhor, a nível profissional, como PWA.
 Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é reaproveitado dela.
 
-**Estado do ciclo: iteração 4 de 10 concluída.**
+**Estado do ciclo: iteração 5 de 10 concluída.**
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
 
@@ -71,6 +71,19 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 - Validação: os `.docx` gerados abrem no LibreOffice e convertem para PDF corretamente (XML bem formado, 66 partes verificadas).
 - **55 testes** (novos: preenchimento, markdown mínimo, rótulos de parâmetros, integridade das minutas-base, pacote .docx, classificação e geração de documentos).
 
+## Iteração 5 — Relatórios e relação de bens ✅
+
+- **Modelo de documento com tabelas**: `DocBlock` ganha o tipo `table` (cabeçalho, larguras relativas, alinhamento numérico) e o estilo `small`; o gerador `.docx` escreve tabelas Office Open XML reais (`w:tbl`, grelha, cabeçalho repetido, linhas indivisíveis); a pré-visualização em papel e a impressão renderizam as mesmas tabelas; o texto simples (copiar/email) exporta-as com `|`.
+- **Relatórios do dossier** (`lib/reports.ts`, botão **Relatório** no cabeçalho do dossier), com pré-visualização, Word, PDF e “guardar no dossier”:
+  - **Relatório interno** — identificação, estado (progresso, fase, contadores), o que está a bloquear, próximas ações, checklist por fase (tarefas em aberto com estado/prazo/responsável), interessados, património e passivo com totais (meação), quotas guardadas, documentos em falta, agenda, notas importantes, observações e últimos contactos.
+  - **Ponto de situação para o cliente** — linguagem simples e sem notas internas nem referências: onde estamos, o que já está feito, o que estamos a tratar, o que precisamos de si (só documentos que o cliente pode fornecer), próximos passos e prazos, contactos do escritório.
+  - **Relação de bens** — verbas numeradas por grupo (imóveis com freguesia/artigo/descrição predial, contas com IBAN, participações com NIPC e %, veículos com matrícula, aforro, outros), natureza, quota-parte, valor e base; passivo; resumo com ativo bruto, meação, passivo e valor da herança.
+  - **Mapa de partilha** — valor da herança (da simulação ou do património), quotas de cada herdeiro, atribuição dos bens e **tornas** a pagar/receber.
+- **Mapa de partilha interativo** no separador *Quotas*: cada bem é atribuído a um herdeiro (ou “venda / partilha em dinheiro”); o valor que integra a herança respeita a quota-parte do de cujus e a meação (metade dos bens comuns); direito, recebido em bens e tornas por herdeiro; notas da partilha; gravação automática (`partilhaJson`).
+- **Exportação CSV** (Excel em português: `;`, vírgula decimal, BOM, fórmulas neutralizadas): lista de dossiers filtrada (20 colunas), bloqueios (todos os grupos) e relação de bens/passivo por dossier.
+- **Separador Património**: botões *Relação de bens* e *CSV*.
+- **67 testes** (novos: quota-parte e valor na herança, numeração e descrição das verbas, totais com meação, tornas do mapa de partilha, conteúdo dos quatro relatórios — incluindo a exclusão de notas internas no relatório para o cliente —, tabelas `.docx`, CSV).
+
 ## Plano das próximas iterações
 
 | # | Tema | Conteúdo previsto |
@@ -78,7 +91,7 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 | 2 | ~~Agenda & prazos~~ | ✅ concluída |
 | 3 | ~~Calculadora sucessória~~ | ✅ concluída |
 | 4 | ~~Documentos & minutas~~ | ✅ concluída |
-| 5 | **Relatórios & relação de bens** | Relatório do dossier para cliente/interno (impressão/PDF), relação de bens, mapa de partilha, exportação CSV. |
+| 5 | ~~Relatórios & relação de bens~~ | ✅ concluída |
 | 6 | **Produtividade** | Paleta de comandos (⌘K), vista Kanban por fase, ações em massa, modelos de dossier, “as minhas tarefas”. |
 | 7 | **Segurança** | Bloqueio por PIN, auto-bloqueio, cópias cifradas (AES-GCM), modo privacidade, importação do protótipo antigo. |
 | 8 | **Internacional** | Módulo França/UE aprofundado (CSE, lei aplicável, checklist notaire), textos multilingues (PT/FR/EN) para minutas e relatórios. |

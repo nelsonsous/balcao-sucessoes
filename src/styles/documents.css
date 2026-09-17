@@ -377,3 +377,69 @@ dialog.sheet .sheet-panel:has(.composer) {
     margin: 2.2cm 2cm;
   }
 }
+
+/* Tabelas e notas nos documentos gerados (relatórios, relação de bens) */
+.paper table.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6px 0 14px;
+  font-size: 12.5px;
+  page-break-inside: auto;
+}
+
+.paper table.doc-table th,
+.paper table.doc-table td {
+  border: 1px solid #c8cce0;
+  padding: 5px 7px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.paper table.doc-table th {
+  background: #eef0fb;
+  color: #1f277a;
+  font-weight: 600;
+}
+
+.paper table.doc-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.paper table.doc-table tr {
+  page-break-inside: avoid;
+}
+
+.paper p.doc-small {
+  font-size: 11.5px;
+  color: #5b6180;
+}
+
+/* Relatórios do dossier */
+dialog.sheet .sheet-panel:has(.report-sheet) {
+  width: min(1080px, 100%);
+}
+
+.report-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.report-kinds {
+  overflow-x: auto;
+}
+
+.partilha-table select.select {
+  min-width: 200px;
+  height: 32px;
+}
+
+.text-danger {
+  color: var(--st-pendente);
+}
+
+.text-ok {
+  color: var(--st-concluido);
+}

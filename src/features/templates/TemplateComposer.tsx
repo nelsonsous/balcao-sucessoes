@@ -60,6 +60,47 @@ export function DocPreview({ blocks }: { blocks: DocBlock[] }) {
       return;
     }
     flushBullets();
+    if (b.type === 'table') {
+      const rows = b.rows ?? [];
+      const head = b.header ? rows[0] : undefined;
+      const body = b.header ? rows.slice(1) : rows;
+      const cols = Math.max(1, ...rows.map((r) => r.length));
+      const total = (b.widths ?? []).reduce((a, w) => a + w, 0);
+      out.push(
+        <table key={i} className="doc-table">
+          {b.widths && b.widths.length === cols && (
+            <colgroup>
+              {b.widths.map((w, k) => (
+                <col key={k} style={{ width: `${Math.round((w / total) * 100)}%` }} />
+              ))}
+            </colgroup>
+          )}
+          {head && (
+            <thead>
+              <tr>
+                {head.map((cell, k) => (
+                  <th key={k} className={b.align?.[k] === 'right' ? 'num' : undefined}>
+                    <Runs runs={cell} />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          )}
+          <tbody>
+            {body.map((r, ri) => (
+              <tr key={ri}>
+                {r.map((cell, k) => (
+                  <td key={k} className={b.align?.[k] === 'right' ? 'num' : undefined}>
+                    <Runs runs={cell} />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>,
+      );
+      return;
+    }
     const content = b.lines.map((l, j) => (
       <span key={j}>
         {j > 0 && <br />}
@@ -68,7 +109,7 @@ export function DocPreview({ blocks }: { blocks: DocBlock[] }) {
     ));
     if (b.type === 'h1') out.push(<h1 key={i}>{content}</h1>);
     else if (b.type === 'h2') out.push(<h2 key={i}>{content}</h2>);
-    else out.push(<p key={i}>{content}</p>);
+    else out.push(<p key={i} className={b.small ? 'doc-small' : undefined}>{content}</p>);
   });
   flushBullets();
   return <div className="paper">{out}</div>;

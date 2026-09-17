@@ -5,6 +5,7 @@ import {
   CircleCheck,
   Hourglass,
   Siren,
+  FileSpreadsheet,
   TriangleAlert,
   type LucideIcon,
 } from 'lucide-react';
@@ -13,10 +14,12 @@ import { isActiveCase, useMemberMap, useMembers, useOverviews } from '../../lib/
 import type { TaskRecord } from '../../lib/types';
 import { cx, relativeDays } from '../../lib/utils';
 import { dueState } from '../../engine/deadlines';
-import { phaseLabel } from '../../engine/phases';
+import { phaseLabel, statusLabel } from '../../engine/phases';
 import { PHASE_ICONS } from '../../components/icons';
 import { StatusMenu } from '../../components/StatusMenu';
-import { Avatar, Card, CardHead, DueChip, Empty, KpiCard } from '../../components/ui';
+import { Avatar, Button, Card, CardHead, DueChip, Empty, KpiCard } from '../../components/ui';
+
+import { csvName, downloadCsv } from '../../lib/csv';
 
 export function TasksPage() {
   const overviews = useOverviews();
@@ -56,8 +59,8 @@ export function TasksPage() {
           <h1>O que está a bloquear?</h1>
           <p className="lede">Prazos ultrapassados, tarefas críticas por iniciar e dependências de terceiros, em todos os dossiers ativos.</p>
         </div>
-        {members.length > 0 && (
-          <div className="page-actions">
+        <div className="page-actions">
+          {members.length > 0 && (
             <select className="select" style={{ width: 'auto' }} aria-label="Responsável" value={who} onChange={(e) => setWho(e.target.value)}>
               <option value="">Toda a equipa</option>
               {members.map((m) => (
@@ -66,8 +69,24 @@ export function TasksPage() {
                 </option>
               ))}
             </select>
-          </div>
-        )}
+          )}
+          <Button
+            icon={FileSpreadsheet}
+            disabled={total === 0 && data.soon.length === 0}
+            title="Exportar para Excel (CSV)"
+            onClick={() => {
+              const row = (group: string, t: TaskRecord) => [group, data.caseName.get(t.caseId) ?? '', t.title, phaseLabel(t.phase), statusLabel(t.status), t.dueDate, t.critical, memberMap.get(t.assigneeId)?.name ?? ''];
+              downloadCsv(csvName('bloqueios'), ['Grupo', 'Dossier', 'Tarefa', 'Fase', 'Estado', 'Prazo', 'Crítica', 'Responsável'], [
+                ...data.overdue.map((t) => row('Prazo ultrapassado', t)),
+                ...data.critical.map((t) => row('Crítica por iniciar', t)),
+                ...data.awaiting.map((t) => row('A aguardar terceiros', t)),
+                ...data.soon.map((t) => row('Prazo nos próximos 30 dias', t)),
+              ]);
+            }}
+          >
+            CSV
+          </Button>
+        </div>
       </div>
 
       <div className="kpi-grid four">

@@ -7,6 +7,7 @@ import type { CaseRecord } from '../../lib/types';
 import { useToast } from '../../components/Toast';
 import { Button, Card, useConfirm, useDebounced } from '../../components/ui';
 import { SuccessionCalculator } from './SuccessionCalculator';
+import { PartilhaCard } from '../reports/PartilhaCard';
 
 /** Simulação de quotas do dossier, pré-preenchida a partir dos interessados e do património. */
 export function CaseCalcTab({ c }: { c: CaseRecord }) {
@@ -84,6 +85,7 @@ export function CaseCalcTab({ c }: { c: CaseRecord }) {
         </Card>
       )}
       <SuccessionCalculator value={input} onChange={setInput} />
+      <PartilhaCard c={c} input={input} />
     </div>
   );
 }

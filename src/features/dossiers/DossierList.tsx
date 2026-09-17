@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, CalendarClock, FolderOpen, LayoutGrid, List, Plus, Search, TriangleAlert } from 'lucide-react';
+import { ArrowRight, CalendarClock, FileSpreadsheet, FolderOpen, LayoutGrid, List, Plus, Search, TriangleAlert } from 'lucide-react';
 import { useMemberMap, useMembers, useOverviews, type CaseOverview } from '../../lib/hooks';
 import type { CaseStage, MemberRecord } from '../../lib/types';
 import { cx, formatDate, normalize, relativeDays } from '../../lib/utils';
@@ -20,6 +20,9 @@ function loadPrefs(): { view: 'cards' | 'table'; sort: SortKey } {
     return { view: 'cards', sort: 'recentes' };
   }
 }
+
+import { csvName, downloadCsv } from '../../lib/csv';
+import { STAGE_LABELS, PRIORITY_LABELS } from '../../lib/reports';
 
 export function DossierList() {
   const overviews = useOverviews();
@@ -81,6 +84,41 @@ export function DossierList() {
           <p className="lede">Sucessões em acompanhamento — estado, próxima ação e prazos de cada uma.</p>
         </div>
         <div className="page-actions">
+          <Button
+            icon={FileSpreadsheet}
+            disabled={filtered.length === 0}
+            title="Exportar a lista filtrada para Excel (CSV)"
+            onClick={() =>
+              downloadCsv(
+                csvName('dossiers'),
+                ['Referência', 'Dossier', 'De cujus', 'Óbito', 'Cliente', 'Responsável', 'Situação', 'Prioridade', 'Semáforo', 'Progresso %', 'Fase', 'Pendentes', 'Em curso', 'A aguardar', 'Concluídas', 'Prazos ultrapassados', 'Próximo prazo', 'Próxima ação', 'Etiquetas', 'Atualizado'],
+                filtered.map((o) => [
+                  o.c.ref,
+                  o.c.name,
+                  o.c.deceased.name,
+                  o.c.deceased.deathDate,
+                  o.c.client.name,
+                  memberMap.get(o.c.responsibleId)?.name ?? '',
+                  STAGE_LABELS[o.c.stage],
+                  PRIORITY_LABELS[o.c.priority],
+                  o.health.label,
+                  o.stats.pct,
+                  o.phase ? phaseLabel(o.phase) : '',
+                  o.stats.byStatus.pendente,
+                  o.stats.byStatus.em_curso,
+                  o.stats.byStatus.aguarda,
+                  o.stats.byStatus.concluido,
+                  o.blockers.overdue.length,
+                  o.nextDeadline?.dueDate ?? '',
+                  o.next?.title ?? '',
+                  o.c.tags.join(', '),
+                  o.c.updatedAt.slice(0, 10),
+                ]),
+              )
+            }
+          >
+            CSV
+          </Button>
           <Button variant="primary" icon={Plus} onClick={() => navigate('/dossiers/novo')}>
             Nova sucessão
           </Button>

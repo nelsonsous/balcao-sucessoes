@@ -90,6 +90,8 @@ export interface CaseRecord {
   generalNotes: string;
   /** Simulação de quotas guardada (calculadora sucessória), em JSON. */
   calcJson?: string;
+  /** Mapa de partilha (atribuição de bens a herdeiros), em JSON. */
+  partilhaJson?: string;
   demo?: boolean;
   createdAt: string;
   updatedAt: string;

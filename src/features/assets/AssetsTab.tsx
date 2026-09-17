@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Globe, Info, Landmark, Plus, Scale, Trash2, Wallet } from 'lucide-react';
+import { FileSpreadsheet, FileText, Globe, Info, Landmark, Plus, Scale, Trash2, Wallet } from 'lucide-react';
 import { deleteAsset, deleteDebt, saveAsset, saveDebt } from '../../lib/actions';
 import { db, newAsset, newDebt } from '../../lib/db';
 import {
@@ -15,6 +15,9 @@ import { ASSET_META } from '../../components/icons';
 import { MoneyInput } from '../../components/MoneyInput';
 import { useToast } from '../../components/Toast';
 import { Button, Card, CardHead, Empty, Field, Sheet, useConfirm } from '../../components/ui';
+import { csvName, downloadCsv } from '../../lib/csv';
+import { assetsCsvRows } from '../../lib/reports';
+import { ReportSheet } from '../reports/ReportSheet';
 
 const TYPES = Object.keys(ASSET_META) as AssetType[];
 const isForeign = (a: AssetRecord) => Boolean(a.country) && a.country.trim().toLowerCase() !== 'portugal';
@@ -51,6 +54,7 @@ export function AssetsTab({ c }: { c: CaseRecord }) {
   }, [c.id]);
   const [asset, setAsset] = useState<{ a: AssetRecord; isNew: boolean } | null>(null);
   const [debt, setDebt] = useState<{ d: DebtRecord; isNew: boolean } | null>(null);
+  const [report, setReport] = useState(false);
 
   const assets = data?.assets ?? [];
   const debts = data?.debts ?? [];
@@ -72,6 +76,19 @@ export function AssetsTab({ c }: { c: CaseRecord }) {
           <p className="subtle small">Vários tipos de bens no mesmo dossier — com valores, titularidade e estado.</p>
         </div>
         <span className="spacer" />
+        <Button icon={FileText} onClick={() => setReport(true)} disabled={assets.length === 0 && debts.length === 0} title="Relação de bens para imprimir ou Word">
+          Relação de bens
+        </Button>
+        <Button
+          icon={FileSpreadsheet}
+          disabled={assets.length === 0 && debts.length === 0}
+          onClick={() => {
+            const { header, rows } = assetsCsvRows(c, assets, debts);
+            downloadCsv(csvName(`relacao-bens-${c.ref}`), header, rows);
+          }}
+        >
+          CSV
+        </Button>
         <Button icon={Wallet} onClick={() => setDebt({ d: newDebt(c.id), isNew: true })}>
           Dívida
         </Button>
@@ -266,6 +283,7 @@ export function AssetsTab({ c }: { c: CaseRecord }) {
 
       <AssetSheet state={asset} onClose={() => setAsset(null)} />
       <DebtSheet state={debt} onClose={() => setDebt(null)} />
+      <ReportSheet c={c} kind={report ? 'bens' : null} onClose={() => setReport(false)} onKind={() => undefined} />
     </div>
   );
 }

@@ -23,6 +23,7 @@ Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-o
 | **Calculadora sucessória** | Quotas da sucessão legítima por classe (cônjuge com ¼ garantido, representação por estirpes, irmãos germanos/unilaterais, colaterais, Estado), legítima e quota disponível, meação, inoficiosidade, estimativa de Imposto do Selo, fundamentação com artigos e árvore genealógica; página própria e separador “Quotas” em cada dossier. |
 | **Documentos** | Checklist documental gerada a partir das tarefas e dos interessados, estados com datas, anexos guardados offline (arrastar-e-largar), abrir/descarregar. |
 | **Minutas** | 11 minutas-base (PT/FR/EN) e minutas do escritório com campos automáticos do dossier; pré-visualização, edição, Word (.docx), PDF, email e “guardar no dossier”. |
+| **Relatórios** | Relatório interno, ponto de situação para o cliente (sem notas internas), relação de bens (verbas numeradas com elementos de identificação) e mapa de partilha com tornas — pré-visualização, Word, PDF e arquivo no dossier; exportação CSV de dossiers, bloqueios e património. |
 | **O que está a bloquear?** | Por dossier e global: prazos ultrapassados, críticas por iniciar, dependências de terceiros, prazos a 30 dias. |
 | **Reconciliação** | Alterar o questionário atualiza a checklist sem perder trabalho: tarefas novas aparecem, as intocadas que deixam de se aplicar saem, as que tinham trabalho ficam “a rever”. |
 | **Interessados** | Qualidade sucessória, parentesco, cabeça-de-casal, menores/maiores acompanhados, procuração, aceitação/repúdio, NIF validado; sugestões automáticas a partir do questionário. |
@@ -37,7 +38,7 @@ Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-o
 ```bash
 npm install
 npm run dev        # desenvolvimento em http://localhost:5173
-npm test           # testes do motor, calendário e calculadora (vitest)
+npm test           # testes do motor, calendário, calculadora, relatórios e documentos (vitest)
 npm run build      # typecheck + build de produção em dist/
 npm run preview    # serve dist/ em http://localhost:4173 (com service worker)
 ```

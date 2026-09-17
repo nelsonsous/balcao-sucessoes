@@ -489,7 +489,10 @@ export function blocksToText(blocks: DocBlock[]): string {
   const lines: string[] = [];
   let prev: DocBlock['type'] | null = null;
   for (const b of blocks) {
-    const text = b.lines.map((l) => l.map((r) => r.text).join('')).join('\n');
+    const text =
+      b.type === 'table'
+        ? (b.rows ?? []).map((r) => r.map((cell) => cell.map((x) => x.text).join('')).join(' | ')).join('\n')
+        : b.lines.map((l) => l.map((r) => r.text).join('')).join('\n');
     if (prev && !(prev === 'li' && b.type === 'li')) lines.push('');
     if (b.type === 'h1') lines.push(text.toUpperCase());
     else if (b.type === 'li') lines.push(`• ${text}`);

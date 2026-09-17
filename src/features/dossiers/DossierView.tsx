@@ -56,6 +56,8 @@ import { CaseEditSheet } from './CaseEditSheet';
 import { ChecklistTab, type ChecklistFilter } from './ChecklistTab';
 import { QuestionnaireTab } from './QuestionnaireTab';
 import { TaskDrawer } from './TaskDrawer';
+import { ReportSheet } from '../reports/ReportSheet';
+import type { ReportKind } from '../../lib/reports';
 
 type TabId = 'checklist' | 'interessados' | 'patrimonio' | 'documentos' | 'quotas' | 'agenda' | 'notas' | 'questionario' | 'historico';
 
@@ -91,6 +93,7 @@ export function DossierView() {
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [filter, setFilter] = useState<ChecklistFilter>('abertas');
   const [editing, setEditing] = useState(false);
+  const [report, setReport] = useState<ReportKind | null>(null);
   const [allBlockers, setAllBlockers] = useState(false);
   const search = useSearch();
   useEffect(() => {
@@ -208,6 +211,9 @@ export function DossierView() {
               </option>
             ))}
           </select>
+          <Button icon={FileText} onClick={() => setReport('interno')}>
+            Relatório
+          </Button>
           <Button icon={Pencil} onClick={() => setEditing(true)}>
             Editar
           </Button>
@@ -390,6 +396,7 @@ export function DossierView() {
       </div>
 
       <TaskDrawer task={task} caseRecord={c} onClose={() => setSelectedTask(null)} />
+      <ReportSheet c={c} kind={report} onClose={() => setReport(null)} onKind={setReport} />
       <CaseEditSheet open={editing} c={c} onClose={() => setEditing(false)} />
     </div>
   );
