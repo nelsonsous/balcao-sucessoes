@@ -41,6 +41,12 @@ export interface Answers {
   ascendants: '' | Tri;
   siblings: '' | Tri;
   incapable: '' | Tri;
+  /** Separação de pessoas e bens ou divórcio pendente à data do óbito. */
+  separated: '' | Tri;
+  /** Herdeiros a residir no estrangeiro. */
+  heirsAbroad: '' | Tri;
+  /** Herdeiros de paradeiro desconhecido. */
+  unknownHeirs: '' | Tri;
   others: '' | 'sim' | 'nao' | 'a_confirmar';
   will: '' | Tri;
   gifts: '' | Tri;

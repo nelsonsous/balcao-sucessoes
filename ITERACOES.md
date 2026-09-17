@@ -7,12 +7,12 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 2 — «10 vezes seguidas com melhorias e testes» (iterações 11–20)
 
-**Estado do ciclo 2: iteração 11 de 10 concluída (11/20).**
+**Estado do ciclo 2: iterações 11–12 concluídas (12/20).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
 | 11 | ~~Testes de componentes e invariantes~~ | ✅ concluída |
-| 12 | **Motor jurídico aprofundado** | Novas regras e tarefas: direito de habitação do cônjuge/unido de facto, menores e autorização para a partilha, herdeiros ausentes ou no estrangeiro, participações sociais e registo comercial, veículos, seguros e contas conjuntas; IMT sobre tornas no mapa de partilha; testes por regra. |
+| 12 | ~~Motor jurídico aprofundado~~ | ✅ concluída |
 | 13 | **Prazos avançados** | Contagem em dias úteis ou corridos, suspensão em férias judiciais para prazos judiciais, prazos manuais com regra e data-âncora, avisos coerentes na agenda; testes. |
 | 14 | **Partilha de dossier entre colegas** | Exportar um único dossier (com anexos, cifrado) e importar/juntar com deteção de conflitos e registo no histórico; testes. |
 | 15 | **Cópias automáticas e partilha para a app** | Cópias cifradas automáticas para uma pasta escolhida (File System Access API), rotação; receber ficheiros partilhados no telemóvel (Web Share Target) e anexá-los a um dossier; testes. |
@@ -25,6 +25,13 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
+
+### Iteração 12 — Motor jurídico aprofundado ✅
+
+- **Três perguntas novas** no passo *Família*: separação de pessoas e bens ou divórcio pendente (só com cônjuge), herdeiros a residir no estrangeiro e herdeiros de paradeiro desconhecido (27 perguntas).
+- **Quatro regras novas** (59) e **oito tarefas novas** (80), todas com orientação, documentos e referências: efeitos da separação/divórcio pendente na vocação do cônjuge (arts. 2133.º/3, 1785.º/3 e 1795.º-A CC — crítica); procurações consulares/apostiladas e NIF + representante fiscal dos herdeiros não residentes (LGT art. 19.º/6-7); diligências de localização de herdeiros ausentes com citação edital e curadoria provisória (CC arts. 89.º ss.; CPC arts. 225.º e 240.º — crítica); quota do falecido nas contas conjuntas (CC art. 516.º); seguros de vida ligados a créditos (RJCS); certidões de dívidas fiscais e contributivas (CC art. 2071.º; LGT art. 29.º/2) em todos os dossiers; IRS dos rendimentos da herança indivisa (CIRS art. 19.º) quando há imóveis.
+- **IMT sobre o excesso de imóveis** no mapa de partilha: por herdeiro, valor dos imóveis atribuídos e excesso face à quota — assinalado no cartão e no relatório com a base legal (CIMT art. 2.º/5/c; verba 1.1 TGIS).
+- **Testes**: ativação e não ativação de cada regra nova, dimensão do motor, propriedades com 400 questionários aleatórios (sem erros, chaves únicas, fases válidas, conteúdo completo, tarefas de base sempre presentes) e excesso de imóveis; **143 testes**.
 
 ### Iteração 11 — Testes de componentes e invariantes ✅
 

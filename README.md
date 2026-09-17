@@ -16,7 +16,7 @@ Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-o
 |---|---|
 | **Visão geral** | Painel em tempo real: dossiers em curso, a precisar de atenção, próximas ações de todos os dossiers, prazos a chegar, fase de cada dossier, carga por responsável, contactos a retomar. |
 | **Nova sucessão** | Assistente em 7 passos com **pré-visualização ao vivo** da checklist que vai nascer (tarefas, críticas e prazos calculados). Rascunho guardado automaticamente. |
-| **Motor de regras** | 55 regras jurídicas e 72 modelos de tarefa (Código Civil, CIS, CIRS, CIMT, Reg. (UE) 650/2012…) que geram só o trabalho aplicável, cada tarefa com *porquê*, *como fazer*, documentos e referências. |
+| **Motor de regras** | 27 perguntas, 59 regras jurídicas e 80 modelos de tarefa (Código Civil, CIS, CIRS, CIMT, LGT, Reg. (UE) 650/2012…) que geram só o trabalho aplicável, cada tarefa com *porquê*, *como fazer*, documentos e referências. |
 | **Checklist** | 10 fases, 5 estados (Pendente · Em curso · A aguardar terceiros · Concluída · N/A), tarefas críticas, filtros, pesquisa, tarefas próprias. |
 | **Prazos legais** | Calculados a partir da data do óbito (ex.: Modelo 1 do Imposto do Selo até ao fim do 3.º mês seguinte; IRS; déclaration de succession em França 6/12 meses; caducidade do direito de aceitar). |
 | **Agenda** | Calendário mensal e lista com feriados nacionais/municipais e férias judiciais; escrituras, reuniões, diligências e prazos próprios; exportação `.ics` (Outlook/Google/Apple) com alarmes; aviso de prazos que terminam em dia não útil; resumo diário, notificações e contador no ícone da app. |
@@ -53,7 +53,7 @@ npm run preview    # serve dist/ em http://localhost:4173 (com service worker)
 
 | Documento | Formato |
 |---|---|
-| **Manual do utilizador** — 18 capítulos e 7 anexos com 39 figuras: todas as funcionalidades passo a passo (fases e estados, questionário, catálogo das 72 tarefas, campos das minutas, prazos por país, histórico das versões, ficha técnica) | [Word (.docx)](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.docx) · [PDF](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.pdf) |
+| **Manual do utilizador** — 18 capítulos e 7 anexos com 39 figuras: todas as funcionalidades passo a passo (fases e estados, questionário, catálogo das tarefas geradas, campos das minutas, prazos por país, histórico das versões, ficha técnica) | [Word (.docx)](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.docx) · [PDF](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.pdf) |
 | **Apresentação** — 24 diapositivos com notas do orador: desafio, princípios, motor de regras, cada área da aplicação, relatórios, produtividade, internacional, segurança, números, tecnologia, percurso e como começar | [PowerPoint (.pptx)](docs/Balcao-das-Sucessoes-Apresentacao.pptx) · [PDF](docs/Balcao-das-Sucessoes-Apresentacao.pdf) |
 | **Resumo executivo** — uma página: o que é, como funciona, o que entrega, qualidade, limites e próximos passos | [Markdown](docs/Resumo-Executivo.md) |
 

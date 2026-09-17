@@ -570,6 +570,14 @@ export const RULES: Rule[] = [
         description: 'Obter caderneta predial (VPT atualizado) e certidão permanente do registo predial de cada imóvel; confirmar ónus e encargos.',
         docs: ['Caderneta predial', 'Certidão permanente do registo predial', 'Título de aquisição'],
       },
+      {
+        key: 'heranca-indivisa-irs',
+        phase: 'fiscal',
+        title: 'Declarar em IRS os rendimentos da herança indivisa (rendas) por cada herdeiro',
+        description:
+          'Enquanto não houver partilha, os rendimentos dos bens da herança (ex.: rendas) são imputados a cada herdeiro na proporção da sua quota e declarados no IRS de cada um; o cabeça-de-casal comunica as quotas.',
+        legal: ['Código do IRS, art. 19.º'],
+      },
     ],
   },
   {
@@ -762,6 +770,15 @@ export const RULES: Rule[] = [
         initialStatus: 'em_curso',
         docs: ['Declarações de dívida à data do óbito'],
       },
+      {
+        key: 'seguro-credito',
+        phase: 'passivo',
+        title: 'Acionar seguros de vida associados a créditos (habitação, consumo)',
+        description:
+          'Verificar junto do banco e da seguradora se os créditos tinham seguro de vida: a participação do sinistro liquida ou reduz a dívida e evita que os herdeiros a assumam. Confirmar coberturas, exclusões e prazos de participação.',
+        legal: ['Regime Jurídico do Contrato de Seguro (DL n.º 72/2008), arts. 100.º e 183.º e ss.'],
+        docs: ['Apólices de seguro de vida ligadas a créditos', 'Certidão de óbito', 'Relatório médico ou certificado da causa da morte (se exigido)'],
+      },
     ],
   },
   {
@@ -799,6 +816,15 @@ export const RULES: Rule[] = [
     reason: 'Tarefa de base de qualquer sucessão',
     when: () => true,
     tasks: [
+      {
+        key: 'dividas-fiscais',
+        phase: 'passivo',
+        title: 'Pedir certidões de dívidas às Finanças e à Segurança Social',
+        description:
+          'Apurar impostos, contribuições e coimas em dívida à data do óbito: a herança responde pelos encargos até às forças dos bens herdados e as obrigações tributárias transmitem-se aos sucessores.',
+        legal: ['Código Civil, art. 2071.º', 'Lei Geral Tributária, art. 29.º, n.º 2'],
+        docs: ['Certidão de dívidas (AT)', 'Declaração de situação contributiva (Segurança Social)'],
+      },
       {
         key: 'encargos',
         phase: 'passivo',
@@ -1056,6 +1082,81 @@ export const RULES: Rule[] = [
         phase: 'encerramento',
         title: 'Enviar relatório final, encerrar dossier e arquivar documentação',
         description: 'Enviar relatório de encerramento, emitir nota final e arquivar o dossier.',
+      },
+    ],
+  },
+  {
+    id: 'separacao-conjugal',
+    reason: 'Separação de pessoas e bens ou divórcio pendente',
+    when: (a) => a.spouse === 'casado' && a.separated === 'sim',
+    tasks: [
+      {
+        key: 'separacao-efeitos',
+        phase: 'interessados',
+        title: 'Confirmar os efeitos da separação ou do divórcio pendente na qualidade sucessória do cônjuge',
+        description:
+          'O cônjuge separado judicialmente de pessoas e bens não é chamado à sucessão; a mera separação de facto não afasta a vocação. Na pendência de divórcio, os herdeiros podem prosseguir a ação para efeitos patrimoniais. Verificar averbamentos e o estado do processo.',
+        critical: true,
+        legal: ['Código Civil, art. 2133.º, n.º 3', 'Código Civil, art. 1785.º, n.º 3', 'Código Civil, art. 1795.º-A'],
+        docs: ['Certidão de casamento com averbamentos', 'Certidão da ação de divórcio ou de separação'],
+      },
+    ],
+  },
+  {
+    id: 'herdeiros-estrangeiro',
+    reason: 'Há herdeiros a residir no estrangeiro',
+    when: (a) => a.heirsAbroad === 'sim',
+    tasks: [
+      {
+        key: 'procuracoes-estrangeiro',
+        phase: 'interessados',
+        title: 'Obter procurações e documentos dos herdeiros residentes no estrangeiro',
+        description:
+          'Procurações outorgadas no consulado português ou no país de residência com apostila (Convenção da Haia) ou legalização; na UE, documentos públicos com formulário multilingue. Prever tradução certificada.',
+        legal: ['Convenção da Haia de 5 de outubro de 1961 (apostila)', 'Regulamento (UE) 2016/1191', 'Código do Notariado, art. 172.º'],
+        docs: ['Procurações dos herdeiros no estrangeiro', 'Documentos de identificação dos herdeiros não residentes'],
+      },
+      {
+        key: 'representante-fiscal',
+        phase: 'fiscal',
+        title: 'Garantir NIF português e representante fiscal dos herdeiros não residentes',
+        description:
+          'Cada herdeiro precisa de NIF para a participação do Imposto do Selo e para a partilha; os residentes fora da UE/EEE têm de nomear representante fiscal em Portugal.',
+        legal: ['Lei Geral Tributária, art. 19.º, n.ºs 6 e 7', 'Código do Imposto do Selo, art. 26.º'],
+        docs: ['NIF de cada herdeiro', 'Nomeação de representante fiscal (quando aplicável)'],
+      },
+    ],
+  },
+  {
+    id: 'paradeiro-desconhecido',
+    reason: 'Há herdeiros de paradeiro desconhecido',
+    when: (a) => a.unknownHeirs === 'sim',
+    tasks: [
+      {
+        key: 'localizar-herdeiros',
+        phase: 'interessados',
+        title: 'Diligenciar a localização dos herdeiros de paradeiro desconhecido',
+        description:
+          'Pesquisar registos civis e consulares, bases de dados e contactos familiares; documentar as diligências. Sem localização, ponderar a citação edital no inventário e a curadoria provisória dos bens do ausente.',
+        critical: true,
+        legal: ['Código Civil, arts. 89.º e ss. (curadoria provisória)', 'Código de Processo Civil, arts. 225.º e 240.º (citação edital)'],
+        docs: ['Registo das diligências de localização'],
+      },
+    ],
+  },
+  {
+    id: 'contas-conjuntas',
+    reason: 'Contas bancárias com cônjuge ou outros contitulares',
+    when: (a) => has(a, 'contas') && (a.spouse === 'casado' || a.others === 'sim'),
+    tasks: [
+      {
+        key: 'contas-conjuntas',
+        phase: 'patrimonio',
+        title: 'Apurar a quota do falecido nas contas conjuntas e regularizar o bloqueio',
+        description:
+          'Nas contas solidárias presume-se a participação em partes iguais salvo prova em contrário; só a quota do falecido integra a herança e fica bloqueada até à habilitação. Comunicar o óbito e obter os saldos à data.',
+        legal: ['Código Civil, art. 516.º', 'Código do Imposto do Selo, art. 13.º'],
+        docs: ['Extratos e condições das contas conjuntas', 'Declaração bancária de saldos à data do óbito'],
       },
     ],
   },

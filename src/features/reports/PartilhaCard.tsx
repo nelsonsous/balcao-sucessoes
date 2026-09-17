@@ -132,6 +132,19 @@ export function PartilhaCard({ c, input }: { c: CaseRecord; input: CalcInput }) 
                 ))}
               </tbody>
               <tfoot>
+                {sum.heirs.some((h) => (h.imoveisExcess ?? 0) > 0.005) && (
+                  <tr>
+                    <td colSpan={5}>
+                      <span className="tiny text-danger">
+                        Excesso em imóveis sobre a quota — sujeito a IMT (CIMT, art. 2.º, n.º 5, al. c)) e Imposto do Selo (verba 1.1 TGIS):{' '}
+                        {sum.heirs
+                          .filter((h) => (h.imoveisExcess ?? 0) > 0.005)
+                          .map((h) => `${h.name} ${formatEur(h.imoveisExcess)}`)
+                          .join(' · ')}
+                      </span>
+                    </td>
+                  </tr>
+                )}
                 <tr>
                   <td colSpan={2}>
                     <span className="tiny subtle">

@@ -70,6 +70,19 @@ describe('mapa de partilha', () => {
     expect(sum.heirs[1]!.diff).toBe(-100000); // recebe tornas
     expect(sum.unassigned).toEqual([]);
   });
+  it('assinala o excesso de imóveis sobre a quota (IMT e Imposto do Selo)', () => {
+    const c = caseWith({ answers: { ...emptyAnswers(), spouse: 'nao' } });
+    const casa = newAsset(c.id, { type: 'imoveis', description: 'Casa', value: 300000, ownership: 'proprio' });
+    const conta = newAsset(c.id, { type: 'contas', description: 'Conta', value: 100000, ownership: 'proprio' });
+    const input = { ...emptyCalcInput(), children: [newPerson({ name: 'Ana' }), newPerson({ name: 'Rui' })], values: { own: 400000, common: null, debts: null, donations: null, testamentary: null } };
+    const calc = calculate(input);
+    const [ana, rui] = calc.shares;
+    const sum = partilhaSummary(calc, c, [casa, conta], [], { assignments: { [casa.id]: ana!.key, [conta.id]: rui!.key }, notes: '' });
+    expect(sum.heirs[0]!.imoveisReceived).toBe(300000);
+    expect(sum.heirs[0]!.imoveisExcess).toBe(100000);
+    expect(sum.heirs[1]!.imoveisExcess).toBe(0);
+  });
+
   it('sem cálculo, usa o património e assinala bens por atribuir e para venda', () => {
     const c = caseWith();
     const a1 = newAsset(c.id, { value: 1000 });
@@ -103,7 +116,8 @@ describe('relatórios do dossier', () => {
     const input = { ...emptyCalcInput(), spouse: { present: true, name: 'Cônjuge', regime: 'comunhao_adquiridos' as const }, children: [newPerson({ name: 'João Teste' })], values: { own: 0, common: 200000, debts: 20000, donations: null, testamentary: null } };
     c.calcJson = JSON.stringify(input);
     const calc = calculate(input);
-    c.partilhaJson = writePartilha({ assignments: {}, notes: 'Acordo verbal' });
+    const casaId = (await db.assets.where('caseId').equals(c.id).toArray())[0]!.id;
+    c.partilhaJson = writePartilha({ assignments: { [casaId]: calc.shares.find((s) => s.name === 'João Teste')!.key }, notes: 'Acordo verbal' });
     await db.cases.put(c);
 
     const bundle = await loadCaseBundle(c);
@@ -151,7 +165,7 @@ describe('relatórios do dossier', () => {
     const ptxt = blocksToText(partilha.blocks);
     expect(ptxt).toContain('Quotas hereditárias');
     expect(ptxt).toContain('Acordo verbal');
-    expect(ptxt).toContain('Por atribuir');
+    expect(ptxt).toContain('IMT');
     expect(partilha.fileBase).toMatch(/^mapa-de-partilha-bs-test-001-\d{4}-\d{2}-\d{2}$/);
   });
 });

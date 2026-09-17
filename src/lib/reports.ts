@@ -294,6 +294,10 @@ export interface HeirLine {
   /** received − due: positivo = paga tornas; negativo = recebe tornas. */
   diff: number | null;
   assets: AssetRecord[];
+  /** Valor dos imóveis atribuídos (na parte que integra a herança). */
+  imoveisReceived: number;
+  /** Excesso de imóveis sobre a quota: sujeito a IMT (CIMT, art. 2.º, n.º 5, al. c)) e Imposto do Selo (verba 1.1 TGIS). */
+  imoveisExcess: number | null;
 }
 
 export interface PartilhaSummary {
@@ -316,7 +320,9 @@ export function partilhaSummary(calc: CalcResult | null, c: CaseRecord, assets: 
     const mine = assets.filter((a) => st.assignments[a.id] === s.key);
     const received = mine.reduce((sum, a) => sum + val(a), 0);
     const due = estate > 0 ? estate * toNumber(s.fraction) : null;
-    return { key: s.key, name: s.name, relation: s.relation, fraction: fmtFrac(s.fraction), due, received, diff: due === null ? null : received - due, assets: mine };
+    const imoveisReceived = mine.filter((a) => a.type === 'imoveis').reduce((sum, a) => sum + val(a), 0);
+    const imoveisExcess = due === null ? null : Math.max(0, imoveisReceived - due);
+    return { key: s.key, name: s.name, relation: s.relation, fraction: fmtFrac(s.fraction), due, received, diff: due === null ? null : received - due, assets: mine, imoveisReceived, imoveisExcess };
   });
   const keys = new Set(shares.map((s) => s.key));
   const sale = assets.filter((a) => st.assignments[a.id] === SALE_KEY);
@@ -394,6 +400,10 @@ function mapaPartilhaBlocks(b: CaseBundle): DocBlock[] {
         { align: ['left', 'right', 'right', 'right', 'left'], widths: [3.5, 2, 2, 2, 2.5] },
       ),
     );
+    const excess = sum.heirs.filter((h) => (h.imoveisExcess ?? 0) > 0.005);
+    if (excess.length) {
+      out.push(p({ text: 'Excesso em imóveis sobre a quota (IMT e Imposto do Selo): ', bold: true }, excess.map((h) => `${h.name} — ${money(h.imoveisExcess)}`).join('; ') + '. O excesso de imóveis recebido face à quota-parte é tributado em IMT (CIMT, art. 2.º, n.º 5, al. c)) e Imposto do Selo (verba 1.1 da TGIS, 0,8 %).'));
+    }
     if (sum.sale.length) out.push(p({ text: `Bens a vender / partilhar em dinheiro: `, bold: true }, `${sum.sale.length} verba(s), no valor de ${money(sum.saleValue)}, a distribuir pelas quotas.`));
     if (sum.unassigned.length) out.push(p({ text: 'Por atribuir: ', bold: true }, `${sum.unassigned.length} verba(s).`));
   }
