@@ -333,6 +333,64 @@ Ref.ª {{dossier.ref}} · Responsável: {{responsavel.nome}} · {{hoje}}
 {{lista.prazos}}`,
   },
   {
+    id: 'email-documents-manquants-fr',
+    title: 'E-mail au client — documents manquants',
+    category: 'Cliente',
+    language: 'fr',
+    description: 'Versão francesa do email ao cliente com a lista automática dos documentos em falta.',
+    subject: 'Succession de {{falecido.nome}} — documents à nous transmettre',
+    email: true,
+    body: `Bonjour {{cliente.nome}},
+
+Dans le cadre de la succession de {{falecido.nome}} (dossier {{dossier.ref}}), nous avons besoin des documents suivants pour poursuivre les démarches :
+
+{{lista.documentos_em_falta}}
+
+Vous pouvez nous les transmettre par e-mail (copie lisible) ou les déposer à notre cabinet. Si l’un de ces documents n’est pas disponible, dites-le-nous : nous vous indiquerons comment l’obtenir.
+
+Prochaines étapes de notre côté :
+
+{{lista.proximas_acoes}}
+
+Nous restons à votre disposition pour toute question.
+
+Cordialement,
+{{responsavel.nome}}
+{{escritorio.nome}} · {{escritorio.telefone}} · {{escritorio.email}}`,
+  },
+  {
+    id: 'email-status-update-en',
+    title: 'Email to client — status update',
+    category: 'Cliente',
+    language: 'en',
+    description: 'Versão inglesa do ponto de situação ao cliente: progresso, próximas ações e prazos.',
+    subject: 'Estate of {{falecido.nome}} — status update ({{hoje}})',
+    email: true,
+    body: `Dear {{cliente.nome}},
+
+Please find below a short update on the estate of {{falecido.nome}} (file {{dossier.ref}}), as of {{hoje}}.
+
+**Progress:** {{progresso.percentagem}} of the applicable steps are complete.
+
+**Next actions on our side:**
+
+{{lista.proximas_acoes}}
+
+**Upcoming deadlines:**
+
+{{lista.prazos}}
+
+**Documents we still need from you:**
+
+{{lista.documentos_em_falta}}
+
+We will keep you informed as the matter progresses. Please do not hesitate to contact us with any questions.
+
+Kind regards,
+{{responsavel.nome}}
+{{escritorio.nome}} · {{escritorio.telefone}} · {{escritorio.email}}`,
+  },
+  {
     id: 'lettre-notaire',
     title: 'Lettre au notaire (France) — coordination de la succession',
     category: 'Internacional',

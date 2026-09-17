@@ -6,7 +6,8 @@ import { db, logActivity, newDocument } from '../../lib/db';
 import { attachFile, docKey } from '../../lib/documents';
 import { DOCX_MIME, buildDocx } from '../../lib/docx';
 import { REPORT_KINDS, buildReport, loadCaseBundle, type BuiltReport, type ReportKind } from '../../lib/reports';
-import type { CaseRecord } from '../../lib/types';
+import type { CaseRecord, TemplateLanguage } from '../../lib/types';
+import { LANGUAGE_LABELS } from '../../engine/templates';
 import { downloadFile, formatDate, todayIso, uid } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
 import { Button, Segmented, Sheet } from '../../components/ui';
@@ -17,17 +18,18 @@ export function ReportSheet({ c, kind, onClose, onKind }: { c: CaseRecord; kind:
   const toast = useToast();
   const [report, setReport] = useState<BuiltReport | null>(null);
   const [printing, setPrinting] = useState(false);
+  const [lang, setLang] = useState<TemplateLanguage>('pt');
 
   useEffect(() => {
     if (!kind) return;
     let cancelled = false;
     void loadCaseBundle(c).then((b) => {
-      if (!cancelled) setReport(buildReport(kind, b));
+      if (!cancelled) setReport(buildReport(kind, b, kind === 'cliente' ? lang : 'pt'));
     });
     return () => {
       cancelled = true;
     };
-  }, [kind, c]);
+  }, [kind, c, lang]);
 
   useEffect(() => {
     if (!printing) return;
@@ -97,6 +99,9 @@ export function ReportSheet({ c, kind, onClose, onKind }: { c: CaseRecord; kind:
       <div className="report-sheet">
         <div className="report-kinds">
           <Segmented<ReportKind> label="Tipo de relatório" value={kind ?? 'interno'} onChange={onKind} options={REPORT_KINDS.map((k) => ({ value: k.id, label: k.label }))} />
+          {kind === 'cliente' && (
+            <Segmented<TemplateLanguage> label="Língua" value={lang} onChange={setLang} options={(['pt', 'fr', 'en'] as TemplateLanguage[]).map((l) => ({ value: l, label: LANGUAGE_LABELS[l] }))} />
+          )}
         </div>
         <p className="tiny subtle">Gerado com os dados atuais do dossier. Reveja antes de enviar — conteúdo de apoio, a validar pela equipa.</p>
         <div className="composer-preview">{ready ? <DocPreview blocks={ready.blocks} /> : <div className="skeleton" style={{ height: 360 }} />}</div>

@@ -1926,3 +1926,28 @@ dialog.palette::backdrop {
     grid-column: 2;
   }
 }
+
+/* Internacional */
+.chip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip.on {
+  background: color-mix(in srgb, var(--brand-600) 12%, var(--surface));
+  border-color: var(--brand-600);
+  color: var(--brand-600);
+}
+
+.law-result {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--surface-2);
+}

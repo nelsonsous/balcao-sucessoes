@@ -3,6 +3,7 @@ import { Link, useLocation, useParams, useSearch } from 'wouter';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
   ArrowRight,
+  Globe,
   BookmarkPlus,
   CalendarClock,
   CalendarDays,
@@ -59,9 +60,10 @@ import { QuestionnaireTab } from './QuestionnaireTab';
 import { TaskDrawer } from './TaskDrawer';
 import { ReportSheet } from '../reports/ReportSheet';
 import { SaveTemplateSheet } from './SaveTemplateSheet';
+import { InternationalTab } from '../international/InternationalTab';
 import type { ReportKind } from '../../lib/reports';
 
-type TabId = 'checklist' | 'interessados' | 'patrimonio' | 'documentos' | 'quotas' | 'agenda' | 'notas' | 'questionario' | 'historico';
+type TabId = 'checklist' | 'interessados' | 'patrimonio' | 'documentos' | 'quotas' | 'internacional' | 'agenda' | 'notas' | 'questionario' | 'historico';
 
 const STAGES: Array<{ id: CaseStage; label: string }> = [
   { id: 'ativo', label: 'Ativo' },
@@ -280,6 +282,7 @@ export function DossierView() {
               { id: 'patrimonio', label: 'Património', icon: Landmark, count: data.assets },
               { id: 'documentos', label: 'Documentos', icon: FileText, count: data.docsMissing },
               { id: 'quotas', label: 'Quotas', icon: Scale },
+              { id: 'internacional', label: 'Internacional', icon: Globe },
               { id: 'agenda', label: 'Agenda', icon: CalendarDays },
               { id: 'notas', label: 'Notas & contactos', icon: NotebookPen, count: (data.notes?.length ?? 0) + (data.contacts ?? 0) },
               { id: 'questionario', label: 'Questionário', icon: ClipboardList },
@@ -291,6 +294,7 @@ export function DossierView() {
           {tab === 'patrimonio' && <AssetsTab c={c} />}
           {tab === 'documentos' && <DocumentsTab c={c} />}
           {tab === 'quotas' && <CaseCalcTab c={c} />}
+          {tab === 'internacional' && <InternationalTab c={c} />}
           {tab === 'agenda' && <CaseAgendaTab c={c} onOpenTask={setSelectedTask} />}
           {tab === 'notas' && <NotesTab c={c} />}
           {tab === 'questionario' && <QuestionnaireTab c={c} />}

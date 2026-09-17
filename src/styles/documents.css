@@ -429,6 +429,10 @@ dialog.sheet .sheet-panel:has(.report-sheet) {
 
 .report-kinds {
   overflow-x: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 .partilha-table select.select {

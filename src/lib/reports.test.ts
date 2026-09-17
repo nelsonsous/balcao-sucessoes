@@ -134,6 +134,19 @@ describe('relatórios do dossier', () => {
     expect(btxt).toContain('Meação do cônjuge');
     expect(btxt.replace(/\s/g, ' ')).toContain('100 000,00');
 
+    const fr = buildReport('cliente', bundle, 'fr');
+    const frt = blocksToText(fr.blocks);
+    expect(fr.title).toContain('Point d’étape');
+    expect(frt).toContain('Ce dont nous avons besoin de votre part');
+    expect(frt).toContain('Les intitulés des démarches');
+    expect(frt).not.toContain('Nota interna confidencial');
+    expect(fr.fileBase).toContain('-fr-');
+    const en = buildReport('cliente', bundle, 'en');
+    const ent = blocksToText(en.blocks);
+    expect(en.title).toContain('Status update');
+    expect(ent).toContain('What we need from you');
+    expect(ent).toMatch(/\d{1,2} (January|February|March|April|May|June|July|August|September|October|November|December) \d{4}/);
+    expect(ent).toContain('Person in charge:');
     const partilha = buildReport('partilha', bundle);
     const ptxt = blocksToText(partilha.blocks);
     expect(ptxt).toContain('Quotas hereditárias');

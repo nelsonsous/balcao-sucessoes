@@ -92,6 +92,8 @@ export interface CaseRecord {
   calcJson?: string;
   /** Mapa de partilha (atribuição de bens a herdeiros), em JSON. */
   partilhaJson?: string;
+  /** Módulo internacional (lei aplicável, CSE, entidades), em JSON. */
+  intlJson?: string;
   demo?: boolean;
   createdAt: string;
   updatedAt: string;

@@ -3,7 +3,7 @@
 Ciclo pedido: **10 iterações seguidas** para analisar o protótipo, perceber os conceitos e construir uma aplicação muito melhor, a nível profissional, como PWA.
 Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é reaproveitado dela.
 
-**Estado do ciclo: iteração 7 de 10 concluída.**
+**Estado do ciclo: iteração 8 de 10 concluída.**
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
 
@@ -103,6 +103,14 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 - **Endurecimento**: Content Security Policy por `<meta>` (`default-src 'self'`, sem scripts inline — o script do tema passou para ficheiro externo —, `object-src 'none'`, `base-uri 'self'`), `Referrer-Policy: no-referrer`.
 - **86 testes** (novos: cifra/decifra e rejeição de palavra-passe errada ou ficheiro alterado, força da palavra-passe, PIN com sal e esperas, máscara de nomes, conversão das respostas do protótipo, casamento de tarefas por semelhança e importação completa com estados, interessados, bens, cliente, notas e contactos).
 
+## Iteração 8 — Internacional ✅
+
+- **Motor internacional** (`engine/international.ts`): lei aplicável e competência segundo o Regulamento (UE) n.º 650/2012 — regra da residência habitual (art. 21.º/1), exceção da ligação mais estreita (21.º/2), escolha da lei da nacionalidade (22.º, com validação), unidade da sucessão (23.º), reenvio para Estados terceiros (34.º), competência geral (4.º) e subsidiária (10.º), acordo de competência (5.º–7.º), avisos para Dinamarca/Irlanda/Reino Unido; disponibilidade e razão do **Certificado Sucessório Europeu**; **regime de circulação de documentos** por país (UE: Reg. 2016/1191 sem apostila; Convenção da Haia: apostila; outros: legalização consular); **prazos de referência por país** contados do óbito (França 6/12 meses, Espanha 6, Alemanha 3, Bélgica 4/5, Países Baixos 8, Reino Unido 6/12, EUA 9, Brasil 2 para o inventário, Canadá, Venezuela, África do Sul 14 dias), com base legal e notas — sempre marcados como referência a validar.
+- **Separador «Internacional»** no dossier (aparece com elementos de estraneidade: óbito, residência, nacionalidade, bens ou entidades noutro país): formulário de residência habitual, nacionalidades, escolha de lei e ligação mais estreita com **análise passo a passo** e badges (lei aplicável, competência, CSE); ficha do **CSE** (estado, finalidades, Estados onde será usado, datas de pedido e emissão, notas, lembretes dos arts. 63.º–70.º); tabela de **documentos e circulação** por país e lista dos documentos que normalmente circulam; **prazos por país** com contagem; **entidades no estrangeiro** (notaires, bancos, tribunais, consulados, tradutores, registos, fisco) com contacto e notas. Tudo guardado no dossier (`intlJson`).
+- **Ponto de situação para o cliente em francês e inglês** (seletor de língua no relatório): títulos, textos, cabeçalho, fases e tipos de evento traduzidos, datas no formato da língua; nota de que os títulos das diligências estão em português.
+- **Minutas novas**: «E-mail au client — documents manquants» (FR) e «Email to client — status update» (EN), com os campos automáticos (13 minutas-base).
+- **94 testes** (novos: lei aplicável por residência, escolha válida/inválida, residência fora da UE com competência subsidiária e reenvio, CSE disponível/desnecessário, avisos RU/DK, regime de documentos por país, prazos por país com óbito dentro/fora, fins de mês e ordenação; relatório do cliente em FR/EN).
+
 ## Plano das próximas iterações
 
 | # | Tema | Conteúdo previsto |
@@ -113,7 +121,7 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 | 5 | ~~Relatórios & relação de bens~~ | ✅ concluída |
 | 6 | ~~Produtividade~~ | ✅ concluída |
 | 7 | ~~Segurança~~ | ✅ concluída |
-| 8 | **Internacional** | Módulo França/UE aprofundado (CSE, lei aplicável, checklist notaire), textos multilingues (PT/FR/EN) para minutas e relatórios. |
+| 8 | ~~Internacional~~ | ✅ concluída |
 | 9 | **Qualidade** | Auditoria de acessibilidade (WCAG AA), desempenho (divisão de código, só subsets latinos das fontes), testes E2E, polimento móvel. |
 | 10 | **Entrega** | Revisão final, guia de utilização, pacote pronto a partilhar, resumo executivo. |
 

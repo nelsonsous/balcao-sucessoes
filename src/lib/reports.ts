@@ -12,7 +12,7 @@ import { byCategoryThenName, clientCanProvide } from './documents';
 import { tableBlock, type DocBlock, type DocRun } from './docx';
 import { ACCEPTANCE_LABELS, CHANNEL_LABELS, DEBT_STATUS_LABELS, KINSHIP_LABELS, OWNERSHIP_LABELS, POA_LABELS, ROLE_LABELS, VALUE_BASIS_LABELS } from './labels';
 import { longDate } from './templateContext';
-import type { AssetRecord, AssetType, CaseRecord, ContactLogRecord, DebtRecord, DocumentRecord, EventRecord, MemberRecord, NoteRecord, PartyRecord, TaskRecord } from './types';
+import type { AssetRecord, AssetType, CaseRecord, ContactLogRecord, DebtRecord, DocumentRecord, EventRecord, MemberRecord, NoteRecord, PartyRecord, TaskRecord, TemplateLanguage } from './types';
 import { daysFromToday, formatDate, formatEur, todayIso } from './utils';
 
 export type ReportKind = 'interno' | 'cliente' | 'bens' | 'partilha';
@@ -415,15 +415,22 @@ const dueText = (t: TaskRecord) => {
   return `${formatDate(t.dueDate)}${isOpen(t.status) ? rel : ''}`;
 };
 
-function header(b: CaseBundle, title: string, subtitle: string): DocBlock[] {
+const HEADER_T: Record<TemplateLanguage, { file: string; owner: string; date: string; unassigned: string }> = {
+  pt: { file: 'Dossier', owner: 'Responsável', date: 'Data', unassigned: 'Por atribuir' },
+  fr: { file: 'Dossier', owner: 'Responsable', date: 'Date', unassigned: 'Non attribué' },
+  en: { file: 'File', owner: 'Person in charge', date: 'Date', unassigned: 'Unassigned' },
+};
+
+function header(b: CaseBundle, title: string, subtitle: string, lang: TemplateLanguage = 'pt'): DocBlock[] {
   const { c, settings, members } = b;
   const responsible = members.find((m) => m.id === c.responsibleId);
+  const t = HEADER_T[lang];
   return [
     h1(title),
     lines([
       [R(settings.firmName, true), R(settings.firmCity ? ` · ${settings.firmCity}` : ''), R(settings.firmPhone ? ` · ${settings.firmPhone}` : ''), R(settings.firmEmail ? ` · ${settings.firmEmail}` : '')],
       [R(subtitle)],
-      [R('Dossier: ', true), R(`${c.ref} · ${c.name}`), R('   Responsável: ', true), R(responsible?.name ?? 'Por atribuir'), R('   Data: ', true), R(longDate(todayIso(), 'pt'))],
+      [R(`${t.file}: `, true), R(`${c.ref} · ${c.name}`), R(`   ${t.owner}: `, true), R(responsible?.name ?? t.unassigned), R(`   ${t.date}: `, true), R(longDate(todayIso(), lang))],
     ]),
   ];
 }
@@ -577,42 +584,149 @@ function internalBlocks(b: CaseBundle): DocBlock[] {
 }
 
 // ---------------------------------------------------------------------------
-// Ponto de situação para o cliente
+// Ponto de situação para o cliente (PT / FR / EN)
 
-function clientBlocks(b: CaseBundle): DocBlock[] {
+const PHASE_T: Record<TemplateLanguage, Record<string, string>> = {
+  pt: {},
+  fr: { abertura: 'ouverture', interessados: 'identification des ayants droit', testamento: 'testament', habilitacao: 'habilitation des héritiers', internacional: 'volet international', patrimonio: 'patrimoine', passivo: 'passif', fiscal: 'obligations fiscales', partilha: 'partage', encerramento: 'clôture' },
+  en: { abertura: 'opening', interessados: 'identifying the interested parties', testamento: 'will', habilitacao: 'certification of heirs', internacional: 'international matters', patrimonio: 'assets', passivo: 'liabilities', fiscal: 'tax obligations', partilha: 'distribution', encerramento: 'closing' },
+};
+
+const EVENT_T: Record<TemplateLanguage, Record<string, string>> = {
+  pt: {},
+  fr: { reuniao: 'Réunion', escritura: 'Acte notarié / partage', prazo: 'Délai', diligencia: 'Démarche', lembrete: 'Rappel', outro: 'Autre' },
+  en: { reuniao: 'Meeting', escritura: 'Notarial deed / distribution', prazo: 'Deadline', diligencia: 'Formality', lembrete: 'Reminder', outro: 'Other' },
+};
+
+interface ClientText {
+  title: (deceased: string, caseName: string) => string;
+  to: string;
+  intro: (client: string, date: string) => string;
+  where: string;
+  progress: (done: number, total: number, pct: number) => string;
+  phase: (phase: string) => string;
+  noOpen: string;
+  done: string;
+  noneDone: string;
+  working: string;
+  awaiting: string;
+  noneWorking: string;
+  need: string;
+  noneNeed: string;
+  next: string;
+  by: string;
+  noneNext: string;
+  contacts: string;
+  footer: string;
+  ptTitles: string;
+}
+
+const CLIENT_T: Record<TemplateLanguage, ClientText> = {
+  pt: {
+    title: (d, n) => `Ponto de situação — ${d ? `sucessão de ${d}` : n}`,
+    to: 'Para',
+    intro: (c, d) => `${c ? `Exmo.(a) Senhor(a) ${c}, ` : ''}apresentamos o ponto de situação do processo sucessório à data de ${d}.`,
+    where: 'Onde estamos',
+    progress: (done, total, pct) => `Estão concluídos ${done} de ${total} passos (${pct}%).`,
+    phase: (p) => ` O processo encontra-se na fase de ${p}.`,
+    noOpen: ' Não há passos em aberto.',
+    done: 'O que já está feito',
+    noneDone: 'Ainda sem passos concluídos.',
+    working: 'O que estamos a tratar',
+    awaiting: ' — a aguardar resposta de terceiros',
+    noneWorking: 'Nada em curso neste momento.',
+    need: 'O que precisamos de si',
+    noneNeed: 'Neste momento não precisamos de mais documentos da sua parte.',
+    next: 'Próximos passos e prazos',
+    by: 'Até',
+    noneNext: 'Sem prazos próximos.',
+    contacts: 'Contactos',
+    footer: 'Este ponto de situação reflete a informação disponível à data indicada. Os prazos referidos podem depender de terceiros (repartições, bancos, notários) e serão confirmados pela equipa.',
+    ptTitles: '',
+  },
+  fr: {
+    title: (d, n) => `Point d’étape — ${d ? `succession de ${d}` : n}`,
+    to: 'Pour',
+    intro: (c, d) => `${c ? `Madame, Monsieur ${c}, ` : ''}veuillez trouver ci-dessous le point d’étape de la succession au ${d}.`,
+    where: 'Où en sommes-nous',
+    progress: (done, total, pct) => `${done} étapes sur ${total} sont accomplies (${pct} %).`,
+    phase: (p) => ` Le dossier est au stade : ${p}.`,
+    noOpen: ' Aucune étape en cours.',
+    done: 'Ce qui est déjà fait',
+    noneDone: 'Aucune étape accomplie pour l’instant.',
+    working: 'Ce que nous traitons',
+    awaiting: ' — en attente d’un tiers',
+    noneWorking: 'Rien en cours pour le moment.',
+    need: 'Ce dont nous avons besoin de votre part',
+    noneNeed: 'Nous n’avons pas besoin d’autres documents de votre part pour l’instant.',
+    next: 'Prochaines étapes et délais',
+    by: 'Avant le',
+    noneNext: 'Aucun délai proche.',
+    contacts: 'Contacts',
+    footer: 'Ce point d’étape reflète les informations disponibles à la date indiquée. Les délais mentionnés peuvent dépendre de tiers (administrations, banques, notaires) et seront confirmés par notre équipe.',
+    ptTitles: 'Les intitulés des démarches sont indiqués en portugais.',
+  },
+  en: {
+    title: (d, n) => `Status update — ${d ? `estate of ${d}` : n}`,
+    to: 'To',
+    intro: (c, d) => `${c ? `Dear ${c}, ` : ''}please find below the status of the estate proceedings as at ${d}.`,
+    where: 'Where we are',
+    progress: (done, total, pct) => `${done} of ${total} steps are complete (${pct}%).`,
+    phase: (p) => ` The matter is currently at the ${p} stage.`,
+    noOpen: ' There are no open steps.',
+    done: 'What has been done',
+    noneDone: 'No steps completed yet.',
+    working: 'What we are working on',
+    awaiting: ' — awaiting a third party',
+    noneWorking: 'Nothing in progress at the moment.',
+    need: 'What we need from you',
+    noneNeed: 'We do not need any further documents from you at this time.',
+    next: 'Next steps and deadlines',
+    by: 'By',
+    noneNext: 'No upcoming deadlines.',
+    contacts: 'Contacts',
+    footer: 'This update reflects the information available on the date shown. Deadlines may depend on third parties (public offices, banks, notaries) and will be confirmed by our team.',
+    ptTitles: 'Step titles are shown in Portuguese.',
+  },
+};
+
+function clientBlocks(b: CaseBundle, lang: TemplateLanguage = 'pt'): DocBlock[] {
   const { c, tasks, docs, events, settings, members } = b;
+  const t = CLIENT_T[lang];
   const stats = taskStats(tasks);
   const phase = currentPhase(tasks);
   const responsible = members.find((m) => m.id === c.responsibleId);
-  const out = header(b, `Ponto de situação — ${c.deceased.name ? `sucessão de ${c.deceased.name}` : c.name}`, `Para: ${c.client.name || 'cliente'}`);
+  const phaseName = (id: string) => (lang === 'pt' ? phaseLabel(id as TaskRecord['phase']).toLowerCase() : (PHASE_T[lang][id] ?? phaseLabel(id as TaskRecord['phase']).toLowerCase()));
+  const eventName = (kind: string) => (lang === 'pt' ? EVENT_KIND_LABELS[kind as keyof typeof EVENT_KIND_LABELS] : (EVENT_T[lang][kind] ?? EVENT_KIND_LABELS[kind as keyof typeof EVENT_KIND_LABELS]));
+  const out = header(b, t.title(c.deceased.name, c.name), `${t.to}: ${c.client.name || (lang === 'pt' ? 'cliente' : 'client')}`, lang);
 
-  out.push(p(`${c.client.name ? `Exmo.(a) Senhor(a) ${c.client.name}, ` : ''}apresentamos o ponto de situação do processo sucessório à data de ${longDate(todayIso(), 'pt')}.`));
-  out.push(h2('Onde estamos'));
-  out.push(p(`Estão concluídos ${stats.done} de ${stats.applicable} passos (${stats.pct}%).`, phase ? ` O processo encontra-se na fase de ${phaseLabel(phase).toLowerCase()}.` : ' Não há passos em aberto.'));
+  out.push(p(t.intro(c.client.name, longDate(todayIso(), lang))));
+  out.push(h2(t.where));
+  out.push(p(t.progress(stats.done, stats.applicable, stats.pct), phase ? t.phase(phaseName(phase)) : t.noOpen));
 
-  const done = tasks.filter((t) => t.status === 'concluido');
-  out.push(h2('O que já está feito'));
-  out.push(...list(done.slice(-10).map((t) => t.title), 'Ainda sem passos concluídos.'));
+  const done = tasks.filter((x) => x.status === 'concluido');
+  out.push(h2(t.done));
+  out.push(...list(done.slice(-10).map((x) => x.title), t.noneDone));
 
-  const working = tasks.filter((t) => t.status === 'em_curso' || t.status === 'aguarda');
-  out.push(h2('O que estamos a tratar'));
-  out.push(...list(working.map((t) => `${t.title}${t.status === 'aguarda' ? ' — a aguardar resposta de terceiros' : ''}`), 'Nada em curso neste momento.'));
+  const working = tasks.filter((x) => x.status === 'em_curso' || x.status === 'aguarda');
+  out.push(h2(t.working));
+  out.push(...list(working.map((x) => `${x.title}${x.status === 'aguarda' ? t.awaiting : ''}`), t.noneWorking));
 
   const needed = docs.filter((d) => (d.status === 'em_falta' || d.status === 'pedido') && clientCanProvide(d)).sort(byCategoryThenName);
-  out.push(h2('O que precisamos de si'));
-  out.push(...list(needed.map((d) => d.name), 'Neste momento não precisamos de mais documentos da sua parte.'));
+  out.push(h2(t.need));
+  out.push(...list(needed.map((d) => d.name), t.noneNeed));
 
-  out.push(h2('Próximos passos e prazos'));
+  out.push(h2(t.next));
   const today = todayIso();
-  const upcomingTasks = tasks.filter((t) => isOpen(t.status) && t.dueDate && t.dueDate >= today).sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 5);
-  const upcomingEvents = events.filter((e) => !e.done && e.date >= today && (e.kind === 'escritura' || e.kind === 'reuniao')).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5);
+  const upcomingTasks = tasks.filter((x) => isOpen(x.status) && x.dueDate && x.dueDate >= today).sort((a, z) => a.dueDate.localeCompare(z.dueDate)).slice(0, 5);
+  const upcomingEvents = events.filter((e) => !e.done && e.date >= today && (e.kind === 'escritura' || e.kind === 'reuniao')).sort((a, z) => a.date.localeCompare(z.date)).slice(0, 5);
   const steps = [
-    ...upcomingEvents.map((e) => `${longDate(e.date, 'pt')}${e.time ? `, ${e.time}` : ''} — ${e.title || EVENT_KIND_LABELS[e.kind]}${e.location ? `, ${e.location}` : ''}`),
-    ...upcomingTasks.map((t) => `Até ${longDate(t.dueDate, 'pt')} — ${t.title}`),
+    ...upcomingEvents.map((e) => `${longDate(e.date, lang)}${e.time ? `, ${e.time}` : ''} — ${e.title || eventName(e.kind)}${e.location ? `, ${e.location}` : ''}`),
+    ...upcomingTasks.map((x) => `${t.by} ${longDate(x.dueDate, lang)} — ${x.title}`),
   ];
-  out.push(...list(steps, 'Sem prazos próximos.'));
+  out.push(...list(steps, t.noneNext));
 
-  out.push(h2('Contactos'));
+  out.push(h2(t.contacts));
   out.push(
     lines([
       [R(settings.firmName, true), R(responsible ? ` — ${responsible.name}` : '')],
@@ -620,7 +734,7 @@ function clientBlocks(b: CaseBundle): DocBlock[] {
       [R(settings.firmAddress || ' ')],
     ]),
   );
-  out.push(small('Este ponto de situação reflete a informação disponível à data indicada. Os prazos referidos podem depender de terceiros (repartições, bancos, notários) e serão confirmados pela equipa.'));
+  out.push(small([t.footer, t.ptTitles].filter(Boolean).join(' ')));
   return out;
 }
 
@@ -643,11 +757,11 @@ const slug = (s: string) =>
     .toLowerCase()
     .slice(0, 50);
 
-export function buildReport(kind: ReportKind, b: CaseBundle): BuiltReport {
-  const blocks = kind === 'interno' ? internalBlocks(b) : kind === 'cliente' ? clientBlocks(b) : kind === 'bens' ? relacaoBensBlocks(b) : mapaPartilhaBlocks(b);
+export function buildReport(kind: ReportKind, b: CaseBundle, lang: TemplateLanguage = 'pt'): BuiltReport {
+  const blocks = kind === 'interno' ? internalBlocks(b) : kind === 'cliente' ? clientBlocks(b, lang) : kind === 'bens' ? relacaoBensBlocks(b) : mapaPartilhaBlocks(b);
   const title = blocks[0]?.lines[0]?.map((r) => r.text).join('') ?? REPORT_KINDS.find((k) => k.id === kind)!.label;
   const label = REPORT_KINDS.find((k) => k.id === kind)!.label;
-  return { kind, title, blocks, fileBase: `${slug(label)}-${slug(b.c.ref)}-${todayIso()}` };
+  return { kind, title, blocks, fileBase: `${slug(label)}${lang !== 'pt' ? `-${lang}` : ''}-${slug(b.c.ref)}-${todayIso()}` };
 }
 
 // ---------------------------------------------------------------------------
