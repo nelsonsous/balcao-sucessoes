@@ -50,7 +50,7 @@ export function scoreItem(item: PaletteItem, q: string): number {
 }
 
 /** Filtra e ordena: sem pesquisa mostra recentes, navegação e ações; com pesquisa, por pontuação e grupo. */
-export function rankItems(items: PaletteItem[], q: string, limit = 12): PaletteItem[] {
+export function rankItems(items: PaletteItem[], q: string, limit = 16): PaletteItem[] {
   const n = normalize(q).trim();
   if (!n) {
     return items.filter((i) => i.group === 'recentes' || i.group === 'navegacao' || i.group === 'acoes').slice(0, limit);

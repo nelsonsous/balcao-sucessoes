@@ -457,6 +457,12 @@ function demoCases(): DemoCase[] {
 export async function loadDemoData(): Promise<number> {
   await db.members.bulkPut(MEMBERS);
   const list = demoCases();
+  // Aberturas espalhadas pelos últimos meses (sempre depois do óbito), para a análise da equipa ter história.
+  const SPREAD_DAYS = [30, 75, 140, 220, 400];
+  list.forEach((d, i) => {
+    const death = d.c.deceased.deathDate ? new Date(d.c.deceased.deathDate).getTime() + 7 * 86_400_000 : 0;
+    d.c.createdAt = new Date(Math.max(death, Date.now() - SPREAD_DAYS[i % SPREAD_DAYS.length]! * 86_400_000)).toISOString();
+  });
   for (const d of list) {
     await db.cases.put(d.c);
     await db.parties.bulkPut(d.parties.map((p) => newParty(d.c.id, p)));
@@ -477,15 +483,23 @@ export async function loadDemoData(): Promise<number> {
     await syncCaseTasks(d.c);
 
     const tasks = await db.tasks.where('caseId').equals(d.c.id).toArray();
+    // Tarefas criadas com o dossier; conclusões espalhadas entre a abertura e hoje.
+    const start = new Date(d.c.createdAt).getTime();
+    const span = Math.max(0, Date.now() - start);
+    let i = 0;
     for (const t of tasks) {
       const st = (t.ruleKey && d.statuses[t.ruleKey]) || d.defaultStatus;
-      if (st && st !== t.status) {
-        await db.tasks.update(t.id, {
-          status: st,
-          completedAt: st === 'concluido' ? nowIso() : '',
-          assigneeId: d.c.responsibleId,
-        });
-      }
+      i += 1;
+      await db.tasks.update(t.id, {
+        createdAt: d.c.createdAt,
+        ...(st && st !== t.status
+          ? {
+              status: st,
+              completedAt: st === 'concluido' ? new Date(start + span * (((i % 7) + 1) / 8)).toISOString() : '',
+              assigneeId: d.c.responsibleId,
+            }
+          : {}),
+      });
     }
     await db.activity.bulkPut([
       { id: uid(), caseId: d.c.id, at: d.c.createdAt, kind: 'dossier', text: 'Dossier criado (demonstração)', actor: 'Equipa' },

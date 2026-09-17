@@ -29,6 +29,7 @@ const NewCaseWizard = lazy(() => import('./features/wizard/NewCaseWizard').then(
 const PrazosPage = lazy(() => import('./features/prazos/PrazosPage').then((m) => ({ default: m.PrazosPage })));
 const ReceivedPage = lazy(() => import('./features/inbox/ReceivedPage').then((m) => ({ default: m.ReceivedPage })));
 const RecyclePage = lazy(() => import('./features/recycle/RecyclePage').then((m) => ({ default: m.RecyclePage })));
+const AnalyticsPage = lazy(() => import('./features/analytics/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 
 const Loading = () => <div className="skeleton" style={{ height: 320 }} aria-busy="true" aria-label="A carregar" />;
 
@@ -76,6 +77,7 @@ export default function App() {
               <Route path="/definicoes" component={SettingsPage} />
               <Route path="/recebidos" component={ReceivedPage} />
               <Route path="/reciclagem" component={RecyclePage} />
+              <Route path="/analise" component={AnalyticsPage} />
               <Route component={NotFound} />
               </Switch>
             </Suspense>

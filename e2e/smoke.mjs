@@ -259,6 +259,23 @@ try {
     assert(docs === 1, 'documento criado com o anexo recebido');
   });
 
+  await step('Análise da equipa: gráficos acessíveis com tabela alternativa', async () => {
+    await go('#/analise', 1500);
+    const h1 = await page.$eval('main h1', (e) => e.textContent || '');
+    assert(h1.includes('Análise da equipa'), 'página de análise');
+    const charts = await page.$$eval('svg[role="img"]', (els) => els.map((e) => e.querySelector('title')?.textContent || ''));
+    assert(charts.length >= 4, `gráficos SVG (${charts.length})`);
+    assert(charts.some((t) => /Dossiers por mês/.test(t)), 'gráfico de dossiers por mês');
+    const bars = await page.$$eval('svg[role="img"] rect[fill]', (r) => r.length);
+    assert(bars > 0, 'barras desenhadas com os dados de demonstração');
+    assert(await clickText('.chart-head button', 'Tabela'), 'botão Tabela');
+    await sleep(300);
+    const rows = await page.$$eval('.chart table tbody tr', (r) => r.length);
+    assert(rows >= 3, `tabela alternativa com linhas (${rows})`);
+    const people = await page.$$eval('[data-testid="members-table"] tbody tr', (r) => r.length);
+    assert(people >= 2, `tabela por pessoa (${people})`);
+  });
+
   await step('PIN: definir, bloquear e desbloquear', async () => {
     await go('#/definicoes', 1200);
     assert(await clickText('button', 'Definir PIN'), 'botão Definir PIN');

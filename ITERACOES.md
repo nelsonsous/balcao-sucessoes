@@ -7,7 +7,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 2 — «10 vezes seguidas com melhorias e testes» (iterações 11–20)
 
-**Estado do ciclo 2: iterações 11–16 concluídas (16/20).**
+**Estado do ciclo 2: iterações 11–17 concluídas (17/20).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -17,7 +17,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 14 | ~~Partilha de dossier entre colegas~~ | ✅ concluída |
 | 15 | ~~Cópias automáticas e partilha para a app~~ | ✅ concluída |
 | 16 | ~~Anular ações e reciclagem~~ | ✅ concluída |
-| 17 | **Painel de equipa e análise** | Métricas por mês, fase e pessoa (tempo médio por fase, prazos cumpridos), gráficos SVG acessíveis com tabela alternativa; testes das agregações. |
+| 17 | ~~Painel de equipa e análise~~ | ✅ concluída |
 | 18 | **Pesquisa e vistas guardadas** | Filtros avançados na lista de dossiers, vistas guardadas com nome, pesquisa global em notas, contactos e documentos; testes. |
 | 19 | **Documentos avançados** | Pedidos de documentos por interessado, validade das certidões com avisos, pré-visualização de anexos, estados em lote; testes. |
 | 20 | **Consolidação** | Auditoria final (acessibilidade, E2E alargado), manual e apresentação atualizados, versão 2.1, resumo. |
@@ -25,6 +25,13 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
+
+### Iteração 17 — Painel de equipa e análise ✅
+
+- **Agregações** (`lib/analytics.ts`, funções puras): por **mês** (dossiers abertos e encerrados, tarefas concluídas, prazos cumpridos e falhados por mês de conclusão), por **fase** (tarefas totais/concluídas/em aberto/em atraso, dossiers com a fase concluída e **mediana e média de dias desde a abertura até concluir a fase**) e por **pessoa** (dossiers ativos como responsável, tarefas em aberto e em atraso, concluídas nos últimos 30 dias, **taxa de prazos cumpridos** e tempo médio de conclusão — tarefas atribuídas ou, sem atribuição, dos dossiers de que é responsável); indicadores globais (dossiers ativos e encerrados, tarefas em aberto/atraso/concluídas, prazos cumpridos, tempo médio de encerramento); período de 3/6/12 meses ou tudo; filtro por pessoa; tarefas obsoletas e «não aplicável» excluídas; exportação CSV das tabelas.
+- **Gráficos SVG acessíveis** (`components/charts.tsx`): barras verticais agrupadas ou empilhadas e barras horizontais, com `role="img"`, título e descrição textual com todos os valores, legenda quando há mais de uma série, rótulos diretos, tooltips nativos por barra, estado «sem dados» e **tabela alternativa** que substitui o gráfico ao toque de um botão; cores dos semáforos da aplicação (tokens), tema claro e escuro.
+- **Página «Análise da equipa»** (`/analise`, barra lateral → Escritório, paleta): indicadores, «Dossiers por mês», «Prazos por mês», «Tempo até concluir cada fase», «Tarefas por fase» e tabela por pessoa com barra de prazos cumpridos; nota metodológica (encerramentos pela data da última alteração; indicadores de gestão interna). Os dados de demonstração passaram a espalhar as conclusões ao longo da vida de cada dossier, para a análise ter história.
+- **Testes**: utilitários (meses, mediana, percentagens, prazo cumprido), série mensal com período e «tudo», indicadores/fases/tempos, por pessoa e filtro por pessoa, CSV, vazio; gráficos (título/descrição/legenda/tabela alternativa, empilhado sem dados, horizontal com notas); página (vazio, indicadores, gráficos, tabela por pessoa, filtros) — **193 testes**; novo passo E2E «Análise da equipa: gráficos acessíveis com tabela alternativa» — **14 passos**.
 
 ### Iteração 16 — Anular ações e reciclagem ✅
 
