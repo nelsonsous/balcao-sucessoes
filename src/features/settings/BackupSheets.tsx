@@ -52,7 +52,7 @@ export function ExportSheet({ open, onClose, includeFiles }: { open: boolean; on
         <label className="checkbox">
           <input type="checkbox" checked={encrypt} onChange={(e) => setEncrypt(e.target.checked)} />
           <span>
-            <KeyRound size={13} style={{ verticalAlign: '-2px' }} aria-hidden /> Cifrar com palavra-passe (AES-256-GCM) — recomendado
+            <KeyRound size={13} style={{ display: 'inline', verticalAlign: '-2px' }} aria-hidden /> Cifrar com palavra-passe (AES-256-GCM) — recomendado
           </span>
         </label>
         {encrypt && (
