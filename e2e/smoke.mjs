@@ -161,6 +161,38 @@ try {
     await sleep(400);
   });
 
+  await step('Importar dossier partilhado por um colega', async () => {
+    await go('#/dossiers', 1000);
+    assert(await clickText('button', 'Importar dossier'), 'botão Importar dossier');
+    await page.waitForSelector('dialog[open] #share-json', { timeout: 5000 });
+    const now = new Date().toISOString();
+    const pkg = {
+      app: 'balcao-das-sucessoes/dossier',
+      version: 1,
+      exportedAt: now,
+      exportedBy: 'Rui',
+      includesFiles: false,
+      case: { id: 'e2e-shared-1', ref: 'BS-E2E-1', name: 'Sucessão E2E Partilhada', stage: 'ativo', priority: 'normal', tags: ['e2e'], createdAt: now, updatedAt: now },
+      tables: { tasks: [{ id: 'e2e-t1', caseId: 'e2e-shared-1', title: 'Tarefa partilhada pelo colega', phase: 'abertura', status: 'pendente', createdAt: now, updatedAt: now }] },
+      members: [],
+      files: [],
+    };
+    await page.evaluate((json) => {
+      const el = document.querySelector('dialog[open] #share-json');
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(el, json);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }, JSON.stringify(pkg));
+    assert(await clickText('dialog[open] button', 'Analisar'), 'botão Analisar');
+    await page.waitForFunction(() => /Dossier novo neste dispositivo/.test(document.querySelector('dialog[open]')?.textContent || ''), { timeout: 5000 });
+    assert(await clickText('dialog[open] button', 'Importar'), 'botão Importar');
+    await page.waitForFunction(() => location.hash.includes('e2e-shared-1'), { timeout: 5000 });
+    await sleep(1000);
+    const h1 = await page.$eval('main h1', (e) => e.textContent || '');
+    assert(h1.includes('Sucessão E2E Partilhada'), `dossier importado aberto (${h1.trim()})`);
+    const rows = await page.$$eval('.task-row', (r) => r.map((x) => x.textContent || ''));
+    assert(rows.some((t) => t.includes('Tarefa partilhada pelo colega')), 'tarefa do colega na checklist');
+  });
+
   await step('PIN: definir, bloquear e desbloquear', async () => {
     await go('#/definicoes', 1200);
     assert(await clickText('button', 'Definir PIN'), 'botão Definir PIN');

@@ -39,7 +39,7 @@ export interface BackupFile {
 }
 
 /** Blob → data URL sem FileReader (funciona no navegador, no service worker e em Node). */
-async function blobToDataUrl(blob: Blob): Promise<string> {
+export async function blobToDataUrl(blob: Blob): Promise<string> {
   const bytes = new Uint8Array(await blob.arrayBuffer());
   return `data:${blob.type || 'application/octet-stream'};base64,${toBase64(bytes)}`;
 }

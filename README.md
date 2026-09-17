@@ -35,7 +35,8 @@ Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-o
 | **Histórico** | Registo automático de todas as alterações (quem, o quê, quando). |
 | **Dados** | IndexedDB local, cópia de segurança/importação JSON — opcionalmente **cifrada com palavra-passe (AES-256-GCM)** —, lembrete semanal de cópia, importação do protótipo original, dados de demonstração fictícios, pedido de armazenamento persistente. |
 | **Segurança** | Bloqueio por PIN (PBKDF2, esperas após falhas), auto-bloqueio por inatividade e ao mudar de aplicação, modo privacidade (nomes desfocados para partilhar o ecrã), Content Security Policy sem scripts inline. |
-| **Qualidade** | 0 violações axe-core (WCAG 2.2 AA) em 16 ecrãs, divisão de código por rota e separador, fontes só em latino, 134 testes (unitários, componentes com Testing Library e propriedades com fast-check, cobertura com limiar) e 10 passos E2E com Chrome executados antes de cada publicação. |
+| **Partilha entre colegas** | Exportar um dossier completo (com anexos) num ficheiro cifrado e juntá-lo noutro dispositivo com pré-visualização dos conflitos e quatro regras de junção (mais recente, ficheiro, este dispositivo, novo dossier) — sem nunca apagar nada e com registo no histórico. |
+| **Qualidade** | 0 violações axe-core (WCAG 2.2 AA) em 16 ecrãs, divisão de código por rota e separador, fontes só em latino, 162 testes (unitários, componentes com Testing Library e propriedades com fast-check, cobertura com limiar) e 11 passos E2E com Chrome executados antes de cada publicação. |
 | **PWA** | Instalável (desktop, Android, iOS), offline, atalhos, aviso de nova versão, tema claro/escuro, responsivo com navegação inferior no telemóvel. |
 
 ## Começar

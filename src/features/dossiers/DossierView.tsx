@@ -21,6 +21,7 @@ import {
   Pencil,
   Pin,
   Scale,
+  Share2,
   Siren,
   Trash2,
   Users,
@@ -63,6 +64,7 @@ const DocumentsTab = lazy(() => import('../documents/DocumentsTab').then((m) => 
 const InternationalTab = lazy(() => import('../international/InternationalTab').then((m) => ({ default: m.InternationalTab })));
 const CaseAgendaTab = lazy(() => import('../agenda/CaseAgendaTab').then((m) => ({ default: m.CaseAgendaTab })));
 const ReportSheet = lazy(() => import('../reports/ReportSheet').then((m) => ({ default: m.ReportSheet })));
+const ShareDossierSheet = lazy(() => import('./ShareSheets').then((m) => ({ default: m.ShareDossierSheet })));
 const TabLoading = () => <div className="skeleton" style={{ height: 260 }} aria-busy="true" aria-label="A carregar" />;
 import type { ReportKind } from '../../lib/reports';
 
@@ -102,6 +104,7 @@ export function DossierView() {
   const [editing, setEditing] = useState(false);
   const [report, setReport] = useState<ReportKind | null>(null);
   const [savingTemplate, setSavingTemplate] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [allBlockers, setAllBlockers] = useState(false);
   const search = useSearch();
   useEffect(() => {
@@ -245,6 +248,7 @@ export function DossierView() {
                 },
               },
               { label: 'Guardar como modelo', description: 'Questionário e tarefas próprias', icon: BookmarkPlus, onSelect: () => setSavingTemplate(true) },
+              { label: 'Partilhar com colega…', description: 'Ficheiro cifrado com anexos', icon: Share2, onSelect: () => setSharing(true) },
               { label: 'Eliminar dossier', icon: Trash2, danger: true, separatorBefore: true, onSelect: () => void onDelete() },
             ]}
             button={(p) => (
@@ -421,6 +425,11 @@ export function DossierView() {
         </Suspense>
       )}
       <SaveTemplateSheet c={c} tasks={tasks} open={savingTemplate} onClose={() => setSavingTemplate(false)} />
+      {sharing && (
+        <Suspense fallback={null}>
+          <ShareDossierSheet c={c} open onClose={() => setSharing(false)} />
+        </Suspense>
+      )}
       <CaseEditSheet open={editing} c={c} onClose={() => setEditing(false)} />
     </div>
   );

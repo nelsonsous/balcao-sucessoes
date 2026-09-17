@@ -7,14 +7,14 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 2 — «10 vezes seguidas com melhorias e testes» (iterações 11–20)
 
-**Estado do ciclo 2: iterações 11–13 concluídas (13/20).**
+**Estado do ciclo 2: iterações 11–14 concluídas (14/20).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
 | 11 | ~~Testes de componentes e invariantes~~ | ✅ concluída |
 | 12 | ~~Motor jurídico aprofundado~~ | ✅ concluída |
 | 13 | ~~Prazos avançados~~ | ✅ concluída |
-| 14 | **Partilha de dossier entre colegas** | Exportar um único dossier (com anexos, cifrado) e importar/juntar com deteção de conflitos e registo no histórico; testes. |
+| 14 | ~~Partilha de dossier entre colegas~~ | ✅ concluída |
 | 15 | **Cópias automáticas e partilha para a app** | Cópias cifradas automáticas para uma pasta escolhida (File System Access API), rotação; receber ficheiros partilhados no telemóvel (Web Share Target) e anexá-los a um dossier; testes. |
 | 16 | **Anular ações e reciclagem** | «Anular» nas mudanças de estado e remoções, reciclagem com restauro (tarefas, interessados, bens, documentos), histórico filtrável; testes. |
 | 17 | **Painel de equipa e análise** | Métricas por mês, fase e pessoa (tempo médio por fase, prazos cumpridos), gráficos SVG acessíveis com tabela alternativa; testes das agregações. |
@@ -25,6 +25,14 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
+
+### Iteração 14 — Partilha de dossier entre colegas ✅
+
+- **Ficheiro de partilha** (`lib/share.ts`): um único dossier autocontido — ficha e questionário, tarefas, interessados, bens, passivo, notas, contactos, histórico, agenda, documentos e anexos (base64) — mais os membros da equipa referenciados (responsável e atribuições), para os nomes aparecerem no destino; nome `dossier-<referência>-<data>[.cifrado].json`; **cifra opcional AES-256-GCM** com palavra-passe (PBKDF2) e pista em claro; validação (recusa cópias de segurança completas indicando o sítio certo, versões futuras e tabelas inválidas) e normalização (campos em falta preenchidos com os valores por omissão, `caseId` forçado, registos sem identificador ignorados).
+- **Juntar com deteção de conflitos**: pré-visualização tabela a tabela (novos / atualizados / mantidos / iguais), comparação registo a registo com conteúdo normalizado, ficha do dossier comparada por data de alteração; quatro regras — **manter o mais recente** (por `updatedAt`, recomendada), **preferir o ficheiro**, **preferir este dispositivo** (só acrescenta) e **importar como novo dossier** (identificadores novos com referências cruzadas remapeadas — interessado do documento, anexo — e nova referência interna); histórico só de acréscimo; anexos em falta detetados e o documento fica sem anexo com aviso; membros em falta acrescentados; **nada é apagado** — o que só existe neste dispositivo mantém-se.
+- **Registo no histórico**: «Dossier exportado para partilha — n anexo(s), cifrado», «Dossier importado de ‹colega› (exportado em …): n registos, n anexo(s)» ou «Dossier juntado com a versão de ‹colega› …: n novos, n atualizados, n mantidos — regra: …», com o autor local.
+- **Interface**: menu do dossier → **Partilhar com colega…** (anexos com contagem e tamanho, cifra, pista); lista de dossiers → **Importar dossier** (escolher ficheiro ou colar o conteúdo, palavra-passe com pista, pré-visualização com tabela e regras de junção, abre o dossier no fim); paleta de comandos → «Importar dossier partilhado» (`/dossiers?importar=1`). As folhas carregam a pedido (fora do pacote principal).
+- **Testes**: 8 do módulo (exportação com membros e anexos, validação, cifra, importação em dispositivo vazio, junção com conflitos, regras ficheiro/local incluindo a ficha, cópia com remapeamento, anexos em falta) e 4 de componentes (colar e importar, ficheiro cifrado com pista e mudança de regra, ficheiro recusado, exportação cifrada registada no histórico) — **162 testes**; novo passo E2E «Importar dossier partilhado por um colega» — **11 passos**.
 
 ### Iteração 13 — Prazos avançados ✅
 

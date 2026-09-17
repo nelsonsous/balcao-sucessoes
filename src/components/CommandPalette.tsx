@@ -100,6 +100,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'nav-/minutas', group: 'navegacao', title: 'Minutas', keywords: 'cartas emails modelos', href: '/minutas' },
       { id: 'nav-/definicoes', group: 'navegacao', title: 'Definições', keywords: 'equipa tema cópias segurança', href: '/definicoes' },
       { id: 'act-nova', group: 'acoes', title: 'Nova sucessão', subtitle: 'Assistente com questionário', shortcut: 'N', href: '/dossiers/novo' },
+      { id: 'act-importar', group: 'acoes', title: 'Importar dossier partilhado', subtitle: 'Ficheiro enviado por um colega', keywords: 'partilha juntar colega importar', href: '/dossiers?importar=1' },
       {
         id: 'act-backup',
         group: 'acoes',

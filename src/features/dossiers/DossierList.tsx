@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Link, useLocation } from 'wouter';
-import { ArrowRight, CalendarClock, FileSpreadsheet, FolderOpen, KanbanSquare, LayoutGrid, List, Plus, Search, TriangleAlert } from 'lucide-react';
+import { Suspense, lazy, useMemo, useState } from 'react';
+import { Link, useLocation, useSearch } from 'wouter';
+import { ArrowRight, CalendarClock, FileSpreadsheet, FolderOpen, KanbanSquare, LayoutGrid, List, Plus, Search, TriangleAlert, Upload } from 'lucide-react';
 import { PHASES } from '../../engine/phases';
 import { useMemberMap, useMembers, useOverviews, type CaseOverview } from '../../lib/hooks';
 import type { CaseStage, MemberRecord } from '../../lib/types';
@@ -25,12 +25,15 @@ function loadPrefs(): { view: ListView; sort: SortKey } {
 
 import { csvName, downloadCsv } from '../../lib/csv';
 import { STAGE_LABELS, PRIORITY_LABELS } from '../../lib/reports';
+const ImportDossierSheet = lazy(() => import('./ShareSheets').then((m) => ({ default: m.ImportDossierSheet })));
 
 export function DossierList() {
   const overviews = useOverviews();
   const members = useMembers();
   const memberMap = useMemberMap();
   const [, navigate] = useLocation();
+  const search = useSearch();
+  const [importing, setImporting] = useState(() => new URLSearchParams(search).get('importar') === '1');
   const [q, setQ] = useState('');
   const [health, setHealth] = useState<HealthFilter>('todos');
   const [stage, setStage] = useState<CaseStage | 'abertos' | 'todos'>('abertos');
@@ -121,11 +124,25 @@ export function DossierList() {
           >
             CSV
           </Button>
+          <Button icon={Upload} title="Juntar um dossier partilhado por um colega" onClick={() => setImporting(true)}>
+            Importar dossier
+          </Button>
           <Button variant="primary" icon={Plus} onClick={() => navigate('/dossiers/novo')}>
             Nova sucessão
           </Button>
         </div>
       </div>
+      {importing && (
+        <Suspense fallback={null}>
+          <ImportDossierSheet
+            open
+            onClose={() => {
+              setImporting(false);
+              if (search.includes('importar=1')) navigate('/dossiers', { replace: true });
+            }}
+          />
+        </Suspense>
+      )}
 
       <div className="toolbar list-toolbar">
         <div className="input-group" style={{ flex: '1 1 260px', maxWidth: 380 }}>
