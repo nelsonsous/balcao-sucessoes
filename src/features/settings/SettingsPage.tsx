@@ -280,7 +280,7 @@ export function SettingsPage() {
                 <Info aria-hidden />
                 <div>
                   {install.ios
-                    ? 'No iPhone/iPad: abra no Safari, toque em Partilhar e escolha “Adicionar ao ecrã principal”.'
+                    ? 'No iPhone/iPad: abra no Safari, toque no menu (≡) da barra de endereço ou em Partilhar e escolha “Adicionar ao ecrã principal”.'
                     : 'No Chrome ou Edge: use o ícone de instalação na barra de endereço (ou Menu → Instalar aplicação).'}
                 </div>
               </div>

@@ -7,7 +7,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 2 — «10 vezes seguidas com melhorias e testes» (iterações 11–20)
 
-**Estado do ciclo 2: iterações 11–18 concluídas (18/20).**
+**Estado do ciclo 2: iterações 11–19 concluídas (19/20).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -19,12 +19,21 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 16 | ~~Anular ações e reciclagem~~ | ✅ concluída |
 | 17 | ~~Painel de equipa e análise~~ | ✅ concluída |
 | 18 | ~~Pesquisa e vistas guardadas~~ | ✅ concluída |
-| 19 | **Documentos avançados** | Pedidos de documentos por interessado, validade das certidões com avisos, pré-visualização de anexos, estados em lote; testes. |
+| 19 | ~~Documentos avançados~~ | ✅ concluída |
 | 20 | **Consolidação** | Auditoria final (acessibilidade, E2E alargado), manual e apresentação atualizados, versão 2.1, resumo. |
 
 
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
+
+### Iteração 19 — Documentos avançados ✅
+
+- **Validade das certidões** (`lib/docValidity.ts`): cada documento passa a ter data de emissão e validade em meses (por omissão pelo nome: certidões 6 meses, registo criminal 3, resto não expira — a confirmar caso a caso); só os documentos recebidos/validados expiram e, sem data de emissão, conta a receção; estados válida / **a expirar** (30 dias) / **expirada** com etiqueta na lista («Expira em n dias», «Expirada há n dias»), contagem no resumo, filtro «A expirar» e campos «Emitido em» e «Validade» na ficha do documento.
+- **Pedidos por interessado** (`lib/docRequests.ts`): o menu «Pedir documentos» lista, além da minuta ao cliente, cada interessado com documentos por entregar (os seus e, para o cliente, os genéricos que só ele pode fornecer; nunca os que o escritório obtém); a folha do pedido permite escolher os documentos, sugerir uma data limite, ver o texto em português (com a validade habitual das certidões), **copiar**, **abrir no e-mail** (mailto) e **marcar como pedidos** (data de pedido preenchida e registo no histórico «Pedido de n documento(s) a …»).
+- **Pré-visualização de anexos** (`DocSheets.tsx`): PDF, imagens e texto abrem numa folha dentro da aplicação (iframe/imagem/texto, URL de objeto libertado ao fechar); outros tipos continuam a descarregar-se; CSP com `frame-src 'self' blob:`.
+- **Estados em lote**: modo «Selecionar» com caixas por documento, «Todos os visíveis», menu de estado (datas de pedido/receção preenchidas quando faltam, uma entrada no histórico por dossier, **anular**) e remoção em lote para a reciclagem com um só «anular».
+- **Ajuda de instalação no iPhone** atualizada para a barra compacta do Safari (menu ≡ → Adicionar ao ecrã principal).
+- **Testes**: validade (regras por nome, estados, avisos, emissão vs. receção), pedidos (destinatários, texto, mailto, subconjunto), lote (estados com datas e anular, remoção com reciclagem, marcar pedido), separador (etiqueta de expirada e filtro, seleção e estado em lote, pedido a um interessado) — **212 testes**; novo passo E2E «Documentos: seleção em lote, pedido por interessado e validade» — **16 passos**.
 
 ### Iteração 18 — Pesquisa e vistas guardadas ✅
 

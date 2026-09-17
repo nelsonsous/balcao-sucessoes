@@ -308,6 +308,37 @@ try {
     assert(people >= 2, `tabela por pessoa (${people})`);
   });
 
+  await step('Documentos: seleção em lote, pedido por interessado e validade', async () => {
+    await go(`#/dossiers/${caseId}/documentos`, 1500);
+    await page.waitForSelector('.doc-row', { timeout: 8000 });
+    if ((await page.$$eval('.doc-row', (r) => r.length)) < 3) {
+      // O passo dos «Recebidos» já criou um documento: a lista não se gera sozinha, pede-se a partir da checklist.
+      assert(await clickText('main button', 'Atualizar da checklist'), 'botão Atualizar da checklist');
+      await page.waitForFunction(() => document.querySelectorAll('.doc-row').length >= 3, { timeout: 8000 });
+    }
+    const rows = await page.$$eval('.doc-row', (r) => r.length);
+    assert(rows >= 3, `documentos gerados (${rows})`);
+    assert(await clickText('main button', 'Selecionar'), 'botão Selecionar');
+    await sleep(300);
+    assert(await clickText('[data-testid="doc-bulk"] button', 'Todos os visíveis'), 'botão Todos os visíveis');
+    await sleep(300);
+    assert(await clickText('[data-testid="doc-bulk"] button', 'Estado'), 'menu Estado');
+    await sleep(300);
+    assert(await clickText('.menu-item', 'Pedido / a aguardar'), 'estado Pedido no menu');
+    await sleep(900);
+    const pedidos = await page.$$eval('.doc-row.ds-pedido', (r) => r.length);
+    assert(pedidos >= 3, `documentos marcados como pedidos (${pedidos})`);
+    assert(await clickText('main button', 'Pedir documentos'), 'botão Pedir documentos');
+    await sleep(300);
+    assert(await clickText('.menu-item', 'Pedir a '), 'pedido por interessado no menu');
+    await page.waitForSelector('dialog[open] #rq-body', { timeout: 5000 });
+    const body = await page.$eval('#rq-body', (e) => e.value);
+    assert(/agradecemos o envio/.test(body), 'texto do pedido gerado');
+    assert(await clickText('dialog[open] button', 'Marcar como pedidos'), 'botão Marcar como pedidos');
+    await sleep(600);
+    assert(!(await page.$('dialog[open] #rq-body')), 'pedido registado e folha fechada');
+  });
+
   await step('PIN: definir, bloquear e desbloquear', async () => {
     await go('#/definicoes', 1200);
     assert(await clickText('button', 'Definir PIN'), 'botão Definir PIN');

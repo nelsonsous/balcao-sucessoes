@@ -25,6 +25,7 @@ import type {
 } from './types';
 import { nowIso, uid } from './utils';
 import type { SavedView } from './views';
+import { defaultValidMonths } from './docValidity';
 
 export type BalcaoDB = Dexie & {
   cases: EntityTable<CaseRecord, 'id'>;
@@ -321,6 +322,8 @@ export function newDocument(caseId: string, partial: Partial<DocumentRecord> = {
     partyId: '',
     requestedAt: '',
     receivedAt: '',
+    issuedAt: '',
+    validMonths: defaultValidMonths(partial.name ?? ''),
     notes: '',
     fileId: '',
     fileName: '',

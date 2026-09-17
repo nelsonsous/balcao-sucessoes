@@ -312,6 +312,10 @@ export interface DocumentRecord {
   partyId: string;
   requestedAt: string;
   receivedAt: string;
+  /** Data de emissão (certidões); se vazia, assume-se a data de receção. */
+  issuedAt?: string;
+  /** Validade em meses (0 = não expira); se ausente, aplica-se a regra pelo nome. */
+  validMonths?: number;
   notes: string;
   fileId: string;
   fileName: string;

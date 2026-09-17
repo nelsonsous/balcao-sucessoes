@@ -2,8 +2,9 @@
 import { db, logActivity, newDocument, touchCase } from './db';
 import { restoreTrash, trashRecord } from './recycle';
 import { pushUndo } from './undo';
-import type { DocCategory, DocStatus, DocumentRecord, FileRecord, PartyRecord, TaskRecord } from './types';
+import type { DocCategory, DocStatus, DocumentRecord, FileRecord, PartyRecord, TaskRecord, TrashRecord } from './types';
 import { downloadFile, normalize, nowIso, todayIso, uid } from './utils';
+import { validity } from './docValidity';
 
 export const DOC_CATEGORIES: Array<{ id: DocCategory; label: string }> = [
   { id: 'obito', label: 'Óbito e registo civil' },
@@ -211,14 +212,79 @@ export function formatBytes(n: number): string {
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export function docStats(docs: DocumentRecord[]) {
+export function docStats(docs: DocumentRecord[], today: Date = new Date()) {
   const applicable = docs.filter((d) => d.status !== 'na');
   const done = applicable.filter((d) => d.status === 'recebido' || d.status === 'validado').length;
+  const states = applicable.map((d) => validity(d, today).state);
   return {
     total: applicable.length,
     done,
     missing: applicable.filter((d) => d.status === 'em_falta').length,
     requested: applicable.filter((d) => d.status === 'pedido').length,
+    expiring: states.filter((s) => s === 'a_expirar').length,
+    expired: states.filter((s) => s === 'expirada').length,
     pct: applicable.length ? Math.round((done / applicable.length) * 100) : 0,
   };
+}
+
+const byCase = (docs: DocumentRecord[]) => {
+  const m = new Map<string, DocumentRecord[]>();
+  for (const d of docs) m.set(d.caseId, [...(m.get(d.caseId) ?? []), d]);
+  return m;
+};
+
+/** Muda o estado de vários documentos de uma vez (datas de pedido/receção preenchidas quando faltam), com «anular». */
+export async function bulkSetDocumentStatus(docs: DocumentRecord[], status: DocStatus): Promise<number> {
+  const changed = docs.filter((d) => d.status !== status);
+  if (!changed.length) return 0;
+  const ts = nowIso();
+  const today = todayIso();
+  const label = DOC_STATUS.find((s) => s.id === status)?.label ?? status;
+  await db.documents.bulkUpdate(
+    changed.map((d) => ({
+      key: d.id,
+      changes: {
+        status,
+        updatedAt: ts,
+        ...(status === 'pedido' && !d.requestedAt ? { requestedAt: today } : {}),
+        ...((status === 'recebido' || status === 'validado') && !d.receivedAt ? { receivedAt: today } : {}),
+      },
+    })),
+  );
+  for (const [caseId, list] of byCase(changed)) {
+    await touchCase(caseId);
+    await logActivity(caseId, 'documento', `${list.length} documento(s) → ${label}: ${list.map((d) => `“${d.name}”`).join(', ')}`);
+  }
+  pushUndo(`${changed.length} documento(s) → ${label}`, async () => {
+    const back = nowIso();
+    await db.documents.bulkUpdate(changed.map((d) => ({ key: d.id, changes: { status: d.status, requestedAt: d.requestedAt, receivedAt: d.receivedAt, updatedAt: back } })));
+    for (const [caseId, list] of byCase(changed)) {
+      await touchCase(caseId);
+      await logActivity(caseId, 'documento', `Anulado: ${list.length} documento(s) voltam ao estado anterior`);
+    }
+  });
+  return changed.length;
+}
+
+/** Remove vários documentos para a reciclagem (com anexos), com um único «anular». */
+export async function deleteDocuments(docs: DocumentRecord[]): Promise<number> {
+  if (!docs.length) return 0;
+  const entries: TrashRecord[] = [];
+  for (const d of docs) {
+    const current = (await db.documents.get(d.id)) ?? d;
+    entries.push(await trashRecord('documents', current, current.name));
+  }
+  for (const [caseId, list] of byCase(docs)) await logActivity(caseId, 'documento', `${list.length} documento(s) removido(s) (na reciclagem): ${list.map((d) => `“${d.name}”`).join(', ')}`);
+  pushUndo(`${docs.length} documento(s) removido(s)`, async () => {
+    for (const e of entries) await restoreTrash(e.id);
+  }, 'Ficam 30 dias na reciclagem, com os anexos.');
+  return docs.length;
+}
+
+/** Marca os documentos de um pedido como pedidos (data de hoje) e regista o pedido no histórico. */
+export async function markRequested(docs: DocumentRecord[], recipient: string): Promise<number> {
+  const n = await bulkSetDocumentStatus(docs, 'pedido');
+  const caseId = docs[0]?.caseId;
+  if (caseId) await logActivity(caseId, 'documento', `Pedido de ${docs.length} documento(s) a ${recipient}`);
+  return n;
 }

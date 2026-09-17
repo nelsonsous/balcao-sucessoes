@@ -447,3 +447,48 @@ dialog.sheet .sheet-panel:has(.report-sheet) {
 .text-ok {
   color: var(--st-concluido-fg);
 }
+
+/* Seleção em lote e pré-visualização de anexos */
+.doc-row .doc-check {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  margin-right: 6px;
+  flex: none;
+}
+.doc-row.selected {
+  background: var(--primary-soft);
+}
+.bulk-bar {
+  position: sticky;
+  top: 8px;
+  z-index: 2;
+}
+.preview-box {
+  min-height: 120px;
+}
+.preview-frame {
+  width: 100%;
+  height: min(70vh, 720px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.preview-img {
+  max-width: 100%;
+  max-height: 70vh;
+  display: block;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+.preview-text {
+  max-height: 60vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 0;
+}

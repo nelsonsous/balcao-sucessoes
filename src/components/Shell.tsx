@@ -287,7 +287,7 @@ export function Shell({ children }: { children: ReactNode }) {
               icon={Smartphone}
               iconOnly
               aria-label="Como instalar no iPhone"
-              title="No Safari: Partilhar → Adicionar ao ecrã principal"
+              title="No Safari: menu (≡) ou Partilhar → Adicionar ao ecrã principal"
               onClick={() => setIosHelp(true)}
             />
           )}
@@ -302,10 +302,10 @@ export function Shell({ children }: { children: ReactNode }) {
         <ol className="stack" style={{ paddingLeft: 18, margin: 0 }}>
           <li>Abra o Balcão das Sucessões no <strong>Safari</strong>.</li>
           <li>
-            Toque no botão <strong>Partilhar</strong> (quadrado com seta para cima).
+            Toque no botão <strong>Partilhar</strong> (quadrado com seta para cima). Na barra compacta do Safari mais recente não está sempre visível: toque no ícone de <strong>menu (≡)</strong> dentro da barra de endereço, ou toque na barra para a expandir.
           </li>
           <li>
-            Escolha <strong>Adicionar ao ecrã principal</strong> e confirme.
+            Escolha <strong>Adicionar ao ecrã principal</strong> (no menu ≡ aparece diretamente) e confirme.
           </li>
         </ol>
         <p className="subtle small" style={{ marginTop: 12 }}>
