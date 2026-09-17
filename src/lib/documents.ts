@@ -1,5 +1,7 @@
 // Checklist documental: geração a partir das tarefas e dos interessados, anexos offline.
 import { db, logActivity, newDocument, touchCase } from './db';
+import { restoreTrash, trashRecord } from './recycle';
+import { pushUndo } from './undo';
 import type { DocCategory, DocStatus, DocumentRecord, FileRecord, PartyRecord, TaskRecord } from './types';
 import { downloadFile, normalize, nowIso, todayIso, uid } from './utils';
 
@@ -125,6 +127,11 @@ export async function setDocumentStatus(d: DocumentRecord, status: DocStatus): P
   await db.documents.update(d.id, patch);
   await touchCase(d.caseId);
   await logActivity(d.caseId, 'documento', `Documento “${d.name}”: ${DOC_STATUS.find((s) => s.id === status)?.label}`);
+  pushUndo(`Documento “${d.name}” → ${DOC_STATUS.find((s) => s.id === status)?.label}`, async () => {
+    await db.documents.update(d.id, { status: d.status, requestedAt: d.requestedAt, receivedAt: d.receivedAt, updatedAt: nowIso() });
+    await touchCase(d.caseId);
+    await logActivity(d.caseId, 'documento', `Anulado: documento “${d.name}” volta a ${DOC_STATUS.find((s) => s.id === d.status)?.label}`);
+  });
 }
 
 export async function updateDocument(d: DocumentRecord, patch: Partial<DocumentRecord>): Promise<void> {
@@ -133,14 +140,11 @@ export async function updateDocument(d: DocumentRecord, patch: Partial<DocumentR
 }
 
 export async function deleteDocument(d: DocumentRecord): Promise<void> {
-  // Relê o registo: o objeto recebido pode estar desatualizado quanto ao anexo.
+  // Relê o registo: o objeto recebido pode estar desatualizado quanto ao anexo. Vai para a reciclagem com o anexo.
   const current = (await db.documents.get(d.id)) ?? d;
-  await db.transaction('rw', db.documents, db.files, async () => {
-    if (current.fileId) await db.files.delete(current.fileId);
-    await db.documents.delete(d.id);
-  });
-  await touchCase(d.caseId);
-  await logActivity(d.caseId, 'documento', `Documento removido: ${current.name}`);
+  const entry = await trashRecord('documents', current, current.name);
+  await logActivity(d.caseId, 'documento', `Documento removido (na reciclagem): ${current.name}${current.fileId ? ' — com anexo' : ''}`);
+  pushUndo(`Documento removido: ${current.name}`, () => restoreTrash(entry.id).then(() => undefined), current.fileId ? 'Fica 30 dias na reciclagem, com o anexo.' : 'Fica 30 dias na reciclagem.');
 }
 
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;

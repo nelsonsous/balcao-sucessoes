@@ -7,7 +7,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 2 — «10 vezes seguidas com melhorias e testes» (iterações 11–20)
 
-**Estado do ciclo 2: iterações 11–15 concluídas (15/20).**
+**Estado do ciclo 2: iterações 11–16 concluídas (16/20).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -16,7 +16,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 13 | ~~Prazos avançados~~ | ✅ concluída |
 | 14 | ~~Partilha de dossier entre colegas~~ | ✅ concluída |
 | 15 | ~~Cópias automáticas e partilha para a app~~ | ✅ concluída |
-| 16 | **Anular ações e reciclagem** | «Anular» nas mudanças de estado e remoções, reciclagem com restauro (tarefas, interessados, bens, documentos), histórico filtrável; testes. |
+| 16 | ~~Anular ações e reciclagem~~ | ✅ concluída |
 | 17 | **Painel de equipa e análise** | Métricas por mês, fase e pessoa (tempo médio por fase, prazos cumpridos), gráficos SVG acessíveis com tabela alternativa; testes das agregações. |
 | 18 | **Pesquisa e vistas guardadas** | Filtros avançados na lista de dossiers, vistas guardadas com nome, pesquisa global em notas, contactos e documentos; testes. |
 | 19 | **Documentos avançados** | Pedidos de documentos por interessado, validade das certidões com avisos, pré-visualização de anexos, estados em lote; testes. |
@@ -25,6 +25,14 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
+
+### Iteração 16 — Anular ações e reciclagem ✅
+
+- **Anular** (`lib/undo.ts`, `components/UndoToasts.tsx`): pilha de ações reversíveis da sessão (até 30); cada ação mostra um aviso com o botão **Anular** e **Ctrl/⌘+Z** desfaz a última fora dos campos de texto (e sem diálogos abertos); ação «Anular a última ação» na paleta. Reversíveis: mudança de estado de tarefa (individual e em massa), alterações em massa (responsável, prazo, criticidade…), estado de documento, evento realizado/reaberto e todas as remoções — tarefa(s), interessado, bem, dívida, nota, contacto, evento, documento e **dossier inteiro**. Cada anulação fica no histórico («Anulado: …»).
+- **Reciclagem** (`lib/recycle.ts`, tabela `trash`, base v5): o que se remove deixa de ser apagado — vai para a reciclagem com o registo completo (documentos levam o anexo; dossiers levam ficha, todas as tabelas e anexos), quem apagou e quando; **reposição** para o sítio de origem com registo no histórico («Reposto da reciclagem: …»); apagar definitivamente, esvaziar (tudo ou por dossier) e **expiração automática ao fim de 30 dias** (verificada ao arrancar). Repor um item de um dossier que está na reciclagem indica que se reponha primeiro o dossier. As cópias de segurança passam a incluir a reciclagem.
+- **Página Reciclagem** (`/reciclagem`): filtros por dossier e por tipo, tabela com tipo, item, dossier, quem/quando apagou e dias até expirar, botões **Repor** / **Apagar**, «Esvaziar»; entrada na barra lateral com contador (só quando há itens), na paleta, em Definições → Dados e privacidade e no histórico de cada dossier («Reciclagem (n)»).
+- **Histórico filtrável** (separador Histórico): pesquisa por texto, filtro por tipo de registo (só os presentes), «Só anulações e reposições», contagem «n de m» e tipo em cada entrada.
+- **Testes**: reciclagem (mover/repor com histórico, documento com anexo, dossier inteiro como pacote — incluindo a ordem de reposição —, apagar/esvaziar por dossier/expirar), pilha de anular (registo, avisos, anular em concreto, limite), ações reversíveis (estado, remoção, massa, documento com anexo, evento, dossier), histórico filtrável (tipo, texto, anulações, ligação para a reciclagem) e página Reciclagem (lista, filtro, repor item e dossier) — **183 testes**; novo passo E2E «Anular a última ação pelo aviso» — **13 passos**.
 
 ### Iteração 15 — Cópias automáticas e partilha para a app ✅
 

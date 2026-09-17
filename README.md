@@ -38,7 +38,8 @@ Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-o
 | **Partilha entre colegas** | Exportar um dossier completo (com anexos) num ficheiro cifrado e juntá-lo noutro dispositivo com pré-visualização dos conflitos e quatro regras de junção (mais recente, ficheiro, este dispositivo, novo dossier) — sem nunca apagar nada e com registo no histórico. |
 | **Cópias automáticas** | Cópias cifradas escritas automaticamente numa pasta do dispositivo (File System Access API) com rotação, frequência configurável e aviso quando a pasta precisa de autorização — numa pasta sincronizada, o escritório fica com um repositório central sem servidor. |
 | **Partilha para a app** | No Android, partilhar um PDF, uma fotografia ou uma ligação para o Balcão (Web Share Target) coloca-o em «Recebidos», onde passa a documento do dossier ou a nota. |
-| **Qualidade** | 0 violações axe-core (WCAG 2.2 AA) em 16 ecrãs, divisão de código por rota e separador, fontes só em latino, 169 testes (unitários, componentes com Testing Library e propriedades com fast-check, cobertura com limiar) e 12 passos E2E com Chrome executados antes de cada publicação. |
+| **Anular e reciclagem** | Cada mudança de estado ou remoção mostra «Anular» (também Ctrl/⌘+Z); o que se apaga fica 30 dias na reciclagem — tarefas, interessados, bens, documentos com anexo e dossiers inteiros — com reposição registada no histórico, que passa a ser pesquisável e filtrável por tipo. |
+| **Qualidade** | 0 violações axe-core (WCAG 2.2 AA) em 16 ecrãs, divisão de código por rota e separador, fontes só em latino, 183 testes (unitários, componentes com Testing Library e propriedades com fast-check, cobertura com limiar) e 13 passos E2E com Chrome executados antes de cada publicação. |
 | **PWA** | Instalável (desktop, Android, iOS), offline, atalhos, aviso de nova versão, tema claro/escuro, responsivo com navegação inferior no telemóvel. |
 
 ## Começar

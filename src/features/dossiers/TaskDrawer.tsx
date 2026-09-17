@@ -10,7 +10,7 @@ import {
   Trash2,
   TriangleAlert,
 } from 'lucide-react';
-import { deleteTask, restoreTask, setTaskStatus, updateTask } from '../../lib/actions';
+import { deleteTask, setTaskStatus, updateTask } from '../../lib/actions';
 import { useHolidayCalendar } from '../../lib/agenda';
 import { useMembers } from '../../lib/hooks';
 import type { CaseRecord, PhaseId, TaskRecord } from '../../lib/types';
@@ -58,10 +58,8 @@ export function TaskDrawer({ task, onClose, caseRecord }: { task: TaskRecord | n
       danger: true,
     });
     if (!ok) return;
-    const snapshot = { ...task };
     await deleteTask(task);
     onClose();
-    toast({ title: 'Tarefa removida', action: { label: 'Anular', onClick: () => void restoreTask(snapshot) } });
   };
 
   return (

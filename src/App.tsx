@@ -8,6 +8,8 @@ import { LockScreen } from './components/LockScreen';
 import { Onboarding } from './components/Onboarding';
 import { Reminders } from './components/Reminders';
 import { AutoBackupRunner } from './components/AutoBackupRunner';
+import { UndoToasts } from './components/UndoToasts';
+import { purgeTrash } from './lib/recycle';
 import { PwaPrompts } from './components/PwaPrompts';
 import { Shell } from './components/Shell';
 import { ToastProvider } from './components/Toast';
@@ -26,6 +28,7 @@ const TasksPage = lazy(() => import('./features/tasks/TasksPage').then((m) => ({
 const NewCaseWizard = lazy(() => import('./features/wizard/NewCaseWizard').then((m) => ({ default: m.NewCaseWizard })));
 const PrazosPage = lazy(() => import('./features/prazos/PrazosPage').then((m) => ({ default: m.PrazosPage })));
 const ReceivedPage = lazy(() => import('./features/inbox/ReceivedPage').then((m) => ({ default: m.ReceivedPage })));
+const RecyclePage = lazy(() => import('./features/recycle/RecyclePage').then((m) => ({ default: m.RecyclePage })));
 
 const Loading = () => <div className="skeleton" style={{ height: 320 }} aria-busy="true" aria-label="A carregar" />;
 
@@ -50,6 +53,7 @@ export default function App() {
     void getSetting('theme').then(applyTheme);
     void initLock();
     void getSetting('privacyMode').then((on) => document.body.classList.toggle('privacy', on));
+    void purgeTrash().catch(() => undefined);
   }, []);
 
   return (
@@ -71,12 +75,14 @@ export default function App() {
               <Route path="/minutas" component={TemplatesPage} />
               <Route path="/definicoes" component={SettingsPage} />
               <Route path="/recebidos" component={ReceivedPage} />
+              <Route path="/reciclagem" component={RecyclePage} />
               <Route component={NotFound} />
               </Switch>
             </Suspense>
           </Shell>
           <Reminders />
           <AutoBackupRunner />
+          <UndoToasts />
         </Router>
         <Onboarding />
         <PwaPrompts />

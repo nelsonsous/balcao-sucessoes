@@ -151,13 +151,12 @@ export function DossierView() {
   async function onDelete() {
     const ok = await confirm({
       title: `Eliminar “${c.name}”?`,
-      message: 'Serão eliminados a checklist, interessados, património, notas e histórico deste dossier. Esta ação não pode ser anulada — considere exportar uma cópia de segurança antes.',
-      confirmLabel: 'Eliminar definitivamente',
+      message: 'O dossier, com checklist, interessados, património, documentos, notas e histórico, vai para a reciclagem, onde fica 30 dias e pode ser reposto (Definições → Reciclagem).',
+      confirmLabel: 'Eliminar',
       danger: true,
     });
     if (!ok) return;
     await removeCase(c);
-    toast({ title: 'Dossier eliminado', tone: 'success' });
     navigate('/dossiers');
   }
 

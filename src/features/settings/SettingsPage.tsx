@@ -22,6 +22,7 @@ import {
   UserRound,
   Users,
 } from 'lucide-react';
+import { Recycle } from 'lucide-react';
 import { deleteCaseTemplate, deleteMember, saveMember } from '../../lib/actions';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../lib/db';
@@ -29,6 +30,7 @@ import { answeredCount } from '../../lib/caseTemplates';
 import { attachmentsSize, importBackup, readBackupText, storageEstimate, wipeAll, type BackupFile } from '../../lib/backup';
 import { SecurityCard } from './SecurityCard';
 import { AutoBackupCard } from './AutoBackupCard';
+import { useTrashCount } from '../../lib/recycle';
 import { ExportSheet, LegacyImportSheet, PassphraseSheet } from './BackupSheets';
 import { formatBytes } from '../../lib/documents';
 import { requestPersistence, setSetting, useSettings, type AppSettings } from '../../lib/db';
@@ -57,6 +59,7 @@ export function SettingsPage() {
   const [member, setMember] = useState<Partial<MemberRecord> | null>(null);
   const [storage, setStorage] = useState<{ usage: number; quota: number } | null>(null);
   const [persisted, setPersisted] = useState<boolean | null>(null);
+  const trashCount = useTrashCount();
 
   useEffect(() => {
     setProfile({
@@ -366,6 +369,9 @@ export function SettingsPage() {
               >
                 Remover dados de demonstração
               </Button>
+              <Link href="/reciclagem" className="btn">
+                <Recycle aria-hidden /> Reciclagem{trashCount ? ` (${trashCount})` : ''}
+              </Link>
               <span className="spacer" />
               <Button
                 variant="danger-soft"

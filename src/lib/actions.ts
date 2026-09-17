@@ -10,7 +10,9 @@ import {
   nextCaseRef,
   touchCase,
 } from './db';
-import type { AssetRecord, CaseRecord, CaseTemplateRecord, ContactLogRecord, DebtRecord, EventRecord, MemberRecord, NoteRecord, PartyRecord, Status, TaskRecord } from './types';
+import type { AssetRecord, CaseRecord, CaseTemplateRecord, ContactLogRecord, DebtRecord, EventRecord, MemberRecord, NoteRecord, PartyRecord, Status, TaskRecord, TrashRecord } from './types';
+import { restoreTrash, trashCase, trashRecord } from './recycle';
+import { pushUndo } from './undo';
 import { formatDate, nowIso, uid } from './utils';
 
 // ---------------- Dossiers
@@ -44,7 +46,14 @@ export async function saveCaseDetails(c: CaseRecord, patch: Partial<CaseRecord>)
   if (patch.deceased && patch.deceased.deathDate !== c.deceased.deathDate) await syncCaseTasks(next);
 }
 
+/** Elimina um dossier para a reciclagem (30 dias), com «anular». */
 export async function removeCase(c: CaseRecord): Promise<void> {
+  const entry = await trashCase(c);
+  pushUndo(`Dossier eliminado: ${c.ref}`, () => restoreTrash(entry.id).then(() => undefined), 'Fica 30 dias na reciclagem, com tudo o que lhe pertence.');
+}
+
+/** Elimina um dossier definitivamente (sem reciclagem). */
+export async function destroyCase(c: CaseRecord): Promise<void> {
   await deleteCaseCascade(c.id);
 }
 
@@ -73,6 +82,11 @@ export async function setTaskStatus(t: TaskRecord, status: Status): Promise<void
   });
   await touchCase(t.caseId);
   await logActivity(t.caseId, 'tarefa', `“${t.title}”: ${statusLabel(t.status)} → ${statusLabel(status)}`);
+  pushUndo(`“${t.title}” → ${statusLabel(status)}`, async () => {
+    await db.tasks.update(t.id, { status: t.status, completedAt: t.completedAt, updatedAt: nowIso() });
+    await touchCase(t.caseId);
+    await logActivity(t.caseId, 'tarefa', `Anulado: “${t.title}” volta a ${statusLabel(t.status)}`);
+  });
 }
 
 export async function updateTask(t: TaskRecord, patch: Partial<TaskRecord>, log?: string): Promise<void> {
@@ -96,9 +110,9 @@ export async function addCustomTask(caseId: string, data: Pick<TaskRecord, 'titl
 }
 
 export async function deleteTask(t: TaskRecord): Promise<void> {
-  await db.tasks.delete(t.id);
-  await touchCase(t.caseId);
-  await logActivity(t.caseId, 'tarefa', `Tarefa removida: “${t.title}”`);
+  const entry = await trashRecord('tasks', t, `“${t.title}”`);
+  await logActivity(t.caseId, 'tarefa', `Tarefa removida (na reciclagem): “${t.title}”`);
+  pushUndo(`Tarefa removida: “${t.title}”`, () => restoreTrash(entry.id).then(() => undefined), 'Fica 30 dias na reciclagem.');
 }
 
 export async function restoreTask(t: TaskRecord): Promise<void> {
@@ -120,9 +134,9 @@ export async function saveParty(p: PartyRecord, isNew: boolean): Promise<void> {
 }
 
 export async function deleteParty(p: PartyRecord): Promise<void> {
-  await db.parties.delete(p.id);
-  await touchCase(p.caseId);
-  await logActivity(p.caseId, 'interessado', `Interessado removido: ${p.name}`);
+  const entry = await trashRecord('parties', p, p.name || 'sem nome');
+  await logActivity(p.caseId, 'interessado', `Interessado removido (na reciclagem): ${p.name}`);
+  pushUndo(`Interessado removido: ${p.name || 'sem nome'}`, () => restoreTrash(entry.id).then(() => undefined), 'Fica 30 dias na reciclagem.');
 }
 
 // ---------------- Património e passivo
@@ -134,9 +148,9 @@ export async function saveAsset(a: AssetRecord, isNew: boolean): Promise<void> {
 }
 
 export async function deleteAsset(a: AssetRecord): Promise<void> {
-  await db.assets.delete(a.id);
-  await touchCase(a.caseId);
-  await logActivity(a.caseId, 'patrimonio', `Bem removido: ${a.description}`);
+  const entry = await trashRecord('assets', a, a.description || 'sem descrição');
+  await logActivity(a.caseId, 'patrimonio', `Bem removido (na reciclagem): ${a.description}`);
+  pushUndo(`Bem removido: ${a.description || 'sem descrição'}`, () => restoreTrash(entry.id).then(() => undefined), 'Fica 30 dias na reciclagem.');
 }
 
 export async function saveDebt(d: DebtRecord, isNew: boolean): Promise<void> {
@@ -146,9 +160,9 @@ export async function saveDebt(d: DebtRecord, isNew: boolean): Promise<void> {
 }
 
 export async function deleteDebt(d: DebtRecord): Promise<void> {
-  await db.debts.delete(d.id);
-  await touchCase(d.caseId);
-  await logActivity(d.caseId, 'passivo', `Dívida removida: ${d.creditor}`);
+  const entry = await trashRecord('debts', d, d.creditor || 'credor por indicar');
+  await logActivity(d.caseId, 'passivo', `Dívida removida (na reciclagem): ${d.creditor}`);
+  pushUndo(`Dívida removida: ${d.creditor || 'credor por indicar'}`, () => restoreTrash(entry.id).then(() => undefined), 'Fica 30 dias na reciclagem.');
 }
 
 // ---------------- Notas e contactos
@@ -167,8 +181,10 @@ export async function updateNote(n: NoteRecord, patch: Partial<NoteRecord>): Pro
 }
 
 export async function deleteNote(n: NoteRecord): Promise<void> {
-  await db.notes.delete(n.id);
-  await touchCase(n.caseId);
+  const label = n.text.length > 40 ? `${n.text.slice(0, 40)}…` : n.text;
+  const entry = await trashRecord('notes', n, label || 'nota');
+  await logActivity(n.caseId, 'nota', `Nota removida (na reciclagem): ${label}`);
+  pushUndo('Nota removida', () => restoreTrash(entry.id).then(() => undefined), 'Fica 30 dias na reciclagem.');
 }
 
 export async function addContact(caseId: string, c: Omit<ContactLogRecord, 'id' | 'caseId' | 'createdAt'>): Promise<void> {
@@ -183,8 +199,10 @@ export async function updateContact(c: ContactLogRecord, patch: Partial<ContactL
 }
 
 export async function deleteContact(c: ContactLogRecord): Promise<void> {
-  await db.contacts.delete(c.id);
-  await touchCase(c.caseId);
+  const label = `${c.person || 'interlocutor'} (${formatDate(c.date)})`;
+  const entry = await trashRecord('contacts', c, label);
+  await logActivity(c.caseId, 'contacto', `Contacto removido (na reciclagem): ${label}`);
+  pushUndo(`Contacto removido: ${label}`, () => restoreTrash(entry.id).then(() => undefined), 'Fica 30 dias na reciclagem.');
 }
 
 // ---------------- Agenda
@@ -200,11 +218,16 @@ export async function saveEvent(e: EventRecord, isNew: boolean): Promise<void> {
 export async function setEventDone(e: EventRecord, done: boolean): Promise<void> {
   await db.events.update(e.id, { done, updatedAt: nowIso() });
   if (e.caseId) await logActivity(e.caseId, 'agenda', `Evento ${done ? 'realizado' : 'reaberto'}: ${e.title}`);
+  pushUndo(`Evento ${done ? 'realizado' : 'reaberto'}: ${e.title}`, async () => {
+    await db.events.update(e.id, { done: !done, updatedAt: nowIso() });
+    if (e.caseId) await logActivity(e.caseId, 'agenda', `Anulado: evento “${e.title}” volta a ${done ? 'por realizar' : 'realizado'}`);
+  });
 }
 
 export async function deleteEvent(e: EventRecord): Promise<void> {
-  await db.events.delete(e.id);
-  if (e.caseId) await logActivity(e.caseId, 'agenda', `Evento removido: ${e.title}`);
+  const entry = await trashRecord('events', e, e.title);
+  if (e.caseId) await logActivity(e.caseId, 'agenda', `Evento removido (na reciclagem): ${e.title}`);
+  pushUndo(`Evento removido: ${e.title}`, () => restoreTrash(entry.id).then(() => undefined), 'Fica 30 dias na reciclagem.');
 }
 
 // ---------------- Equipa
@@ -251,6 +274,14 @@ export async function bulkSetStatus(tasks: TaskRecord[], status: Status): Promis
     await touchCase(caseId);
     await logActivity(caseId, 'tarefa', `${list.length} tarefa(s) → ${statusLabel(status)}: ${list.map((t) => `“${t.title}”`).join(', ')}`);
   }
+  pushUndo(`${changed.length} tarefa(s) → ${statusLabel(status)}`, async () => {
+    const back = nowIso();
+    await db.tasks.bulkUpdate(changed.map((t) => ({ key: t.id, changes: { status: t.status, completedAt: t.completedAt, updatedAt: back } })));
+    for (const [caseId, list] of byCase(changed)) {
+      await touchCase(caseId);
+      await logActivity(caseId, 'tarefa', `Anulado: ${list.length} tarefa(s) voltam ao estado anterior`);
+    }
+  });
   return changed.length;
 }
 
@@ -263,6 +294,15 @@ export async function bulkUpdateTasks(tasks: TaskRecord[], patch: Partial<TaskRe
     await touchCase(caseId);
     await logActivity(caseId, 'tarefa', `${list.length} tarefa(s): ${what}`);
   }
+  const keys = Object.keys(patch) as Array<keyof TaskRecord>;
+  pushUndo(`${tasks.length} tarefa(s): ${what}`, async () => {
+    const back = nowIso();
+    await db.tasks.bulkUpdate(tasks.map((t) => ({ key: t.id, changes: { ...(Object.fromEntries(keys.map((k) => [k, t[k]])) as Partial<TaskRecord>), updatedAt: back } })));
+    for (const [caseId, list] of byCase(tasks)) {
+      await touchCase(caseId);
+      await logActivity(caseId, 'tarefa', `Anulado: ${list.length} tarefa(s) — ${what}`);
+    }
+  });
   return tasks.length;
 }
 
@@ -270,11 +310,14 @@ export async function bulkUpdateTasks(tasks: TaskRecord[], patch: Partial<TaskRe
 export async function deleteManualTasks(tasks: TaskRecord[]): Promise<number> {
   const manual = tasks.filter((t) => !t.ruleKey);
   if (!manual.length) return 0;
-  await db.tasks.bulkDelete(manual.map((t) => t.id));
+  const entries: TrashRecord[] = [];
+  for (const t of manual) entries.push(await trashRecord('tasks', t, `“${t.title}”`));
   for (const [caseId, list] of byCase(manual)) {
-    await touchCase(caseId);
-    await logActivity(caseId, 'tarefa', `${list.length} tarefa(s) própria(s) removida(s): ${list.map((t) => `“${t.title}”`).join(', ')}`);
+    await logActivity(caseId, 'tarefa', `${list.length} tarefa(s) própria(s) removida(s) (na reciclagem): ${list.map((t) => `“${t.title}”`).join(', ')}`);
   }
+  pushUndo(`${manual.length} tarefa(s) removida(s)`, async () => {
+    for (const e of entries) await restoreTrash(e.id);
+  }, 'Ficam 30 dias na reciclagem.');
   return manual.length;
 }
 

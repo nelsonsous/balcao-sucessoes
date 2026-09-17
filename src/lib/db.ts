@@ -21,6 +21,7 @@ import type {
   SettingRecord,
   TaskRecord,
   TemplateRecord,
+  TrashRecord,
 } from './types';
 import { nowIso, uid } from './utils';
 
@@ -40,6 +41,7 @@ export type BalcaoDB = Dexie & {
   files: EntityTable<FileRecord, 'id'>;
   templates: EntityTable<TemplateRecord, 'id'>;
   caseTemplates: EntityTable<CaseTemplateRecord, 'id'>;
+  trash: EntityTable<TrashRecord, 'id'>;
 };
 
 export const db = new Dexie('balcao-das-sucessoes') as BalcaoDB;
@@ -72,6 +74,11 @@ db.version(3).stores({
 // v4: modelos de dossier (respostas + tarefas próprias).
 db.version(4).stores({
   caseTemplates: 'id, name',
+});
+
+// v5: reciclagem (itens apagados, repostos ou expirados ao fim de 30 dias).
+db.version(5).stores({
+  trash: 'id, caseId, table, deletedAt',
 });
 
 export const CASE_TABLES = ['tasks', 'parties', 'assets', 'debts', 'notes', 'contacts', 'activity', 'events', 'documents'] as const;
@@ -415,14 +422,16 @@ export async function touchCase(caseId: string): Promise<void> {
   await db.cases.update(caseId, { updatedAt: nowIso() });
 }
 
-export async function deleteCaseCascade(caseId: string): Promise<void> {
+/** Apaga um dossier e tudo o que lhe pertence. `keepTrash` mantém os itens dele que já estavam na reciclagem. */
+export async function deleteCaseCascade(caseId: string, opts: { keepTrash?: boolean } = {}): Promise<void> {
   await db.transaction(
     'rw',
-    [db.cases, db.tasks, db.parties, db.assets, db.debts, db.notes, db.contacts, db.activity, db.events, db.documents, db.files],
+    [db.cases, db.tasks, db.parties, db.assets, db.debts, db.notes, db.contacts, db.activity, db.events, db.documents, db.files, db.trash],
     async () => {
       const fileIds = (await db.documents.where('caseId').equals(caseId).toArray()).map((d) => d.fileId).filter(Boolean);
       if (fileIds.length) await db.files.bulkDelete(fileIds);
       for (const t of CASE_TABLES) await db.table(t).where('caseId').equals(caseId).delete();
+      if (!opts.keepTrash) await db.trash.where('caseId').equals(caseId).delete();
       await db.cases.delete(caseId);
     },
   );

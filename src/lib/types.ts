@@ -371,3 +371,20 @@ export interface SettingRecord {
   key: string;
   value: unknown;
 }
+
+export type TrashTable = 'tasks' | 'parties' | 'assets' | 'debts' | 'notes' | 'contacts' | 'events' | 'documents' | 'cases';
+
+/** Item da reciclagem: registo apagado (ou dossier inteiro), reposto ou expirado ao fim de 30 dias. */
+export interface TrashRecord {
+  id: string;
+  caseId: string;
+  table: TrashTable;
+  recordId: string;
+  label: string;
+  /** O registo apagado (ou, para dossiers, o pacote com ficha e tabelas). */
+  data: unknown;
+  /** Anexos apagados juntamente com o registo. */
+  files: FileRecord[];
+  deletedAt: string;
+  deletedBy: string;
+}

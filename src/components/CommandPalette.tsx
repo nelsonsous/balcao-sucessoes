@@ -20,7 +20,8 @@ import {
   Wand2,
   type LucideIcon,
 } from 'lucide-react';
-import { Inbox } from 'lucide-react';
+import { Inbox, Recycle } from 'lucide-react';
+import { undoLast } from '../lib/undo';
 import { BUILTIN_TEMPLATES } from '../engine/templates';
 import { isOpen } from '../engine/phases';
 import { downloadBackup } from '../lib/backup';
@@ -50,6 +51,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   'nav-/prazos': CalendarDays,
   'nav-/minutas': Wand2,
   'nav-/recebidos': Inbox,
+  'nav-/reciclagem': Recycle,
   'nav-/definicoes': Settings,
   'act-nova': Plus,
   'act-backup': Database,
@@ -96,6 +98,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'nav-/dossiers', group: 'navegacao', title: 'Dossiers', keywords: 'lista processos sucessões', href: '/dossiers' },
       { id: 'nav-/agenda', group: 'navegacao', title: 'Agenda', keywords: 'calendário prazos eventos', href: '/agenda' },
       { id: 'nav-/recebidos', group: 'navegacao', title: 'Recebidos', subtitle: 'Ficheiros partilhados para a aplicação', keywords: 'partilha telemóvel recebidos anexar inbox', href: '/recebidos' },
+      { id: 'nav-/reciclagem', group: 'navegacao', title: 'Reciclagem', subtitle: 'Itens apagados nos últimos 30 dias', keywords: 'lixo apagados repor restaurar', href: '/reciclagem' },
       { id: 'nav-/tarefas', group: 'navegacao', title: 'O que está a bloquear?', keywords: 'bloqueios atrasos críticas', href: '/tarefas' },
       { id: 'nav-/minhas', group: 'navegacao', title: 'As minhas tarefas', keywords: 'minhas pessoal', href: '/minhas' },
       { id: 'nav-/calculadora', group: 'navegacao', title: 'Calculadora sucessória', keywords: 'quotas legítima herdeiros', href: '/calculadora' },
@@ -104,6 +107,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'nav-/definicoes', group: 'navegacao', title: 'Definições', keywords: 'equipa tema cópias segurança', href: '/definicoes' },
       { id: 'act-nova', group: 'acoes', title: 'Nova sucessão', subtitle: 'Assistente com questionário', shortcut: 'N', href: '/dossiers/novo' },
       { id: 'act-importar', group: 'acoes', title: 'Importar dossier partilhado', subtitle: 'Ficheiro enviado por um colega', keywords: 'partilha juntar colega importar', href: '/dossiers?importar=1' },
+      { id: 'act-anular', group: 'acoes', title: 'Anular a última ação', subtitle: 'Ctrl/⌘+Z fora dos campos de texto', keywords: 'undo desfazer voltar atrás', run: () => void undoLast() },
       {
         id: 'act-backup',
         group: 'acoes',

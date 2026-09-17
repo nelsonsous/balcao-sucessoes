@@ -137,6 +137,35 @@ try {
     assert(activity >= 1, 'histórico regista a mudança');
   });
 
+  await step('Anular a última ação (estado da tarefa) pelo aviso', async () => {
+    const cls = await page.$eval('.task-row', (e) => e.className);
+    const target = /st-em_curso/.test(cls) ? 'A aguardar' : 'Em curso';
+    const targetCls = target === 'Em curso' ? 'st-em_curso' : 'st-aguarda';
+    const before = await page.$$eval(`.task-row.${targetCls}`, (r) => r.length);
+    await page.click('.task-row .status-pill');
+    await sleep(300);
+    assert(await clickText('.menu-item', target), `opção ${target} no menu`);
+    await sleep(600);
+    const after = await page.$$eval(`.task-row.${targetCls}`, (r) => r.length);
+    assert(after === before + 1, `estado alterado (${before} → ${after})`);
+    await page.waitForFunction(() => [...document.querySelectorAll('.toast button')].some((b) => /Anular/.test(b.textContent || '')), { timeout: 5000 });
+    assert(await clickText('.toast button', 'Anular'), 'botão Anular no aviso');
+    await sleep(800);
+    const undone = await page.$$eval(`.task-row.${targetCls}`, (r) => r.length);
+    assert(undone === before, `estado anulado (${before} → ${after} → ${undone})`);
+    const log = await page.evaluate(
+      () =>
+        new Promise((res) => {
+          const r = indexedDB.open('balcao-das-sucessoes');
+          r.onsuccess = () => {
+            const q = r.result.transaction('activity').objectStore('activity').getAll();
+            q.onsuccess = () => res(q.result.filter((a) => /^Anulado:/.test(a.text)).length);
+          };
+        }),
+    );
+    assert(log >= 1, 'histórico regista a anulação');
+  });
+
   await step('Paleta de comandos navega para a agenda', async () => {
     await page.keyboard.down('Control');
     await page.keyboard.press('KeyK');

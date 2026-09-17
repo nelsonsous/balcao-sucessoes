@@ -25,9 +25,10 @@ import {
   Wand2,
   WifiOff,
 } from 'lucide-react';
-import { Inbox } from 'lucide-react';
+import { Inbox, Recycle } from 'lucide-react';
 import { db, setSetting, useSettings } from '../lib/db';
 import { useInboxCount } from '../lib/shareInbox';
+import { useTrashCount } from '../lib/recycle';
 import { useAgendaItems } from '../lib/agenda';
 import { isActiveCase, useInstall, useOnline, useOverviews } from '../lib/hooks';
 import { todayIso } from '../lib/utils';
@@ -68,6 +69,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const [palette, setPalette] = useState(false);
   const agenda = useAgendaItems();
   const inbox = useInboxCount();
+  const trash = useTrashCount();
   const myCount = useMemo(() => {
     if (!settings.meId) return 0;
     const g = groupMyTasks((overviews ?? []).map((o) => ({ c: o.c, tasks: o.tasks })), settings.meId);
@@ -171,6 +173,11 @@ export function Shell({ children }: { children: ReactNode }) {
           <NavLink href="/definicoes" icon={Settings}>
             Definições
           </NavLink>
+          {trash > 0 && (
+            <NavLink href="/reciclagem" icon={Recycle} count={trash}>
+              Reciclagem
+            </NavLink>
+          )}
         </nav>
 
         <div className="sidebar-foot">
