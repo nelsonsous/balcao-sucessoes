@@ -24,6 +24,7 @@ import type {
   TrashRecord,
 } from './types';
 import { nowIso, uid } from './utils';
+import type { SavedView } from './views';
 
 export type BalcaoDB = Dexie & {
   cases: EntityTable<CaseRecord, 'id'>;
@@ -126,6 +127,8 @@ export interface AppSettings {
   lastAutoBackupAt: string;
   /** "permissao" quando a pasta precisa de nova autorização; outra mensagem = último erro. */
   autoBackupLastError: string;
+  /** Vistas guardadas da lista de dossiers (filtros com nome). */
+  savedViews: SavedView[];
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -157,6 +160,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoBackupDirName: '',
   lastAutoBackupAt: '',
   autoBackupLastError: '',
+  savedViews: [],
 };
 
 export async function getSetting<K extends keyof AppSettings>(key: K): Promise<AppSettings[K]> {

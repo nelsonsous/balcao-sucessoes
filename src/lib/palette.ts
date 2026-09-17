@@ -1,7 +1,7 @@
 // Paleta de comandos: pesquisa e ordenação de comandos, dossiers, tarefas e minutas.
 import { normalize } from './utils';
 
-export type PaletteGroup = 'recentes' | 'navegacao' | 'acoes' | 'dossiers' | 'tarefas' | 'minutas';
+export type PaletteGroup = 'recentes' | 'navegacao' | 'acoes' | 'dossiers' | 'tarefas' | 'minutas' | 'notas' | 'contactos' | 'documentos';
 
 export interface PaletteItem {
   id: string;
@@ -23,9 +23,12 @@ export const GROUP_LABELS: Record<PaletteGroup, string> = {
   dossiers: 'Dossiers',
   tarefas: 'Tarefas',
   minutas: 'Minutas',
+  notas: 'Notas',
+  contactos: 'Contactos',
+  documentos: 'Documentos',
 };
 
-const GROUP_ORDER: PaletteGroup[] = ['recentes', 'navegacao', 'acoes', 'dossiers', 'minutas', 'tarefas'];
+const GROUP_ORDER: PaletteGroup[] = ['recentes', 'navegacao', 'acoes', 'dossiers', 'minutas', 'tarefas', 'documentos', 'notas', 'contactos'];
 
 /** Pontuação de um item para a pesquisa: 0 = não corresponde. */
 export function scoreItem(item: PaletteItem, q: string): number {

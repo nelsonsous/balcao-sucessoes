@@ -20,7 +20,10 @@ import {
   Wand2,
   type LucideIcon,
 } from 'lucide-react';
-import { Inbox, Recycle, TrendingUp } from 'lucide-react';
+import { FileText, Inbox, MessageSquare, NotebookPen, Recycle, TrendingUp } from 'lucide-react';
+import { CHANNEL_LABELS } from '../lib/labels';
+import { DOC_STATUS } from '../lib/documents';
+import { formatDate } from '../lib/utils';
 import { undoLast } from '../lib/undo';
 import { BUILTIN_TEMPLATES } from '../engine/templates';
 import { isOpen } from '../engine/phases';
@@ -39,6 +42,9 @@ const GROUP_ICONS: Record<PaletteGroup, LucideIcon> = {
   dossiers: FolderOpen,
   tarefas: CircleCheck,
   minutas: Wand2,
+  notas: NotebookPen,
+  contactos: MessageSquare,
+  documentos: FileText,
 };
 
 const NAV_ICONS: Record<string, LucideIcon> = {
@@ -76,8 +82,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 
   const data = useLiveQuery(async () => {
     if (!open) return undefined;
-    const [cases, tasks, custom] = await Promise.all([db.cases.toArray(), db.tasks.toArray(), db.templates.toArray()]);
-    return { cases, tasks, custom };
+    const [cases, tasks, custom, notes, contacts, documents] = await Promise.all([db.cases.toArray(), db.tasks.toArray(), db.templates.toArray(), db.notes.toArray(), db.contacts.toArray(), db.documents.toArray()]);
+    return { cases, tasks, custom, notes, contacts, documents };
   }, [open]);
 
   useEffect(() => {
@@ -150,6 +156,23 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         const c = caseName.get(t.caseId);
         if (!c || c.stage !== 'ativo' || t.obsolete || !isOpen(t.status)) continue;
         out.push({ id: `task-${t.id}`, group: 'tarefas', title: t.title, subtitle: `Tarefa · ${c.name}`, keywords: c.ref, href: `/dossiers/${t.caseId}?tarefa=${t.id}` });
+      }
+      // Pesquisa global: notas, contactos e documentos (só aparecem com pesquisa).
+      const firstLine = (s: string) => (s.split('\n').find((l) => l.trim()) ?? '').trim().slice(0, 80) || 'Nota';
+      for (const n of data.notes) {
+        const c = caseName.get(n.caseId);
+        if (!c || c.stage === 'arquivado') continue;
+        out.push({ id: `note-${n.id}`, group: 'notas', title: firstLine(n.text), subtitle: `Nota · ${c.ref} ${c.name}`, keywords: n.text.slice(0, 500), href: `/dossiers/${n.caseId}/notas` });
+      }
+      for (const k of data.contacts) {
+        const c = caseName.get(k.caseId);
+        if (!c || c.stage === 'arquivado') continue;
+        out.push({ id: `contact-${k.id}`, group: 'contactos', title: `${k.person || 'Contacto'} — ${CHANNEL_LABELS[k.channel]}`, subtitle: `Contacto · ${formatDate(k.date)} · ${c.ref} ${c.name}`, keywords: `${k.summary} ${k.followUp}`, href: `/dossiers/${k.caseId}/notas` });
+      }
+      for (const d of data.documents) {
+        const c = caseName.get(d.caseId);
+        if (!c || c.stage === 'arquivado') continue;
+        out.push({ id: `doc-${d.id}`, group: 'documentos', title: d.name, subtitle: `Documento · ${DOC_STATUS.find((s) => s.id === d.status)?.label ?? d.status} · ${c.ref} ${c.name}`, keywords: `${d.fileName} ${d.category} ${d.notes}`, href: `/dossiers/${d.caseId}/documentos` });
       }
     }
     const recent = loadRecent();

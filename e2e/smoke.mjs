@@ -91,6 +91,38 @@ try {
   });
 
   let caseId = '';
+  await step('Filtros avançados no endereço e vista guardada', async () => {
+    await go('#/dossiers', 1000);
+    const total = await page.$$eval('.case-card, .table tbody tr, .board-card', (r) => r.length);
+    assert(total >= 3, `lista com dossiers (${total})`);
+    assert(await clickText('main button', 'Filtros'), 'botão Filtros');
+    await page.waitForSelector('dialog[open] #f-prio', { timeout: 5000 });
+    await page.select('#f-prio', 'urgente');
+    await sleep(500);
+    const href1 = await page.evaluate(() => location.href);
+    assert(/prio=urgente/.test(href1), `filtro no endereço (${href1})`);
+    assert(await clickText('dialog[open] button', 'Guardar como vista'), 'botão Guardar como vista');
+    await page.waitForSelector('dialog[open] #view-name', { timeout: 5000 });
+    await page.type('#view-name', 'Urgentes E2E');
+    assert(await clickText('dialog[open] button', 'Guardar vista'), 'botão Guardar vista');
+    await sleep(600);
+    const savedText = await page.$eval('[data-testid="saved-views"]', (e) => e.textContent || '');
+    assert(savedText.includes('Urgentes E2E'), 'vista guardada listada');
+    await page.keyboard.press('Escape');
+    await sleep(400);
+    const filtered = await page.$$eval('.case-card, .table tbody tr, .board-card', (r) => r.length);
+    assert(filtered < total, `lista filtrada (${filtered} < ${total})`);
+    assert(await clickText('main .chip', 'Limpar filtros'), 'chip Limpar filtros');
+    await sleep(500);
+    assert(!/prio=/.test(await page.evaluate(() => location.href)), 'endereço sem filtros');
+    assert(await clickText('main button', 'Vistas'), 'botão Vistas');
+    await page.waitForSelector('dialog[open] [data-testid="saved-views"]', { timeout: 5000 });
+    assert(await clickText('dialog[open] [data-testid="saved-views"] button', 'Urgentes E2E'), 'aplicar a vista guardada');
+    await sleep(600);
+    assert(/prio=urgente/.test(await page.evaluate(() => location.href)), 'vista aplicada pelo endereço');
+    await go('#/dossiers', 800);
+  });
+
   await step('Lista de dossiers e abertura de um dossier', async () => {
     await go('#/dossiers');
     const hrefs = await page.$$eval('a[href^="#/dossiers/"]', (as) => as.map((a) => a.getAttribute('href')));

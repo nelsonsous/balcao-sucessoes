@@ -7,7 +7,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 2 — «10 vezes seguidas com melhorias e testes» (iterações 11–20)
 
-**Estado do ciclo 2: iterações 11–17 concluídas (17/20).**
+**Estado do ciclo 2: iterações 11–18 concluídas (18/20).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -18,13 +18,21 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 15 | ~~Cópias automáticas e partilha para a app~~ | ✅ concluída |
 | 16 | ~~Anular ações e reciclagem~~ | ✅ concluída |
 | 17 | ~~Painel de equipa e análise~~ | ✅ concluída |
-| 18 | **Pesquisa e vistas guardadas** | Filtros avançados na lista de dossiers, vistas guardadas com nome, pesquisa global em notas, contactos e documentos; testes. |
+| 18 | ~~Pesquisa e vistas guardadas~~ | ✅ concluída |
 | 19 | **Documentos avançados** | Pedidos de documentos por interessado, validade das certidões com avisos, pré-visualização de anexos, estados em lote; testes. |
 | 20 | **Consolidação** | Auditoria final (acessibilidade, E2E alargado), manual e apresentação atualizados, versão 2.1, resumo. |
 
 
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
+
+### Iteração 18 — Pesquisa e vistas guardadas ✅
+
+- **Filtros avançados** na lista de dossiers (`lib/views.ts`, painel «Filtros»): situação, semáforo, responsável, **prioridade**, **etiqueta**, **fase atual**, **prazos** (ultrapassados, próximos 7/30 dias, sem prazos), **data do óbito** (3/12 meses, mais de 1 ano) e **internacional** (óbito, residência, nacionalidade ou bens no estrangeiro); aplicação imediata, contador «Filtros (n)», **chips** dos filtros ativos com remoção individual e «Limpar filtros».
+- **Endereço partilhável**: os filtros vivem no endereço (`/dossiers?q=…&prio=urgente&prazo=7d…`), o que permite favoritos, ligações internas (paleta, painel) e partilha entre colegas; valores desconhecidos são ignorados.
+- **Vistas**: predefinidas (prazos ultrapassados, urgentes, prazo em 7 dias, internacionais, óbitos recentes, concluídos) e **guardadas com nome** (substituição pelo nome, remoção), guardadas nas definições e incluídas nas cópias de segurança; painel «Vistas» com «Guardar a vista atual».
+- **Pesquisa profunda**: opção «pesquisar também em notas, contactos, documentos, interessados e bens» na lista (índice construído a pedido) e **pesquisa global na paleta** (⌘K): notas (primeira linha), contactos (pessoa, canal, resumo) e documentos (nome, ficheiro, estado) abrem o separador certo do dossier.
+- **Testes**: filtros dimensão a dimensão, pesquisa profunda, contagem/descrição/comparação, sincronização com o endereço (ida e volta, valores inválidos), vistas predefinidas e guardadas; componente da lista (painel, chip, endereço, limpar, pesquisa profunda, guardar e aplicar vistas); paleta (notas, contactos, documentos e navegação) — **202 testes**; novo passo E2E «Filtros avançados no endereço e vista guardada» — **15 passos**.
 
 ### Iteração 17 — Painel de equipa e análise ✅
 

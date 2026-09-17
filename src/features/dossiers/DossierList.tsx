@@ -1,14 +1,17 @@
 import { Suspense, lazy, useMemo, useState } from 'react';
 import { Link, useLocation, useSearch } from 'wouter';
-import { ArrowRight, CalendarClock, FileSpreadsheet, FolderOpen, KanbanSquare, LayoutGrid, List, Plus, Search, TriangleAlert, Upload } from 'lucide-react';
+import { ArrowRight, Bookmark, CalendarClock, FileSpreadsheet, FolderOpen, KanbanSquare, LayoutGrid, List, Plus, Search, SlidersHorizontal, TriangleAlert, Upload, X } from 'lucide-react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../../lib/db';
+import { EMPTY_FILTERS, applyFilters, buildDeepIndex, countActive, describeFilters, filtersFromSearch, filtersToSearch, type Filters, type HealthFilter } from '../../lib/views';
+import { FiltersSheet, ViewsSheet } from './FilterSheets';
 import { PHASES } from '../../engine/phases';
 import { useMemberMap, useMembers, useOverviews, type CaseOverview } from '../../lib/hooks';
-import type { CaseStage, MemberRecord } from '../../lib/types';
-import { cx, formatDate, normalize, relativeDays } from '../../lib/utils';
+import type { MemberRecord } from '../../lib/types';
+import { cx, formatDate, relativeDays } from '../../lib/utils';
 import { phaseLabel } from '../../engine/phases';
 import { Avatar, Button, Card, DueChip, Empty, HealthBadge, Progress, Segmented, StackedBar } from '../../components/ui';
 
-type HealthFilter = 'todos' | 'atencao' | 'andamento' | 'concluidos';
 type SortKey = 'recentes' | 'prazo' | 'progresso' | 'nome' | 'obito';
 
 const PREF_KEY = 'bs-list-prefs';
@@ -34,10 +37,22 @@ export function DossierList() {
   const [, navigate] = useLocation();
   const search = useSearch();
   const [importing, setImporting] = useState(() => new URLSearchParams(search).get('importar') === '1');
-  const [q, setQ] = useState('');
-  const [health, setHealth] = useState<HealthFilter>('todos');
-  const [stage, setStage] = useState<CaseStage | 'abertos' | 'todos'>('abertos');
-  const [resp, setResp] = useState('');
+  // Os filtros vivem no endereço (#/dossiers?prio=urgente&prazo=7d): partilháveis e guardáveis.
+  const filters = useMemo(() => filtersFromSearch(search), [search]);
+  const setFilters = (f: Filters) => {
+    // O «?» é sempre enviado: sem ele, o wouter mantém a pesquisa anterior no endereço.
+    navigate(`/dossiers?${filtersToSearch(f)}`, { replace: true });
+  };
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [viewsOpen, setViewsOpen] = useState(false);
+  const activeCount = countActive(filters);
+  const chips = describeFilters(filters, members);
+  const deepIndex = useLiveQuery(async () => {
+    if (!filters.deep) return undefined;
+    const [notes, contacts, documents, parties, assets] = await Promise.all([db.notes.toArray(), db.contacts.toArray(), db.documents.toArray(), db.parties.toArray(), db.assets.toArray()]);
+    return buildDeepIndex({ notes, contacts, documents, parties, assets });
+  }, [filters.deep]);
+  const tags = useMemo(() => [...new Set((overviews ?? []).flatMap((o) => o.c.tags))].sort((a, b) => a.localeCompare(b, 'pt')), [overviews]);
   const [prefs, setPrefs] = useState(loadPrefs);
 
   const savePrefs = (p: typeof prefs) => {
@@ -50,16 +65,7 @@ export function DossierList() {
   };
 
   const filtered = useMemo(() => {
-    const n = normalize(q);
-    const list = (overviews ?? []).filter((o) => {
-      if (stage === 'abertos' ? !(o.c.stage === 'ativo' || o.c.stage === 'suspenso') : stage !== 'todos' && o.c.stage !== stage) return false;
-      if (resp && o.c.responsibleId !== resp) return false;
-      if (health === 'atencao' && o.health.level !== 'vermelho') return false;
-      if (health === 'andamento' && !(o.health.level === 'laranja' || o.health.level === 'azul')) return false;
-      if (health === 'concluidos' && o.health.level !== 'verde') return false;
-      if (n && !normalize([o.c.name, o.c.ref, o.c.deceased.name, o.c.client.name, o.c.tags.join(' ')].join(' ')).includes(n)) return false;
-      return true;
-    });
+    const list = applyFilters(overviews ?? [], filters, deepIndex ? { deep: deepIndex } : {});
     const s = prefs.sort;
     return list.sort((a, b) => {
       if (s === 'nome') return a.c.name.localeCompare(b.c.name, 'pt');
@@ -68,7 +74,7 @@ export function DossierList() {
       if (s === 'prazo') return (a.nextDeadline?.dueDate || '9999').localeCompare(b.nextDeadline?.dueDate || '9999');
       return b.c.updatedAt.localeCompare(a.c.updatedAt);
     });
-  }, [overviews, q, health, stage, resp, prefs.sort]);
+  }, [overviews, filters, deepIndex, prefs.sort]);
 
   const base = (overviews ?? []).filter((o) => o.c.stage === 'ativo' || o.c.stage === 'suspenso');
   const counts = {
@@ -138,22 +144,41 @@ export function DossierList() {
             open
             onClose={() => {
               setImporting(false);
-              if (search.includes('importar=1')) navigate('/dossiers', { replace: true });
+              if (search.includes('importar=1')) setFilters(filters);
             }}
           />
         </Suspense>
       )}
+      <FiltersSheet
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        filters={filters}
+        onChange={setFilters}
+        members={members}
+        tags={tags}
+        onSaveView={() => {
+          setFiltersOpen(false);
+          setViewsOpen(true);
+        }}
+      />
+      <ViewsSheet open={viewsOpen} onClose={() => setViewsOpen(false)} filters={filters} onApply={setFilters} />
 
       <div className="toolbar list-toolbar">
         <div className="input-group" style={{ flex: '1 1 260px', maxWidth: 380 }}>
           <Search aria-hidden />
-          <input className="input" placeholder="Nome, referência, falecido, cliente, etiqueta…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Pesquisar dossiers" />
+          <input
+            className="input"
+            placeholder={filters.deep ? 'Pesquisar em tudo: notas, contactos, documentos…' : 'Nome, referência, falecido, cliente, etiqueta…'}
+            value={filters.q}
+            onChange={(e) => setFilters({ ...filters, q: e.target.value })}
+            aria-label="Pesquisar dossiers"
+          />
         </div>
-        {stage === 'abertos' && (
+        {filters.stage === 'abertos' && (
           <Segmented<HealthFilter>
             label="Filtrar por semáforo"
-            value={health}
-            onChange={setHealth}
+            value={filters.health}
+            onChange={(health) => setFilters({ ...filters, health })}
             options={[
               { value: 'todos', label: 'Todos', count: counts.todos },
               { value: 'atencao', label: 'Atenção', count: counts.atencao },
@@ -162,25 +187,13 @@ export function DossierList() {
             ]}
           />
         )}
+        <Button icon={SlidersHorizontal} onClick={() => setFiltersOpen(true)} aria-pressed={activeCount > 0} title="Filtros avançados">
+          Filtros{activeCount ? ` (${activeCount})` : ''}
+        </Button>
+        <Button icon={Bookmark} onClick={() => setViewsOpen(true)} title="Vistas predefinidas e guardadas">
+          Vistas
+        </Button>
         <span className="spacer" />
-        <select className="select" style={{ width: 'auto' }} aria-label="Situação" value={stage} onChange={(e) => setStage(e.target.value as typeof stage)}>
-          <option value="abertos">Ativos e suspensos</option>
-          <option value="ativo">Só ativos</option>
-          <option value="suspenso">Suspensos</option>
-          <option value="concluido">Concluídos</option>
-          <option value="arquivado">Arquivados</option>
-          <option value="todos">Todos</option>
-        </select>
-        {members.length > 0 && (
-          <select className="select" style={{ width: 'auto' }} aria-label="Responsável" value={resp} onChange={(e) => setResp(e.target.value)}>
-            <option value="">Toda a equipa</option>
-            {members.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        )}
         <select className="select" style={{ width: 'auto' }} aria-label="Ordenar" value={prefs.sort} onChange={(e) => savePrefs({ ...prefs, sort: e.target.value as SortKey })}>
           <option value="recentes">Atualizados recentemente</option>
           <option value="prazo">Prazo mais próximo</option>
@@ -199,6 +212,18 @@ export function DossierList() {
           ]}
         />
       </div>
+      {chips.length > 0 && (
+        <div className="row wrap" style={{ gap: 6, marginBottom: 12 }} role="group" aria-label="Filtros ativos">
+          {chips.map((ch) => (
+            <button key={ch.key} type="button" className="chip on" title="Remover este filtro" onClick={() => setFilters({ ...filters, [ch.key]: EMPTY_FILTERS[ch.key] })}>
+              {ch.label} <X size={12} aria-hidden />
+            </button>
+          ))}
+          <button type="button" className="chip" onClick={() => setFilters({ ...EMPTY_FILTERS, q: filters.q })}>
+            Limpar filtros
+          </button>
+        </div>
+      )}
 
       {overviews === undefined ? (
         <div className="skeleton" style={{ height: 300 }} />
