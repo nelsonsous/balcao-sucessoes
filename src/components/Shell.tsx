@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
@@ -31,8 +31,9 @@ import { todayIso } from '../lib/utils';
 import { cx, normalize } from '../lib/utils';
 import { groupMyTasks } from '../lib/myTasks';
 import { lockNow } from '../lib/lock';
-import { CommandPalette } from './CommandPalette';
 import { ErrorBoundary } from './ErrorBoundary';
+
+const CommandPalette = lazy(() => import('./CommandPalette').then((m) => ({ default: m.CommandPalette })));
 import { Avatar, Button, Sheet } from './ui';
 
 function NavLink({ href, icon: Icon, children, count, alert, exact }: {
@@ -290,7 +291,11 @@ export function Shell({ children }: { children: ReactNode }) {
         </p>
       </Sheet>
 
-      <CommandPalette open={palette} onClose={() => setPalette(false)} />
+      {palette && (
+        <Suspense fallback={null}>
+          <CommandPalette open={palette} onClose={() => setPalette(false)} />
+        </Suspense>
+      )}
 
       <nav className="mobile-nav" aria-label="Navegação">
         <MobileLink href="/" icon={LayoutDashboard} label="Início" exact />

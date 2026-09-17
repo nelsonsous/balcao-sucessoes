@@ -214,7 +214,7 @@ export function Empty({ icon: Icon, title, text, action }: { icon: LucideIcon; t
       <span className="empty-icon">
         <Icon aria-hidden />
       </span>
-      <h3>{title}</h3>
+      <h2 className="empty-title">{title}</h2>
       {text && <p>{text}</p>}
       {action}
     </div>

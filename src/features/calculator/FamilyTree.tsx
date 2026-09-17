@@ -90,7 +90,7 @@ export function FamilyTree({ input, result }: { input: CalcInput; result: CalcRe
         <Node relation="De cujus" name={input.deceasedName || 'Falecido(a)'} deceased />
         {input.spouse.present && (
           <>
-            <span className="ft-link" aria-label="casado(a) com">
+            <span className="ft-link" role="img" aria-label="casado(a) com">
               <Heart size={13} aria-hidden />
             </span>
             <Node relation="Cônjuge" name={input.spouse.name || 'Cônjuge'} share={spouseShare} muted={!spouseShare} />

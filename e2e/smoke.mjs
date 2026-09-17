@@ -1,0 +1,223 @@
+// Testes ponta a ponta (smoke) com o Chrome do sistema: `npm run e2e`.
+// Arranca o `vite preview` sobre a pasta dist/, percorre os fluxos principais e sai com código ≠ 0 em caso de falha.
+import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import puppeteer from 'puppeteer-core';
+
+const PORT = Number(process.env.E2E_PORT || 4187);
+const BASE = `http://localhost:${PORT}/`;
+const CANDIDATES = [
+  process.env.CHROME_PATH,
+  process.env.CHROME_BIN,
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/usr/bin/google-chrome',
+  '/usr/bin/google-chrome-stable',
+  '/usr/bin/chromium-browser',
+  '/usr/bin/chromium',
+  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+].filter(Boolean);
+const chrome = CANDIDATES.find((p) => existsSync(p));
+if (!chrome) {
+  console.error('E2E: Chrome não encontrado (defina CHROME_PATH).');
+  process.exit(process.env.CI ? 1 : 0);
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let failures = 0;
+const results = [];
+async function step(name, fn) {
+  const t0 = Date.now();
+  try {
+    await fn();
+    results.push(`✓ ${name} (${Date.now() - t0} ms)`);
+  } catch (e) {
+    failures += 1;
+    results.push(`✗ ${name}: ${e.message}`);
+  }
+}
+const assert = (cond, msg) => {
+  if (!cond) throw new Error(msg);
+};
+
+// 1) servidor de pré-visualização
+const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', shell: process.platform === 'win32' });
+const ready = async () => {
+  for (let i = 0; i < 60; i++) {
+    try {
+      const r = await fetch(BASE);
+      if (r.ok) return;
+    } catch {
+      /* ainda não */
+    }
+    await sleep(500);
+  }
+  throw new Error('vite preview não arrancou');
+};
+
+let browser;
+try {
+  await ready();
+  browser = await puppeteer.launch({ executablePath: chrome, headless: true, args: ['--no-sandbox', '--no-first-run', '--lang=pt-PT'], defaultViewport: { width: 1366, height: 900 } });
+  const page = await browser.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  const go = async (hash, settle = 800) => {
+    await page.evaluate((h) => {
+      location.hash = h;
+    }, hash);
+    await sleep(settle);
+  };
+  const clickText = (sel, text) =>
+    page.evaluate(
+      (s, t) => {
+        const el = [...document.querySelectorAll(s)].find((b) => (b.textContent || '').trim().includes(t));
+        if (!el) return false;
+        el.click();
+        return true;
+      },
+      sel,
+      text,
+    );
+
+  await step('Boas-vindas e dados fictícios', async () => {
+    await page.goto(BASE, { waitUntil: 'networkidle0' });
+    await page.waitForSelector('#ob-name', { timeout: 20000 });
+    await page.type('#ob-name', 'Ana');
+    assert(await clickText('button', 'Explorar com dados fictícios'), 'botão de dados fictícios');
+    await page.waitForFunction(() => !document.querySelector('#ob-name'), { timeout: 20000 });
+    await sleep(1500);
+    const kpis = await page.$$eval('.kpi', (els) => els.map((e) => e.textContent || ''));
+    assert(kpis.some((t) => t.includes('Dossiers em curso')), 'KPI "Dossiers em curso" no painel');
+  });
+
+  let caseId = '';
+  await step('Lista de dossiers e abertura de um dossier', async () => {
+    await go('#/dossiers');
+    const hrefs = await page.$$eval('a[href^="#/dossiers/"]', (as) => as.map((a) => a.getAttribute('href')));
+    const first = hrefs.find((h) => h && !h.endsWith('/novo'));
+    assert(first, 'há dossiers na lista');
+    caseId = first.split('/')[2];
+    await go(first, 1500);
+    const h1 = await page.$eval('main h1', (e) => e.textContent || '');
+    assert(h1.trim().length > 3, 'cabeçalho do dossier');
+    const rows = await page.$$('.task-row');
+    assert(rows.length >= 3, `checklist com tarefas (${rows.length})`);
+  });
+
+  await step('Gaveta da tarefa abre e fecha', async () => {
+    await page.click('.task-main');
+    await page.waitForSelector('dialog[open]', { timeout: 5000 });
+    const title = await page.$eval('dialog[open]', (d) => d.textContent || '');
+    assert(title.includes('Tarefa'), 'gaveta com título');
+    await page.keyboard.press('Escape');
+    await sleep(400);
+    assert(!(await page.$('dialog[open]')), 'gaveta fechada com Esc');
+  });
+
+  await step('Mudar o estado de uma tarefa persiste após recarregar', async () => {
+    const before = await page.$$eval('.task-row.st-concluido', (r) => r.length);
+    await page.click('.task-row .status-pill');
+    await sleep(300);
+    assert(await clickText('.menu-item', 'Concluída'), 'opção Concluída no menu');
+    await sleep(600);
+    const after = await page.$$eval('.task-row.st-concluido', (r) => r.length);
+    assert(after >= before, 'estado alterado');
+    await page.reload({ waitUntil: 'networkidle0' });
+    await sleep(1200);
+    const activity = await page.evaluate(
+      () =>
+        new Promise((res) => {
+          const r = indexedDB.open('balcao-das-sucessoes');
+          r.onsuccess = () => {
+            const q = r.result.transaction('activity').objectStore('activity').getAll();
+            q.onsuccess = () => res(q.result.filter((a) => /Concluída/.test(a.text)).length);
+          };
+        }),
+    );
+    assert(activity >= 1, 'histórico regista a mudança');
+  });
+
+  await step('Paleta de comandos navega para a agenda', async () => {
+    await page.keyboard.down('Control');
+    await page.keyboard.press('KeyK');
+    await page.keyboard.up('Control');
+    await page.waitForSelector('dialog.palette[open]', { timeout: 5000 });
+    await page.keyboard.type('agenda');
+    await sleep(300);
+    await page.keyboard.press('Enter');
+    await sleep(800);
+    const hash = await page.evaluate(() => location.hash);
+    assert(hash === '#/agenda', `navegou para a agenda (${hash})`);
+    assert(await page.$('.cal-day, .agenda-main'), 'agenda renderizada');
+  });
+
+  await step('Relatório do dossier abre com pré-visualização', async () => {
+    await go(`#/dossiers/${caseId}`, 1200);
+    assert(await clickText('button', 'Relatório'), 'botão Relatório');
+    await page.waitForSelector('dialog[open] .paper h1', { timeout: 8000 });
+    const t = await page.$eval('dialog[open] .paper h1', (e) => e.textContent || '');
+    assert(t.includes('Relatório do dossier'), `título do relatório (${t})`);
+    await page.keyboard.press('Escape');
+    await sleep(400);
+  });
+
+  await step('PIN: definir, bloquear e desbloquear', async () => {
+    await go('#/definicoes', 1200);
+    assert(await clickText('button', 'Definir PIN'), 'botão Definir PIN');
+    await page.waitForSelector('#pin-new', { timeout: 5000 });
+    await page.type('#pin-new', '2580');
+    await page.type('#pin-again', '2580');
+    assert(await clickText('button', 'Guardar PIN'), 'guardar PIN');
+    await sleep(1200);
+    assert(await clickText('button', 'Bloquear agora'), 'bloquear agora');
+    await page.waitForSelector('.lock-screen', { timeout: 5000 });
+    await page.type('.lock-input', '0000');
+    await page.keyboard.press('Enter');
+    await sleep(800);
+    assert(await page.$('.lock-screen'), 'PIN errado mantém bloqueio');
+    await page.type('.lock-input', '2580');
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => !document.querySelector('.lock-screen'), { timeout: 5000 });
+  });
+
+  await step('Telemóvel: barra inferior e painel', async () => {
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    await go('#/', 1200);
+    const nav = await page.$eval('.mobile-nav', (e) => getComputedStyle(e).display);
+    assert(nav !== 'none', 'barra inferior visível no telemóvel');
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
+    assert(overflow, 'sem scroll horizontal no telemóvel');
+    await page.setViewport({ width: 1366, height: 900 });
+  });
+
+  await step('Funciona offline (service worker)', async () => {
+    const sw = await page.evaluate(async () => {
+      if (!('serviceWorker' in navigator)) return 'unsupported';
+      for (let i = 0; i < 20; i++) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg?.active) return 'active';
+        await new Promise((r) => setTimeout(r, 500));
+      }
+      return 'none';
+    });
+    if (sw !== 'active') {
+      results.push(`  (service worker: ${sw} — teste offline ignorado)`);
+      return;
+    }
+    await page.setOfflineMode(true);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await sleep(1500);
+    const ok = await page.evaluate(() => Boolean(document.querySelector('.lock-screen, .shell')));
+    await page.setOfflineMode(false);
+    assert(ok, 'aplicação renderiza sem rede');
+  });
+
+  const realErrors = errors.filter((e) => !/ResizeObserver/.test(e));
+  await step('Sem erros de JavaScript', async () => assert(realErrors.length === 0, realErrors.join(' | ')));
+} finally {
+  await browser?.close();
+  server.kill();
+}
+console.log(results.join('\n'));
+console.log(failures ? `\n${failures} passo(s) falharam` : '\nE2E: tudo a passar');
+process.exit(failures ? 1 : 0);

@@ -36,7 +36,7 @@
   --border-strong: #cdd4e3;
   --text: #161d33;
   --text-2: #465069;
-  --text-3: #767f97;
+  --text-3: #5f6884;
   --text-inverse: #ffffff;
   --link: var(--brand-600);
 
@@ -111,7 +111,7 @@
     --border-strong: #33427a;
     --text: #e8ebf7;
     --text-2: #b3bad3;
-    --text-3: #8189a6;
+    --text-3: #98a0bb;
     --link: var(--brand-300);
     --primary: #5b67e6;
     --primary-hover: #6f7aee;
@@ -155,7 +155,7 @@
   --border-strong: #33427a;
   --text: #e8ebf7;
   --text-2: #b3bad3;
-  --text-3: #8189a6;
+  --text-3: #98a0bb;
   --link: var(--brand-300);
   --primary: #5b67e6;
   --primary-hover: #6f7aee;

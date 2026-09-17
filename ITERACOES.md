@@ -3,7 +3,7 @@
 Ciclo pedido: **10 iterações seguidas** para analisar o protótipo, perceber os conceitos e construir uma aplicação muito melhor, a nível profissional, como PWA.
 Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é reaproveitado dela.
 
-**Estado do ciclo: iteração 8 de 10 concluída.**
+**Estado do ciclo: iteração 9 de 10 concluída.**
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
 
@@ -111,6 +111,14 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 - **Minutas novas**: «E-mail au client — documents manquants» (FR) e «Email to client — status update» (EN), com os campos automáticos (13 minutas-base).
 - **94 testes** (novos: lei aplicável por residência, escolha válida/inválida, residência fora da UE com competência subsidiária e reenvio, CSE disponível/desnecessário, avisos RU/DK, regime de documentos por país, prazos por país com óbito dentro/fora, fins de mês e ordenação; relatório do cliente em FR/EN).
 
+## Iteração 9 — Qualidade ✅
+
+- **Acessibilidade (WCAG 2.2 AA)**: auditoria automática com axe-core em 16 ecrãs (painel, dossiers, assistente, todos os separadores do dossier, bloqueios, minhas tarefas, agenda, calculadora, minutas, definições): **547 → 0 violações**. Correções: texto discreto com contraste ≥ 4,5:1 nos dois temas (`--text-3`), cabeçalhos do funil, dias fora do mês e fins de semana da agenda, nós esbatidos da árvore genealógica, passos inativos do assistente, cores de avatar e do dia em atraso; ordem dos títulos (h1 → h2) nos estados vazios, secções da calculadora e minutas; `role="img"` no símbolo de casamento; ligações em texto corrido sublinhadas; alvos de toque ≥ 24 px nos chips do calendário.
+- **Desempenho**: divisão de código por rota (agenda, calculadora, minutas, definições, minhas tarefas, bloqueios, assistente) e por separador pesado do dossier (quotas, documentos, internacional, agenda) mais paleta de comandos e relatórios a pedido — pacote inicial de **843 kB → 561 kB** (gzip 255 → 172 kB) com 12 pedaços carregados só quando necessários; fontes só nos subconjuntos latino/latino alargado (**10 → 4 ficheiros woff2**), menos precache e arranque mais rápido offline.
+- **Testes ponta a ponta** (`npm run e2e`, `e2e/smoke.mjs`, Chrome do sistema via puppeteer-core): boas-vindas e dados fictícios, lista e abertura de dossier, gaveta da tarefa, mudança de estado persistida após recarregar (com histórico), paleta de comandos, relatório, PIN (definir, bloquear, PIN errado, desbloquear), telemóvel (barra inferior, sem scroll horizontal), funcionamento offline com service worker e ausência de erros de JavaScript — **10 passos, integrados na publicação** (o deploy só acontece com unitários, E2E e build a passar).
+- **Polimento móvel**: alvos de toque, sem overflow horizontal (verificado no E2E), áreas seguras e `prefers-reduced-motion` já existentes confirmados.
+- 94 testes unitários + 10 passos E2E.
+
 ## Plano das próximas iterações
 
 | # | Tema | Conteúdo previsto |
@@ -122,7 +130,7 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 | 6 | ~~Produtividade~~ | ✅ concluída |
 | 7 | ~~Segurança~~ | ✅ concluída |
 | 8 | ~~Internacional~~ | ✅ concluída |
-| 9 | **Qualidade** | Auditoria de acessibilidade (WCAG AA), desempenho (divisão de código, só subsets latinos das fontes), testes E2E, polimento móvel. |
+| 9 | ~~Qualidade~~ | ✅ concluída |
 | 10 | **Entrega** | Revisão final, guia de utilização, pacote pronto a partilhar, resumo executivo. |
 
 ## Registo técnico

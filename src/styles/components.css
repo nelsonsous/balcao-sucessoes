@@ -858,8 +858,10 @@ button.status-pill:hover {
   height: 26px;
 }
 
-.empty h3 {
+.empty .empty-title {
   font-size: 15px;
+  font-family: var(--font-sans);
+  margin: 0;
 }
 
 .empty p {

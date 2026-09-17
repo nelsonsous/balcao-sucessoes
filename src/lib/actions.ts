@@ -209,7 +209,7 @@ export async function deleteEvent(e: EventRecord): Promise<void> {
 
 // ---------------- Equipa
 
-const PALETTE = ['#2d39b9', '#0e8a6a', '#b4531f', '#8b3fb8', '#c2375b', '#1f7fa8', '#6b7a1f', '#a15c00'];
+const PALETTE = ['#2d39b9', '#0b7a5e', '#b4531f', '#8b3fb8', '#c2375b', '#1a6f93', '#6b7a1f', '#a15c00'];
 
 export async function saveMember(m: Partial<MemberRecord> & { name: string }): Promise<MemberRecord> {
   const count = await db.members.count();

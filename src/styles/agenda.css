@@ -97,7 +97,7 @@
 }
 
 .cal-head > div.weekend {
-  color: color-mix(in srgb, var(--text-3) 70%, transparent);
+  color: var(--text-3);
 }
 
 .cal-day {
@@ -213,7 +213,8 @@
   gap: 4px;
   width: 100%;
   min-width: 0;
-  padding: 2px 6px;
+  min-height: 24px;
+  padding: 3px 6px;
   border: 0;
   border-left: 3px solid var(--src-evento);
   border-radius: 4px;
@@ -696,9 +697,13 @@
   color: #fff;
 }
 
+.week-day.overdue {
+  background: #b8303f;
+}
+
 .week-day.overdue .wd,
 .week-day.overdue .wc {
-  color: rgba(255, 255, 255, 0.9);
+  color: #fff;
 }
 
 .pip {
@@ -733,4 +738,15 @@
   .tabs .tab {
     padding: 10px 10px;
   }
+}
+
+/* Números dos fins de semana com contraste suficiente (WCAG AA) */
+.cal-day.weekend .cal-num {
+  color: var(--text-3);
+}
+
+/* Dias fora do mês: número legível, só os itens ficam esbatidos */
+.cal-day.out .cal-num {
+  opacity: 1;
+  color: var(--text-3);
 }

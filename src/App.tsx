@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Route, Router, Switch } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import { FileQuestion } from 'lucide-react';
@@ -11,16 +11,20 @@ import { PwaPrompts } from './components/PwaPrompts';
 import { Shell } from './components/Shell';
 import { ToastProvider } from './components/Toast';
 import { Button, Card, ConfirmProvider, Empty } from './components/ui';
-import { AgendaPage } from './features/agenda/AgendaPage';
-import { CalculatorPage } from './features/calculator/CalculatorPage';
-import { TemplatesPage } from './features/templates/TemplatesPage';
 import { Dashboard } from './features/dashboard/Dashboard';
 import { DossierList } from './features/dossiers/DossierList';
 import { DossierView } from './features/dossiers/DossierView';
-import { SettingsPage } from './features/settings/SettingsPage';
-import { MyTasksPage } from './features/tasks/MyTasksPage';
-import { TasksPage } from './features/tasks/TasksPage';
-import { NewCaseWizard } from './features/wizard/NewCaseWizard';
+
+// Páginas menos frequentes carregam à parte (divisão de código): a app arranca mais depressa.
+const AgendaPage = lazy(() => import('./features/agenda/AgendaPage').then((m) => ({ default: m.AgendaPage })));
+const CalculatorPage = lazy(() => import('./features/calculator/CalculatorPage').then((m) => ({ default: m.CalculatorPage })));
+const TemplatesPage = lazy(() => import('./features/templates/TemplatesPage').then((m) => ({ default: m.TemplatesPage })));
+const SettingsPage = lazy(() => import('./features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const MyTasksPage = lazy(() => import('./features/tasks/MyTasksPage').then((m) => ({ default: m.MyTasksPage })));
+const TasksPage = lazy(() => import('./features/tasks/TasksPage').then((m) => ({ default: m.TasksPage })));
+const NewCaseWizard = lazy(() => import('./features/wizard/NewCaseWizard').then((m) => ({ default: m.NewCaseWizard })));
+
+const Loading = () => <div className="skeleton" style={{ height: 320 }} aria-busy="true" aria-label="A carregar" />;
 
 function NotFound() {
   return (
@@ -50,7 +54,8 @@ export default function App() {
       <ConfirmProvider>
         <Router hook={useHashLocation}>
           <Shell>
-            <Switch>
+            <Suspense fallback={<Loading />}>
+              <Switch>
               <Route path="/" component={Dashboard} />
               <Route path="/dossiers" component={DossierList} />
               <Route path="/dossiers/novo" component={NewCaseWizard} />
@@ -62,7 +67,8 @@ export default function App() {
               <Route path="/minutas" component={TemplatesPage} />
               <Route path="/definicoes" component={SettingsPage} />
               <Route component={NotFound} />
-            </Switch>
+              </Switch>
+            </Suspense>
           </Shell>
           <Reminders />
         </Router>

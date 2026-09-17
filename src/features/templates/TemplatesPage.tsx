@@ -148,7 +148,7 @@ export function TemplatesPage() {
               </div>
               <div>
                 <div className="tiny subtle strong">{t.category.toUpperCase()}</div>
-                <h3 className="template-title">{t.title}</h3>
+                <h2 className="template-title">{t.title}</h2>
                 <p className="small muted">{t.description}</p>
               </div>
               <div className="row wrap" style={{ gap: 6, marginTop: 'auto' }}>

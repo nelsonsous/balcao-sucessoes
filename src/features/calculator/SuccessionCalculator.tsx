@@ -122,7 +122,7 @@ function Section({ icon: Icon, title, hint, children }: { icon: typeof Users; ti
       <div className="calc-section-head">
         <Icon aria-hidden />
         <div>
-          <h3>{title}</h3>
+          <h2>{title}</h2>
           {hint && <p className="tiny subtle">{hint}</p>}
         </div>
       </div>

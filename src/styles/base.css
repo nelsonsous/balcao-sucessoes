@@ -199,3 +199,15 @@ svg {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* Ligações dentro de texto corrido: distinguíveis sem depender só da cor (WCAG 1.4.1) */
+p a,
+.callout a,
+.lede a,
+.li-sub a,
+.task-sub a,
+.small a,
+.tiny a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

@@ -34,6 +34,7 @@ Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-o
 | **Histórico** | Registo automático de todas as alterações (quem, o quê, quando). |
 | **Dados** | IndexedDB local, cópia de segurança/importação JSON — opcionalmente **cifrada com palavra-passe (AES-256-GCM)** —, lembrete semanal de cópia, importação do protótipo original, dados de demonstração fictícios, pedido de armazenamento persistente. |
 | **Segurança** | Bloqueio por PIN (PBKDF2, esperas após falhas), auto-bloqueio por inatividade e ao mudar de aplicação, modo privacidade (nomes desfocados para partilhar o ecrã), Content Security Policy sem scripts inline. |
+| **Qualidade** | 0 violações axe-core (WCAG 2.2 AA) em 16 ecrãs, divisão de código por rota e separador, fontes só em latino, 94 testes unitários e 10 passos E2E com Chrome executados antes de cada publicação. |
 | **PWA** | Instalável (desktop, Android, iOS), offline, atalhos, aviso de nova versão, tema claro/escuro, responsivo com navegação inferior no telemóvel. |
 
 ## Começar
@@ -42,6 +43,7 @@ Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-o
 npm install
 npm run dev        # desenvolvimento em http://localhost:5173
 npm test           # testes do motor, calendário, calculadora, relatórios e documentos (vitest)
+npm run e2e        # testes ponta a ponta com o Chrome instalado (depois de npm run build)
 npm run build      # typecheck + build de produção em dist/
 npm run preview    # serve dist/ em http://localhost:4173 (com service worker)
 ```

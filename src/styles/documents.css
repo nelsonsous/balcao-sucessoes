@@ -441,9 +441,9 @@ dialog.sheet .sheet-panel:has(.report-sheet) {
 }
 
 .text-danger {
-  color: var(--st-pendente);
+  color: var(--st-pendente-fg);
 }
 
 .text-ok {
-  color: var(--st-concluido);
+  color: var(--st-concluido-fg);
 }

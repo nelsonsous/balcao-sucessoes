@@ -32,7 +32,7 @@ const workdayAhead = (n: number): string => workCalendar.nextBusinessDay(daysAhe
 
 const MEMBERS: MemberRecord[] = [
   { id: 'demo-ana', name: 'Ana Marques', role: 'Advogada', color: '#2d39b9', createdAt: nowIso() },
-  { id: 'demo-joana', name: 'Joana Pires', role: 'Advogada', color: '#0e8a6a', createdAt: nowIso() },
+  { id: 'demo-joana', name: 'Joana Pires', role: 'Advogada', color: '#0b7a5e', createdAt: nowIso() },
   { id: 'demo-rita', name: 'Rita Sousa', role: 'Solicitadora', color: '#b4531f', createdAt: nowIso() },
 ];
 

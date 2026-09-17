@@ -88,8 +88,10 @@
   margin-top: 1px;
 }
 
-.calc-section-head h3 {
+.calc-section-head h2 {
   font-size: 14.5px;
+  font-family: var(--font-sans);
+  margin: 0;
 }
 
 .pe-list {
@@ -503,9 +505,14 @@
 }
 
 .ft-node.muted {
-  opacity: 0.55;
   box-shadow: none;
   border-style: dashed;
+  color: var(--text-3);
+}
+
+.ft-node.muted .ft-name,
+.ft-node.muted .ft-rel {
+  color: var(--text-3);
 }
 
 .ft-collaterals {

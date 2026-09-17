@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useParams, useSearch } from 'wouter';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
@@ -48,9 +48,6 @@ import {
   useConfirm,
 } from '../../components/ui';
 import { ActivityTab } from '../activity/ActivityTab';
-import { CaseAgendaTab } from '../agenda/CaseAgendaTab';
-import { CaseCalcTab } from '../calculator/CaseCalcTab';
-import { DocumentsTab } from '../documents/DocumentsTab';
 import { AssetsTab } from '../assets/AssetsTab';
 import { NotesTab } from '../notes/NotesTab';
 import { PartiesTab } from '../parties/PartiesTab';
@@ -58,9 +55,15 @@ import { CaseEditSheet } from './CaseEditSheet';
 import { ChecklistTab, type ChecklistFilter } from './ChecklistTab';
 import { QuestionnaireTab } from './QuestionnaireTab';
 import { TaskDrawer } from './TaskDrawer';
-import { ReportSheet } from '../reports/ReportSheet';
 import { SaveTemplateSheet } from './SaveTemplateSheet';
-import { InternationalTab } from '../international/InternationalTab';
+
+// Separadores pesados (calculadora, documentos, internacional, agenda) e relatórios carregam à parte.
+const CaseCalcTab = lazy(() => import('../calculator/CaseCalcTab').then((m) => ({ default: m.CaseCalcTab })));
+const DocumentsTab = lazy(() => import('../documents/DocumentsTab').then((m) => ({ default: m.DocumentsTab })));
+const InternationalTab = lazy(() => import('../international/InternationalTab').then((m) => ({ default: m.InternationalTab })));
+const CaseAgendaTab = lazy(() => import('../agenda/CaseAgendaTab').then((m) => ({ default: m.CaseAgendaTab })));
+const ReportSheet = lazy(() => import('../reports/ReportSheet').then((m) => ({ default: m.ReportSheet })));
+const TabLoading = () => <div className="skeleton" style={{ height: 260 }} aria-busy="true" aria-label="A carregar" />;
 import type { ReportKind } from '../../lib/reports';
 
 type TabId = 'checklist' | 'interessados' | 'patrimonio' | 'documentos' | 'quotas' | 'internacional' | 'agenda' | 'notas' | 'questionario' | 'historico';
@@ -292,10 +295,12 @@ export function DossierView() {
           {tab === 'checklist' && <ChecklistTab c={c} tasks={tasks} filter={filter} onFilter={setFilter} onOpen={openTask} />}
           {tab === 'interessados' && <PartiesTab c={c} />}
           {tab === 'patrimonio' && <AssetsTab c={c} />}
-          {tab === 'documentos' && <DocumentsTab c={c} />}
-          {tab === 'quotas' && <CaseCalcTab c={c} />}
-          {tab === 'internacional' && <InternationalTab c={c} />}
-          {tab === 'agenda' && <CaseAgendaTab c={c} onOpenTask={setSelectedTask} />}
+          <Suspense fallback={<TabLoading />}>
+            {tab === 'documentos' && <DocumentsTab c={c} />}
+            {tab === 'quotas' && <CaseCalcTab c={c} />}
+            {tab === 'internacional' && <InternationalTab c={c} />}
+            {tab === 'agenda' && <CaseAgendaTab c={c} onOpenTask={setSelectedTask} />}
+          </Suspense>
           {tab === 'notas' && <NotesTab c={c} />}
           {tab === 'questionario' && <QuestionnaireTab c={c} />}
           {tab === 'historico' && <ActivityTab caseId={c.id} />}
@@ -410,7 +415,11 @@ export function DossierView() {
       </div>
 
       <TaskDrawer task={task} caseRecord={c} onClose={() => setSelectedTask(null)} />
-      <ReportSheet c={c} kind={report} onClose={() => setReport(null)} onKind={setReport} />
+      {report && (
+        <Suspense fallback={null}>
+          <ReportSheet c={c} kind={report} onClose={() => setReport(null)} onKind={setReport} />
+        </Suspense>
+      )}
       <SaveTemplateSheet c={c} tasks={tasks} open={savingTemplate} onClose={() => setSavingTemplate(false)} />
       <CaseEditSheet open={editing} c={c} onClose={() => setEditing(false)} />
     </div>
