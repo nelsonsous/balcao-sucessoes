@@ -21,8 +21,13 @@ import { PHASES, phaseLabel } from '../../engine/phases';
 import { STEPS, answerLabel, completion, visibleQuestions } from '../../engine/questions';
 import { PHASE_ICONS } from '../../components/icons';
 import { useToast } from '../../components/Toast';
-import { Button, Card, Field } from '../../components/ui';
+import { Button, Card, Field, useConfirm } from '../../components/ui';
 import { QuestionStep } from '../dossiers/QuestionnaireForm';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../../lib/db';
+import { addCustomTask } from '../../lib/actions';
+import { BUILTIN_CASE_TEMPLATES, answeredCount, answersFromTemplate, toDef as caseTemplateDef, type CaseTemplateDef } from '../../lib/caseTemplates';
+import type { CustomTaskSeed } from '../../lib/types';
 
 const DRAFT_KEY = 'bs-wizard-draft';
 
@@ -35,6 +40,9 @@ interface Draft {
   deceased: Deceased;
   client: ClientInfo;
   answers: Answers;
+  /** Modelo de dossier aplicado (para informação) e tarefas próprias a acrescentar. */
+  templateId?: string;
+  extraTasks?: CustomTaskSeed[];
 }
 
 function emptyDraft(): Draft {
@@ -78,6 +86,23 @@ export function NewCaseWizard() {
   const [busy, setBusy] = useState(false);
   const [touched, setTouched] = useState(false);
   const top = useRef<HTMLDivElement>(null);
+  const confirm = useConfirm();
+  const savedTemplates = useLiveQuery(() => db.caseTemplates.toArray(), []);
+  const templates: CaseTemplateDef[] = useMemo(() => [...(savedTemplates ?? []).map(caseTemplateDef), ...BUILTIN_CASE_TEMPLATES], [savedTemplates]);
+
+  async function applyTemplate(id: string) {
+    const t = templates.find((x) => x.id === id);
+    if (!t) {
+      setD((x) => ({ ...x, templateId: undefined, extraTasks: [] }));
+      return;
+    }
+    if (answeredCount(d.answers) > 0) {
+      const ok = await confirm({ title: `Aplicar o modelo “${t.name}”?`, message: 'As respostas já dadas ao questionário são substituídas pelas do modelo. Pode ajustá-las a seguir.', confirmLabel: 'Aplicar' });
+      if (!ok) return;
+    }
+    setD((x) => ({ ...x, answers: answersFromTemplate(t), tags: t.tags.length ? t.tags.join(', ') : x.tags, priority: t.priority, templateId: t.id, extraTasks: t.tasks }));
+    toast({ tone: 'success', title: `Modelo aplicado: ${t.name}`, description: `${answeredCount(t.answers)} respostas preenchidas${t.tasks.length ? ` · ${t.tasks.length} tarefa(s) própria(s)` : ''}. Reveja o questionário.` });
+  }
 
   useEffect(() => {
     try {
@@ -159,6 +184,7 @@ export function NewCaseWizard() {
         client: d.client,
         answers: d.answers,
       });
+      for (const seed of d.extraTasks ?? []) await addCustomTask(c.id, { ...seed });
       try {
         localStorage.removeItem(DRAFT_KEY);
       } catch {
@@ -286,6 +312,36 @@ export function NewCaseWizard() {
                   </Field>
                   <Field label="Etiquetas" htmlFor="w-tags" hint="Separadas por vírgulas (ex.: França, Imóveis)" className="span-2">
                     <input id="w-tags" className="input" value={d.tags} onChange={(e) => setD((x) => ({ ...x, tags: e.target.value }))} />
+                  </Field>
+                  <Field
+                    label="Começar a partir de um modelo"
+                    htmlFor="w-template"
+                    className="span-2"
+                    hint={
+                      d.templateId
+                        ? `Modelo aplicado${(d.extraTasks?.length ?? 0) ? ` · ${d.extraTasks!.length} tarefa(s) própria(s) serão acrescentadas` : ''}. As respostas podem ser ajustadas nos passos seguintes.`
+                        : 'Opcional: preenche o questionário com um cenário típico (pode guardar os seus modelos a partir de qualquer dossier).'
+                    }
+                  >
+                    <select id="w-template" className="select" value={d.templateId ?? ''} onChange={(e) => void applyTemplate(e.target.value)}>
+                      <option value="">Sem modelo — responder de raiz</option>
+                      {savedTemplates && savedTemplates.length > 0 && (
+                        <optgroup label="Modelos do escritório">
+                          {savedTemplates.map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      <optgroup label="Modelos-base">
+                        {BUILTIN_CASE_TEMPLATES.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
                   </Field>
                 </div>
               </Card>

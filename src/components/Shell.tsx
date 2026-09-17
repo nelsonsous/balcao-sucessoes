@@ -5,6 +5,7 @@ import {
   Calculator,
   CalendarDays,
   CircleAlert,
+  Command,
   Download,
   FolderOpen,
   LayoutDashboard,
@@ -16,6 +17,7 @@ import {
   Settings,
   Smartphone,
   Sun,
+  UserCheck,
   Wand2,
   WifiOff,
 } from 'lucide-react';
@@ -24,6 +26,8 @@ import { useAgendaItems } from '../lib/agenda';
 import { isActiveCase, useInstall, useOnline, useOverviews } from '../lib/hooks';
 import { todayIso } from '../lib/utils';
 import { cx, normalize } from '../lib/utils';
+import { groupMyTasks } from '../lib/myTasks';
+import { CommandPalette } from './CommandPalette';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Avatar, Button, Sheet } from './ui';
 
@@ -53,7 +57,13 @@ export function Shell({ children }: { children: ReactNode }) {
   const online = useOnline();
   const [loc, navigate] = useLocation();
   const [iosHelp, setIosHelp] = useState(false);
+  const [palette, setPalette] = useState(false);
   const agenda = useAgendaItems();
+  const myCount = useMemo(() => {
+    if (!settings.meId) return 0;
+    const g = groupMyTasks((overviews ?? []).map((o) => ({ c: o.c, tasks: o.tasks })), settings.meId);
+    return g.filter((x) => x.id === 'atrasadas' || x.id === 'hoje').reduce((n, x) => n + x.tasks.length, 0);
+  }, [overviews, settings.meId]);
   const todayCount = useMemo(() => {
     const t = todayIso();
     return (agenda ?? []).filter((i) => !i.done && i.date === t).length;
@@ -71,6 +81,11 @@ export function Shell({ children }: { children: ReactNode }) {
   // Atalhos globais: N = nova sucessão, / = pesquisa
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPalette((p) => !p);
+        return;
+      }
       const el = e.target as HTMLElement;
       if (el.closest('input, textarea, select, [contenteditable], dialog')) return;
       if (e.key === '/') {
@@ -120,6 +135,9 @@ export function Shell({ children }: { children: ReactNode }) {
           </NavLink>
           <NavLink href="/tarefas" icon={ListChecks} count={counts.blocking} alert>
             O que está a bloquear?
+          </NavLink>
+          <NavLink href="/minhas" icon={UserCheck} count={myCount} alert>
+            As minhas tarefas
           </NavLink>
           <span className="nav-label">Ferramentas</span>
           <NavLink href="/calculadora" icon={Calculator}>
@@ -187,6 +205,10 @@ export function Shell({ children }: { children: ReactNode }) {
             Balcão
           </Link>
           <GlobalSearch />
+          <button type="button" className="btn ghost sm palette-btn" onClick={() => setPalette(true)} title="Paleta de comandos (⌘K / Ctrl+K)" aria-label="Paleta de comandos">
+            <Command aria-hidden />
+            <span className="kbd desktop-only">⌘K</span>
+          </button>
           <span className="spacer" />
           {!online && (
             <span className="badge warn" title="Sem ligação à internet — a aplicação continua a funcionar">
@@ -243,6 +265,8 @@ export function Shell({ children }: { children: ReactNode }) {
           A aplicação passa a abrir em ecrã inteiro e funciona sem ligação à internet.
         </p>
       </Sheet>
+
+      <CommandPalette open={palette} onClose={() => setPalette(false)} />
 
       <nav className="mobile-nav" aria-label="Navegação">
         <MobileLink href="/" icon={LayoutDashboard} label="Início" exact />

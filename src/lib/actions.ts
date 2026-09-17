@@ -10,18 +10,7 @@ import {
   nextCaseRef,
   touchCase,
 } from './db';
-import type {
-  AssetRecord,
-  CaseRecord,
-  ContactLogRecord,
-  DebtRecord,
-  EventRecord,
-  MemberRecord,
-  NoteRecord,
-  PartyRecord,
-  Status,
-  TaskRecord,
-} from './types';
+import type { AssetRecord, CaseRecord, CaseTemplateRecord, ContactLogRecord, DebtRecord, EventRecord, MemberRecord, NoteRecord, PartyRecord, Status, TaskRecord } from './types';
 import { formatDate, nowIso, uid } from './utils';
 
 // ---------------- Dossiers
@@ -241,4 +230,61 @@ export async function deleteMember(m: MemberRecord): Promise<void> {
     await db.cases.where('responsibleId').equals(m.id).modify({ responsibleId: '' });
     await db.tasks.where('assigneeId').equals(m.id).modify({ assigneeId: '' });
   });
+}
+
+// ---------------------------------------------------------------------------
+// Ações em massa (checklist)
+
+const byCase = (tasks: TaskRecord[]): Map<string, TaskRecord[]> => {
+  const m = new Map<string, TaskRecord[]>();
+  for (const t of tasks) m.set(t.caseId, [...(m.get(t.caseId) ?? []), t]);
+  return m;
+};
+
+/** Muda o estado de várias tarefas de uma vez (uma entrada no histórico por dossier). */
+export async function bulkSetStatus(tasks: TaskRecord[], status: Status): Promise<number> {
+  const changed = tasks.filter((t) => t.status !== status);
+  if (!changed.length) return 0;
+  const ts = nowIso();
+  await db.tasks.bulkUpdate(changed.map((t) => ({ key: t.id, changes: { status, completedAt: status === 'concluido' ? ts : '', updatedAt: ts } })));
+  for (const [caseId, list] of byCase(changed)) {
+    await touchCase(caseId);
+    await logActivity(caseId, 'tarefa', `${list.length} tarefa(s) → ${statusLabel(status)}: ${list.map((t) => `“${t.title}”`).join(', ')}`);
+  }
+  return changed.length;
+}
+
+/** Aplica o mesmo patch a várias tarefas (responsável, prazo, criticidade…). */
+export async function bulkUpdateTasks(tasks: TaskRecord[], patch: Partial<TaskRecord>, what: string): Promise<number> {
+  if (!tasks.length) return 0;
+  const ts = nowIso();
+  await db.tasks.bulkUpdate(tasks.map((t) => ({ key: t.id, changes: { ...patch, updatedAt: ts } })));
+  for (const [caseId, list] of byCase(tasks)) {
+    await touchCase(caseId);
+    await logActivity(caseId, 'tarefa', `${list.length} tarefa(s): ${what}`);
+  }
+  return tasks.length;
+}
+
+/** Remove tarefas próprias (as geradas por regras não se apagam — marcam-se N/A). */
+export async function deleteManualTasks(tasks: TaskRecord[]): Promise<number> {
+  const manual = tasks.filter((t) => !t.ruleKey);
+  if (!manual.length) return 0;
+  await db.tasks.bulkDelete(manual.map((t) => t.id));
+  for (const [caseId, list] of byCase(manual)) {
+    await touchCase(caseId);
+    await logActivity(caseId, 'tarefa', `${list.length} tarefa(s) própria(s) removida(s): ${list.map((t) => `“${t.title}”`).join(', ')}`);
+  }
+  return manual.length;
+}
+
+// ---------------------------------------------------------------------------
+// Modelos de dossier
+
+export async function saveCaseTemplate(t: CaseTemplateRecord): Promise<void> {
+  await db.caseTemplates.put({ ...t, updatedAt: nowIso() });
+}
+
+export async function deleteCaseTemplate(id: string): Promise<void> {
+  await db.caseTemplates.delete(id);
 }

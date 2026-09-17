@@ -16,6 +16,7 @@ import { Dashboard } from './features/dashboard/Dashboard';
 import { DossierList } from './features/dossiers/DossierList';
 import { DossierView } from './features/dossiers/DossierView';
 import { SettingsPage } from './features/settings/SettingsPage';
+import { MyTasksPage } from './features/tasks/MyTasksPage';
 import { TasksPage } from './features/tasks/TasksPage';
 import { NewCaseWizard } from './features/wizard/NewCaseWizard';
 
@@ -51,6 +52,7 @@ export default function App() {
               <Route path="/dossiers/novo" component={NewCaseWizard} />
               <Route path="/dossiers/:id/:tab?" component={DossierView} />
               <Route path="/tarefas" component={TasksPage} />
+              <Route path="/minhas" component={MyTasksPage} />
               <Route path="/agenda" component={AgendaPage} />
               <Route path="/calculadora" component={CalculatorPage} />
               <Route path="/minutas" component={TemplatesPage} />

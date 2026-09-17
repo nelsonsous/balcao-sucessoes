@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  BookmarkPlus,
   BellRing,
   CalendarDays,
   Database,
@@ -20,7 +21,10 @@ import {
   UserRound,
   Users,
 } from 'lucide-react';
-import { deleteMember, saveMember } from '../../lib/actions';
+import { deleteCaseTemplate, deleteMember, saveMember } from '../../lib/actions';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../../lib/db';
+import { answeredCount } from '../../lib/caseTemplates';
 import { attachmentsSize, downloadBackup, importBackup, parseBackup, storageEstimate, wipeAll } from '../../lib/backup';
 import { formatBytes } from '../../lib/documents';
 import { requestPersistence, setSetting, useSettings, type AppSettings } from '../../lib/db';
@@ -133,6 +137,16 @@ export function SettingsPage() {
                 <input id="s-email" type="email" className="input" value={profile.firmEmail} onChange={(e) => setProfile({ ...profile, firmEmail: e.target.value })} />
               </Field>
             </div>
+            <Field label="Na equipa, eu sou" htmlFor="s-me" hint="Liga o seu perfil a uma pessoa da equipa para “As minhas tarefas”.">
+              <select id="s-me" className="select" value={settings.meId} onChange={(e) => void setSetting('meId', e.target.value)}>
+                <option value="">— não definido —</option>
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
             <div>
               <Button variant="primary" onClick={() => void saveProfile()}>
                 Guardar perfil
@@ -140,6 +154,8 @@ export function SettingsPage() {
             </div>
           </div>
         </Card>
+
+        <CaseTemplatesCard />
 
         <Card>
           <CardHead
@@ -507,5 +523,48 @@ function MemberSheet({ member, onClose }: { member: Partial<MemberRecord> | null
         </Field>
       </div>
     </Sheet>
+  );
+}
+
+
+function CaseTemplatesCard() {
+  const confirm = useConfirm();
+  const toast = useToast();
+  const templates = useLiveQuery(() => db.caseTemplates.toArray(), []);
+  return (
+    <Card>
+      <CardHead icon={BookmarkPlus} title="Modelos de dossier" subtitle="Guardados a partir de dossiers (menu ⋯ → Guardar como modelo). Os modelos-base estão sempre disponíveis em “Nova sucessão”." />
+      <div className="card-body stack">
+        {!templates?.length ? (
+          <p className="small subtle">Ainda sem modelos do escritório.</p>
+        ) : (
+          <div className="stack" style={{ gap: 8 }}>
+            {templates.map((t) => (
+              <div key={t.id} className="row" style={{ gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="strong">{t.name}</div>
+                  <div className="tiny subtle">
+                    {answeredCount(t.answers)} respostas · {t.tags.length} etiqueta(s) · {t.tasks.length} tarefa(s) própria(s){t.description ? ` — ${t.description}` : ''}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn ghost sm icon"
+                  aria-label={`Remover ${t.name}`}
+                  onClick={async () => {
+                    const ok = await confirm({ title: `Remover o modelo “${t.name}”?`, message: 'Os dossiers criados a partir dele não são afetados.', confirmLabel: 'Remover' });
+                    if (!ok) return;
+                    await deleteCaseTemplate(t.id);
+                    toast({ tone: 'success', title: 'Modelo removido' });
+                  }}
+                >
+                  <Trash2 aria-hidden />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Card>
   );
 }

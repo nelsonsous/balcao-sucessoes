@@ -19,6 +19,7 @@ const TABLES = [
   'settings',
   'events',
   'documents',
+  'caseTemplates',
   'templates',
   'files',
 ] as const;

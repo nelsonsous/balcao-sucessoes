@@ -7,6 +7,7 @@ import type {
   Answers,
   AssetRecord,
   CaseRecord,
+  CaseTemplateRecord,
   ClientInfo,
   ContactLogRecord,
   DebtRecord,
@@ -38,6 +39,7 @@ export type BalcaoDB = Dexie & {
   documents: EntityTable<DocumentRecord, 'id'>;
   files: EntityTable<FileRecord, 'id'>;
   templates: EntityTable<TemplateRecord, 'id'>;
+  caseTemplates: EntityTable<CaseTemplateRecord, 'id'>;
 };
 
 export const db = new Dexie('balcao-das-sucessoes') as BalcaoDB;
@@ -67,6 +69,11 @@ db.version(3).stores({
   templates: 'id, category',
 });
 
+// v4: modelos de dossier (respostas + tarefas próprias).
+db.version(4).stores({
+  caseTemplates: 'id, name',
+});
+
 export const CASE_TABLES = ['tasks', 'parties', 'assets', 'debts', 'notes', 'contacts', 'activity', 'events', 'documents'] as const;
 
 // ---------------------------------------------------------------------------
@@ -88,6 +95,8 @@ export interface AppSettings {
   showJudicialHolidays: boolean;
   notifications: boolean;
   appBadge: boolean;
+  /** Pessoa da equipa que corresponde a quem usa este dispositivo ("As minhas tarefas"). */
+  meId: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -105,6 +114,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showJudicialHolidays: true,
   notifications: false,
   appBadge: true,
+  meId: '',
 };
 
 export async function getSetting<K extends keyof AppSettings>(key: K): Promise<AppSettings[K]> {
@@ -389,4 +399,20 @@ export async function requestPersistence(): Promise<boolean | null> {
   } catch {
     return null;
   }
+}
+
+export function newCaseTemplate(partial: Partial<CaseTemplateRecord> = {}): CaseTemplateRecord {
+  const ts = nowIso();
+  return {
+    id: uid(),
+    name: '',
+    description: '',
+    answers: emptyAnswers(),
+    tags: [],
+    priority: 'normal',
+    tasks: [],
+    createdAt: ts,
+    updatedAt: ts,
+    ...partial,
+  };
 }

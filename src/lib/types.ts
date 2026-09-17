@@ -338,6 +338,27 @@ export interface TemplateRecord {
   updatedAt: string;
 }
 
+/** Tarefa própria guardada num modelo de dossier. */
+export interface CustomTaskSeed {
+  title: string;
+  phase: PhaseId;
+  description: string;
+  critical: boolean;
+}
+
+/** Modelo de dossier: respostas ao questionário + tarefas próprias + etiquetas. */
+export interface CaseTemplateRecord {
+  id: string;
+  name: string;
+  description: string;
+  answers: Answers;
+  tags: string[];
+  priority: Priority;
+  tasks: CustomTaskSeed[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SettingRecord {
   key: string;
   value: unknown;

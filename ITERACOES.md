@@ -3,7 +3,7 @@
 Ciclo pedido: **10 iterações seguidas** para analisar o protótipo, perceber os conceitos e construir uma aplicação muito melhor, a nível profissional, como PWA.
 Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é reaproveitado dela.
 
-**Estado do ciclo: iteração 5 de 10 concluída.**
+**Estado do ciclo: iteração 6 de 10 concluída.**
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
 
@@ -84,6 +84,16 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 - **Separador Património**: botões *Relação de bens* e *CSV*.
 - **67 testes** (novos: quota-parte e valor na herança, numeração e descrição das verbas, totais com meação, tornas do mapa de partilha, conteúdo dos quatro relatórios — incluindo a exclusão de notas internas no relatório para o cliente —, tabelas `.docx`, CSV).
 
+## Iteração 6 — Produtividade ✅
+
+- **Paleta de comandos** (`⌘K` / `Ctrl+K`, botão no topo): ir para qualquer página, abrir dossiers (nome, referência, falecido, cliente, etiquetas), tarefas em aberto e minutas (abre logo o compositor via `/minutas?usar=…`), executar ações (nova sucessão, exportar cópia de segurança, tema, instalar). Pesquisa sem acentos, por palavras em qualquer ordem e por iniciais (“vg” → Visão geral); recentes guardados localmente; navegação por teclado.
+- **As minhas tarefas** (`/minhas`, barra lateral com contador de atrasadas/hoje): trabalho em aberto atribuído à pessoa (ou dos dossiers de que é responsável), em dossiers ativos, agrupado em Atrasadas · Para hoje · Esta semana · Próximas · Sem prazo, com mudança de estado na linha; a identidade define-se em Definições → Perfil (“Na equipa, eu sou”) ou na própria página.
+- **Checklist em quadro (Kanban)**: vista Lista/Quadro por dossier (preferência guardada); colunas por estado, cartões com fase, prazo, responsável e criticidade; **arrastar e largar** muda o estado.
+- **Ações em massa** na checklist: modo de seleção com caixas por tarefa e “selecionar todas as visíveis”; barra fixa para mudar estado, atribuir responsável, definir prazo, marcar/desmarcar crítica e remover tarefas próprias (as geradas por regras marcam-se N/A); uma entrada de histórico por dossier e ação.
+- **Modelos de dossier** (base de dados v4, tabela `caseTemplates`, incluída nas cópias de segurança): quatro modelos-base (cônjuge e filhos; sem descendentes — irmãos; ligação a França com tarefa própria; testamento e menores) e modelos do escritório guardados a partir de qualquer dossier (menu ⋯ → *Guardar como modelo*: respostas, etiquetas, prioridade e tarefas próprias, sem dados pessoais). No assistente, “Começar a partir de um modelo” preenche o questionário (com confirmação se já havia respostas) e acrescenta as tarefas próprias ao criar; gestão em Definições.
+- **Dossiers em quadro por fase**: terceira vista da lista (cartões · tabela · quadro), uma coluna por fase atual com semáforo, progresso, próxima ação e responsável.
+- **76 testes** (novos: pontuação e ordenação da paleta, agrupamento das minhas tarefas, modelos-base geram checklists válidas, modelo a partir de dossier sem dados pessoais, ações em massa com histórico por dossier).
+
 ## Plano das próximas iterações
 
 | # | Tema | Conteúdo previsto |
@@ -92,7 +102,7 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 | 3 | ~~Calculadora sucessória~~ | ✅ concluída |
 | 4 | ~~Documentos & minutas~~ | ✅ concluída |
 | 5 | ~~Relatórios & relação de bens~~ | ✅ concluída |
-| 6 | **Produtividade** | Paleta de comandos (⌘K), vista Kanban por fase, ações em massa, modelos de dossier, “as minhas tarefas”. |
+| 6 | ~~Produtividade~~ | ✅ concluída |
 | 7 | **Segurança** | Bloqueio por PIN, auto-bloqueio, cópias cifradas (AES-GCM), modo privacidade, importação do protótipo antigo. |
 | 8 | **Internacional** | Módulo França/UE aprofundado (CSE, lei aplicável, checklist notaire), textos multilingues (PT/FR/EN) para minutas e relatórios. |
 | 9 | **Qualidade** | Auditoria de acessibilidade (WCAG AA), desempenho (divisão de código, só subsets latinos das fontes), testes E2E, polimento móvel. |

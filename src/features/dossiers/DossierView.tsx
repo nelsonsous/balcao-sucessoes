@@ -3,6 +3,7 @@ import { Link, useLocation, useParams, useSearch } from 'wouter';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
   ArrowRight,
+  BookmarkPlus,
   CalendarClock,
   CalendarDays,
   ChevronRight,
@@ -57,6 +58,7 @@ import { ChecklistTab, type ChecklistFilter } from './ChecklistTab';
 import { QuestionnaireTab } from './QuestionnaireTab';
 import { TaskDrawer } from './TaskDrawer';
 import { ReportSheet } from '../reports/ReportSheet';
+import { SaveTemplateSheet } from './SaveTemplateSheet';
 import type { ReportKind } from '../../lib/reports';
 
 type TabId = 'checklist' | 'interessados' | 'patrimonio' | 'documentos' | 'quotas' | 'agenda' | 'notas' | 'questionario' | 'historico';
@@ -94,6 +96,7 @@ export function DossierView() {
   const [filter, setFilter] = useState<ChecklistFilter>('abertas');
   const [editing, setEditing] = useState(false);
   const [report, setReport] = useState<ReportKind | null>(null);
+  const [savingTemplate, setSavingTemplate] = useState(false);
   const [allBlockers, setAllBlockers] = useState(false);
   const search = useSearch();
   useEffect(() => {
@@ -230,6 +233,7 @@ export function DossierView() {
                   navigate(`/dossiers/${copy.id}`);
                 },
               },
+              { label: 'Guardar como modelo', description: 'Questionário e tarefas próprias', icon: BookmarkPlus, onSelect: () => setSavingTemplate(true) },
               { label: 'Eliminar dossier', icon: Trash2, danger: true, separatorBefore: true, onSelect: () => void onDelete() },
             ]}
             button={(p) => (
@@ -397,6 +401,7 @@ export function DossierView() {
 
       <TaskDrawer task={task} caseRecord={c} onClose={() => setSelectedTask(null)} />
       <ReportSheet c={c} kind={report} onClose={() => setReport(null)} onKind={setReport} />
+      <SaveTemplateSheet c={c} tasks={tasks} open={savingTemplate} onClose={() => setSavingTemplate(false)} />
       <CaseEditSheet open={editing} c={c} onClose={() => setEditing(false)} />
     </div>
   );

@@ -1,5 +1,6 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useLocation, useSearch } from 'wouter';
 import { Copy, FilePlus2, FileText, Mail, Pencil, Search, Trash2, Wand2 } from 'lucide-react';
 import { db } from '../../lib/db';
 import type { TemplateLanguage, TemplateRecord } from '../../lib/types';
@@ -44,6 +45,16 @@ export function TemplatesPage() {
   const [editing, setEditing] = useState<TemplateRecord | null>(null);
 
   const all = useMemo(() => [...(custom ?? []).map(toDef), ...BUILTIN_TEMPLATES], [custom]);
+  // Ligação direta (paleta de comandos): /minutas?usar=<id> abre o compositor.
+  const search = useSearch();
+  const [, navigate] = useLocation();
+  useEffect(() => {
+    const id = new URLSearchParams(search).get('usar');
+    if (!id || custom === undefined) return;
+    const t = all.find((x) => x.id === id);
+    if (t) setComposer({ template: t });
+    navigate('/minutas', { replace: true });
+  }, [search, all, custom, navigate]);
   const visible = all.filter(
     (t) =>
       (lang === 'todas' || t.language === lang) &&

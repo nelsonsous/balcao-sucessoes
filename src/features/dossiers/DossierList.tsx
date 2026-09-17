@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, CalendarClock, FileSpreadsheet, FolderOpen, LayoutGrid, List, Plus, Search, TriangleAlert } from 'lucide-react';
+import { ArrowRight, CalendarClock, FileSpreadsheet, FolderOpen, KanbanSquare, LayoutGrid, List, Plus, Search, TriangleAlert } from 'lucide-react';
+import { PHASES } from '../../engine/phases';
 import { useMemberMap, useMembers, useOverviews, type CaseOverview } from '../../lib/hooks';
 import type { CaseStage, MemberRecord } from '../../lib/types';
 import { cx, formatDate, normalize, relativeDays } from '../../lib/utils';
@@ -12,10 +13,11 @@ type SortKey = 'recentes' | 'prazo' | 'progresso' | 'nome' | 'obito';
 
 const PREF_KEY = 'bs-list-prefs';
 
-function loadPrefs(): { view: 'cards' | 'table'; sort: SortKey } {
+type ListView = 'cards' | 'table' | 'quadro';
+function loadPrefs(): { view: ListView; sort: SortKey } {
   try {
     const p = JSON.parse(localStorage.getItem(PREF_KEY) ?? '{}');
-    return { view: p.view === 'table' ? 'table' : 'cards', sort: p.sort ?? 'recentes' };
+    return { view: p.view === 'table' ? 'table' : p.view === 'quadro' ? 'quadro' : 'cards', sort: p.sort ?? 'recentes' };
   } catch {
     return { view: 'cards', sort: 'recentes' };
   }
@@ -169,13 +171,14 @@ export function DossierList() {
           <option value="obito">Óbito mais recente</option>
           <option value="nome">Nome (A–Z)</option>
         </select>
-        <Segmented<'cards' | 'table'>
+        <Segmented<ListView>
           label="Vista"
           value={prefs.view}
           onChange={(view) => savePrefs({ ...prefs, view })}
           options={[
             { value: 'cards', label: <span className="sr-only">Cartões</span>, icon: LayoutGrid },
             { value: 'table', label: <span className="sr-only">Tabela</span>, icon: List },
+            { value: 'quadro', label: <span className="sr-only">Quadro por fase</span>, icon: KanbanSquare },
           ]}
         />
       </div>
@@ -195,6 +198,8 @@ export function DossierList() {
             }
           />
         </Card>
+      ) : prefs.view === 'quadro' ? (
+        <DossierBoard list={filtered} memberMap={memberMap} />
       ) : prefs.view === 'cards' ? (
         <div className="case-grid">
           {filtered.map((o) => (
@@ -305,5 +310,47 @@ function CaseCard({ o, member }: { o: CaseOverview; member?: MemberRecord }) {
       )}
       <div className="tiny subtle">Atualizado em {formatDate(c.updatedAt.slice(0, 10))}</div>
     </Link>
+  );
+}
+
+
+/** Quadro da carteira: uma coluna por fase atual (a primeira com trabalho em aberto). */
+function DossierBoard({ list, memberMap }: { list: CaseOverview[]; memberMap: Map<string, MemberRecord> }) {
+  const cols = [...PHASES.map((p) => ({ id: p.id as string, label: p.label })), { id: '__done', label: 'Sem trabalho em aberto' }];
+  return (
+    <div className="board dossier-board" role="list" aria-label="Dossiers por fase">
+      {cols.map((col) => {
+        const items = list.filter((o) => (o.phase ?? '__done') === col.id);
+        if (!items.length && col.id !== '__done') return null;
+        return (
+          <section key={col.id} className="board-col" role="listitem" aria-label={`${col.label}: ${items.length}`}>
+            <header className="board-head">
+              <span className="board-title">{col.label}</span>
+              <span className="board-count tabular">{items.length}</span>
+            </header>
+            <div className="board-cards">
+              {items.length === 0 && <div className="board-empty">—</div>}
+              {items.map((o) => {
+                const m = memberMap.get(o.c.responsibleId);
+                return (
+                  <Link key={o.c.id} href={`/dossiers/${o.c.id}`} className={cx('board-card', o.blockers.overdue.length > 0 && 'overdue')}>
+                    <span className="board-card-title">{o.c.name}</span>
+                    <span className="board-card-phase">
+                      {o.c.ref} · {o.stats.pct}%
+                    </span>
+                    {o.next && <span className="board-card-next">{o.next.title}</span>}
+                    <span className="board-card-foot">
+                      <HealthBadge health={o.health} />
+                      <span className="spacer" />
+                      {m && <Avatar member={m} size="sm" />}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+    </div>
   );
 }
