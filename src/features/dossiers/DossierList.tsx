@@ -265,7 +265,7 @@ function CaseCard({ o, member }: { o: CaseOverview; member?: MemberRecord }) {
           <div className="tiny subtle strong">{c.ref}</div>
           <div className="case-card-title">{c.name}</div>
           <div className="small subtle truncate">
-            {c.deceased.name || 'De cujus por indicar'}
+            <span className="pv">{c.deceased.name || 'De cujus por indicar'}</span>
             {c.deceased.deathDate ? ` · óbito ${relativeDays(c.deceased.deathDate)}` : ''}
           </div>
         </div>
