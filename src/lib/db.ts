@@ -107,6 +107,18 @@ export interface AppSettings {
   privacyMode: boolean;
   /** Data/hora da última cópia de segurança exportada. */
   lastBackupAt: string;
+  /** Cópias automáticas para uma pasta do dispositivo (File System Access API). */
+  autoBackupEnabled: boolean;
+  autoBackupEvery: 'alteracao' | 'diaria' | 'semanal';
+  autoBackupKeep: number;
+  autoBackupFiles: boolean;
+  /** Palavra-passe das cópias automáticas (fica só neste dispositivo). */
+  autoBackupPass: string;
+  /** Nome da pasta escolhida (o handle fica na tabela de definições, chave autoBackupDir). */
+  autoBackupDirName: string;
+  lastAutoBackupAt: string;
+  /** "permissao" quando a pasta precisa de nova autorização; outra mensagem = último erro. */
+  autoBackupLastError: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -130,6 +142,14 @@ export const DEFAULT_SETTINGS: AppSettings = {
   lockOnHide: false,
   privacyMode: false,
   lastBackupAt: '',
+  autoBackupEnabled: false,
+  autoBackupEvery: 'diaria',
+  autoBackupKeep: 10,
+  autoBackupFiles: true,
+  autoBackupPass: '',
+  autoBackupDirName: '',
+  lastAutoBackupAt: '',
+  autoBackupLastError: '',
 };
 
 export async function getSetting<K extends keyof AppSettings>(key: K): Promise<AppSettings[K]> {

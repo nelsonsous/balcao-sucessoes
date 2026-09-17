@@ -41,6 +41,17 @@ export default defineConfig({
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
           { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        share_target: {
+          action: './share-target',
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url',
+            files: [{ name: 'files', accept: ['application/pdf', 'image/*', 'text/plain', 'application/json', '.doc', '.docx', '.odt', '.xls', '.xlsx', '.eml', '.msg'] }],
+          },
+        },
         shortcuts: [
           { name: 'Nova sucessão', short_name: 'Nova', url: './#/dossiers/novo', icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
           { name: 'Dossiers', url: './#/dossiers', icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },

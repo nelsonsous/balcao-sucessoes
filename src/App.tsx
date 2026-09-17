@@ -7,6 +7,7 @@ import { initLock } from './lib/lock';
 import { LockScreen } from './components/LockScreen';
 import { Onboarding } from './components/Onboarding';
 import { Reminders } from './components/Reminders';
+import { AutoBackupRunner } from './components/AutoBackupRunner';
 import { PwaPrompts } from './components/PwaPrompts';
 import { Shell } from './components/Shell';
 import { ToastProvider } from './components/Toast';
@@ -24,6 +25,7 @@ const MyTasksPage = lazy(() => import('./features/tasks/MyTasksPage').then((m) =
 const TasksPage = lazy(() => import('./features/tasks/TasksPage').then((m) => ({ default: m.TasksPage })));
 const NewCaseWizard = lazy(() => import('./features/wizard/NewCaseWizard').then((m) => ({ default: m.NewCaseWizard })));
 const PrazosPage = lazy(() => import('./features/prazos/PrazosPage').then((m) => ({ default: m.PrazosPage })));
+const ReceivedPage = lazy(() => import('./features/inbox/ReceivedPage').then((m) => ({ default: m.ReceivedPage })));
 
 const Loading = () => <div className="skeleton" style={{ height: 320 }} aria-busy="true" aria-label="A carregar" />;
 
@@ -68,11 +70,13 @@ export default function App() {
               <Route path="/prazos" component={PrazosPage} />
               <Route path="/minutas" component={TemplatesPage} />
               <Route path="/definicoes" component={SettingsPage} />
+              <Route path="/recebidos" component={ReceivedPage} />
               <Route component={NotFound} />
               </Switch>
             </Suspense>
           </Shell>
           <Reminders />
+          <AutoBackupRunner />
         </Router>
         <Onboarding />
         <PwaPrompts />

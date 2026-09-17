@@ -193,6 +193,43 @@ try {
     assert(rows.some((t) => t.includes('Tarefa partilhada pelo colega')), 'tarefa do colega na checklist');
   });
 
+  await step('Recebidos (Web Share Target): manifesto e anexar ao dossier', async () => {
+    const manifest = await page.evaluate(() => fetch('manifest.webmanifest').then((r) => r.json()));
+    assert(manifest.share_target && /share-target$/.test(manifest.share_target.action) && manifest.share_target.method === 'POST', 'manifesto com share_target');
+    await page.evaluate(
+      () =>
+        new Promise((resolve, reject) => {
+          const r = indexedDB.open('balcao-share-inbox', 1);
+          r.onupgradeneeded = () => r.result.createObjectStore('items', { keyPath: 'id', autoIncrement: true });
+          r.onsuccess = () => {
+            const tx = r.result.transaction('items', 'readwrite');
+            tx.objectStore('items').add({ title: 'Certidão E2E', text: '', url: '', files: [{ name: 'certidao-e2e.pdf', type: 'application/pdf', size: 12, blob: new Blob(['%PDF-1.4 e2e'], { type: 'application/pdf' }) }], at: new Date().toISOString() });
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+          };
+          r.onerror = () => reject(r.error);
+        }),
+    );
+    await go('#/recebidos', 1500);
+    const main = await page.$eval('main', (e) => e.textContent || '');
+    assert(main.includes('certidao-e2e.pdf'), 'ficheiro recebido listado');
+    await page.select('#rx-case', caseId);
+    assert(await clickText('main button', 'Anexar ao dossier'), 'botão Anexar ao dossier');
+    await page.waitForFunction(() => /Nada recebido/.test(document.querySelector('main')?.textContent || ''), { timeout: 5000 });
+    const docs = await page.evaluate(
+      (cid) =>
+        new Promise((res) => {
+          const r = indexedDB.open('balcao-das-sucessoes');
+          r.onsuccess = () => {
+            const q = r.result.transaction('documents').objectStore('documents').getAll();
+            q.onsuccess = () => res(q.result.filter((d) => d.caseId === cid && d.fileName === 'certidao-e2e.pdf').length);
+          };
+        }),
+      caseId,
+    );
+    assert(docs === 1, 'documento criado com o anexo recebido');
+  });
+
   await step('PIN: definir, bloquear e desbloquear', async () => {
     await go('#/definicoes', 1200);
     assert(await clickText('button', 'Definir PIN'), 'botão Definir PIN');

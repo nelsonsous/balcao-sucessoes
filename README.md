@@ -36,7 +36,9 @@ Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-o
 | **Dados** | IndexedDB local, cópia de segurança/importação JSON — opcionalmente **cifrada com palavra-passe (AES-256-GCM)** —, lembrete semanal de cópia, importação do protótipo original, dados de demonstração fictícios, pedido de armazenamento persistente. |
 | **Segurança** | Bloqueio por PIN (PBKDF2, esperas após falhas), auto-bloqueio por inatividade e ao mudar de aplicação, modo privacidade (nomes desfocados para partilhar o ecrã), Content Security Policy sem scripts inline. |
 | **Partilha entre colegas** | Exportar um dossier completo (com anexos) num ficheiro cifrado e juntá-lo noutro dispositivo com pré-visualização dos conflitos e quatro regras de junção (mais recente, ficheiro, este dispositivo, novo dossier) — sem nunca apagar nada e com registo no histórico. |
-| **Qualidade** | 0 violações axe-core (WCAG 2.2 AA) em 16 ecrãs, divisão de código por rota e separador, fontes só em latino, 162 testes (unitários, componentes com Testing Library e propriedades com fast-check, cobertura com limiar) e 11 passos E2E com Chrome executados antes de cada publicação. |
+| **Cópias automáticas** | Cópias cifradas escritas automaticamente numa pasta do dispositivo (File System Access API) com rotação, frequência configurável e aviso quando a pasta precisa de autorização — numa pasta sincronizada, o escritório fica com um repositório central sem servidor. |
+| **Partilha para a app** | No Android, partilhar um PDF, uma fotografia ou uma ligação para o Balcão (Web Share Target) coloca-o em «Recebidos», onde passa a documento do dossier ou a nota. |
+| **Qualidade** | 0 violações axe-core (WCAG 2.2 AA) em 16 ecrãs, divisão de código por rota e separador, fontes só em latino, 169 testes (unitários, componentes com Testing Library e propriedades com fast-check, cobertura com limiar) e 12 passos E2E com Chrome executados antes de cada publicação. |
 | **PWA** | Instalável (desktop, Android, iOS), offline, atalhos, aviso de nova versão, tema claro/escuro, responsivo com navegação inferior no telemóvel. |
 
 ## Começar

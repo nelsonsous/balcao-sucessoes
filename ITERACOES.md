@@ -7,7 +7,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 2 — «10 vezes seguidas com melhorias e testes» (iterações 11–20)
 
-**Estado do ciclo 2: iterações 11–14 concluídas (14/20).**
+**Estado do ciclo 2: iterações 11–15 concluídas (15/20).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -15,7 +15,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 12 | ~~Motor jurídico aprofundado~~ | ✅ concluída |
 | 13 | ~~Prazos avançados~~ | ✅ concluída |
 | 14 | ~~Partilha de dossier entre colegas~~ | ✅ concluída |
-| 15 | **Cópias automáticas e partilha para a app** | Cópias cifradas automáticas para uma pasta escolhida (File System Access API), rotação; receber ficheiros partilhados no telemóvel (Web Share Target) e anexá-los a um dossier; testes. |
+| 15 | ~~Cópias automáticas e partilha para a app~~ | ✅ concluída |
 | 16 | **Anular ações e reciclagem** | «Anular» nas mudanças de estado e remoções, reciclagem com restauro (tarefas, interessados, bens, documentos), histórico filtrável; testes. |
 | 17 | **Painel de equipa e análise** | Métricas por mês, fase e pessoa (tempo médio por fase, prazos cumpridos), gráficos SVG acessíveis com tabela alternativa; testes das agregações. |
 | 18 | **Pesquisa e vistas guardadas** | Filtros avançados na lista de dossiers, vistas guardadas com nome, pesquisa global em notas, contactos e documentos; testes. |
@@ -25,6 +25,14 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
+
+### Iteração 15 — Cópias automáticas e partilha para a app ✅
+
+- **Cópias automáticas para uma pasta** (`lib/autoBackup.ts`, File System Access API — Chrome/Edge em computador): o utilizador escolhe uma pasta do dispositivo (o handle fica guardado em IndexedDB); a aplicação escreve cópias **sempre cifradas** (AES-256-GCM, palavra-passe própria que fica só no dispositivo) com nome `balcao-sucessoes-auto-<data>-<hora>.cifrada.json`, um `LEIA-ME.txt` com as instruções de reposição e **rotação** (mantém as últimas 5/10/20/50). Se a pasta for sincronizada (OneDrive, SharePoint, Google Drive, NAS), o escritório fica com um repositório central de cópias sem servidor próprio.
+- **Agendador** (`components/AutoBackupRunner.tsx`): corre ao arrancar, a cada minuto e quando a aplicação deixa de estar visível; só copia quando há alterações desde a última cópia (ficha dos dossiers ou histórico), segundo a frequência — a cada alteração (intervalo mínimo de 10 min), diária ou semanal; a cópia automática também conta como cópia de segurança para o lembrete semanal. Quando o navegador exige nova autorização da pasta, avisa com um toast cuja ação «Autorizar» pede a permissão e retoma; erros ficam registados e visíveis nas definições.
+- **Definições → Cópias automáticas** (`AutoBackupCard`): estado, pasta, última cópia, botões «Escolher pasta…», «Autorizar pasta», «Copiar agora», palavra-passe com força, frequência, cópias a manter, anexos, ativação (só com pasta e palavra-passe); aviso para navegadores sem suporte.
+- **Partilha para a app (Web Share Target)**: o manifesto declara `share_target` (POST multipart com título, texto, ligação e ficheiros — PDF, imagens, Office, e-mails); o service worker (`public/sw-extra.js`) recebe a partilha, guarda-a numa caixa de entrada IndexedDB própria (`lib/shareInbox.ts`) e redireciona para a nova página **Recebidos** (`/recebidos`), onde se escolhe o dossier e cada item passa a **documento recebido com anexo** (ficheiros) ou a **nota** (texto/ligação), ou é ignorado. Entrada «Recebidos» na barra lateral (só quando há itens, com contador), na paleta e aviso ao arrancar; explicação no cartão «Aplicação». Android com a app instalada; no iPhone a partilha direta ainda não é suportada pelo sistema.
+- **Testes**: pasta em memória com o subconjunto da API (escrita cifrada legível com a palavra-passe, LEIA-ME uma vez, rotação que não toca em ficheiros estranhos), matriz de agendamento (frequências, sem dados, nada mudou, intervalo mínimo), ciclo do agendador (desligado, sem pasta, sem permissão, feito, nada a fazer, «copiar agora», erro registado); caixa de entrada (guardar, listar, contar, remover, reconstruir ficheiro, títulos); página Recebidos (estado vazio, anexar ficheiro como documento e ligação como nota, ignorar) — **169 testes**; novo passo E2E «Recebidos: manifesto e anexar ao dossier» — **12 passos**.
 
 ### Iteração 14 — Partilha de dossier entre colegas ✅
 

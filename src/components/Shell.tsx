@@ -25,7 +25,9 @@ import {
   Wand2,
   WifiOff,
 } from 'lucide-react';
+import { Inbox } from 'lucide-react';
 import { db, setSetting, useSettings } from '../lib/db';
+import { useInboxCount } from '../lib/shareInbox';
 import { useAgendaItems } from '../lib/agenda';
 import { isActiveCase, useInstall, useOnline, useOverviews } from '../lib/hooks';
 import { todayIso } from '../lib/utils';
@@ -65,6 +67,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const [iosHelp, setIosHelp] = useState(false);
   const [palette, setPalette] = useState(false);
   const agenda = useAgendaItems();
+  const inbox = useInboxCount();
   const myCount = useMemo(() => {
     if (!settings.meId) return 0;
     const g = groupMyTasks((overviews ?? []).map((o) => ({ c: o.c, tasks: o.tasks })), settings.meId);
@@ -159,6 +162,11 @@ export function Shell({ children }: { children: ReactNode }) {
           <NavLink href="/minutas" icon={Wand2}>
             Minutas
           </NavLink>
+          {inbox > 0 && (
+            <NavLink href="/recebidos" icon={Inbox} count={inbox} alert>
+              Recebidos
+            </NavLink>
+          )}
           <span className="nav-label">Escritório</span>
           <NavLink href="/definicoes" icon={Settings}>
             Definições

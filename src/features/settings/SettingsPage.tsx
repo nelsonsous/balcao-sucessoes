@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'wouter';
 import {
   BookmarkPlus,
   BellRing,
@@ -27,6 +28,7 @@ import { db } from '../../lib/db';
 import { answeredCount } from '../../lib/caseTemplates';
 import { attachmentsSize, importBackup, readBackupText, storageEstimate, wipeAll, type BackupFile } from '../../lib/backup';
 import { SecurityCard } from './SecurityCard';
+import { AutoBackupCard } from './AutoBackupCard';
 import { ExportSheet, LegacyImportSheet, PassphraseSheet } from './BackupSheets';
 import { formatBytes } from '../../lib/documents';
 import { requestPersistence, setSetting, useSettings, type AppSettings } from '../../lib/db';
@@ -281,6 +283,9 @@ export function SettingsPage() {
               </div>
             )}
             <p className="subtle small">Versão {__APP_VERSION__} · funciona offline depois da primeira visita.</p>
+            <p className="subtle small">
+              No Android, com a aplicação instalada, pode partilhar PDFs, fotografias e ligações diretamente para o Balcão (Partilhar → Balcão das Sucessões) e anexá-los a um dossier em <Link href="/recebidos">Recebidos</Link>.
+            </p>
           </div>
         </Card>
 
@@ -382,6 +387,8 @@ export function SettingsPage() {
             </div>
           </div>
         </Card>
+
+        <AutoBackupCard />
 
         <Card className="span-2">
           <CardHead icon={Info} title="Sobre" />

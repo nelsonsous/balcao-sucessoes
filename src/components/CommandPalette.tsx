@@ -20,6 +20,7 @@ import {
   Wand2,
   type LucideIcon,
 } from 'lucide-react';
+import { Inbox } from 'lucide-react';
 import { BUILTIN_TEMPLATES } from '../engine/templates';
 import { isOpen } from '../engine/phases';
 import { downloadBackup } from '../lib/backup';
@@ -48,6 +49,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   'nav-/calculadora': Calculator,
   'nav-/prazos': CalendarDays,
   'nav-/minutas': Wand2,
+  'nav-/recebidos': Inbox,
   'nav-/definicoes': Settings,
   'act-nova': Plus,
   'act-backup': Database,
@@ -93,6 +95,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'nav-/', group: 'navegacao', title: 'Visão geral', href: '/' },
       { id: 'nav-/dossiers', group: 'navegacao', title: 'Dossiers', keywords: 'lista processos sucessões', href: '/dossiers' },
       { id: 'nav-/agenda', group: 'navegacao', title: 'Agenda', keywords: 'calendário prazos eventos', href: '/agenda' },
+      { id: 'nav-/recebidos', group: 'navegacao', title: 'Recebidos', subtitle: 'Ficheiros partilhados para a aplicação', keywords: 'partilha telemóvel recebidos anexar inbox', href: '/recebidos' },
       { id: 'nav-/tarefas', group: 'navegacao', title: 'O que está a bloquear?', keywords: 'bloqueios atrasos críticas', href: '/tarefas' },
       { id: 'nav-/minhas', group: 'navegacao', title: 'As minhas tarefas', keywords: 'minhas pessoal', href: '/minhas' },
       { id: 'nav-/calculadora', group: 'navegacao', title: 'Calculadora sucessória', keywords: 'quotas legítima herdeiros', href: '/calculadora' },

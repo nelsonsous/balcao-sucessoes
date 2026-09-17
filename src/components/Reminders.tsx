@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useAgendaItems } from '../lib/agenda';
 import { db, useSettings } from '../lib/db';
+import { useInboxCount } from '../lib/shareInbox';
 import { todayIso } from '../lib/utils';
 import { useToast } from './Toast';
 
@@ -51,8 +52,23 @@ export function Reminders() {
   const settings = useSettings();
   const items = useAgendaItems();
   const toast = useToast();
-  const [, navigate] = useLocation();
+  const [loc, navigate] = useLocation();
+  const locRef = useRef(loc);
+  locRef.current = loc;
+  const inbox = useInboxCount();
   const [day, setDay] = useState(todayIso);
+
+  // Itens partilhados para a aplicação (Web Share Target) à espera de serem anexados.
+  useEffect(() => {
+    if (!inbox || locRef.current.startsWith('/recebidos')) return;
+    toast({
+      key: 'inbox',
+      title: inbox === 1 ? '1 item recebido por partilha' : `${inbox} itens recebidos por partilha`,
+      description: 'Escolha o dossier e anexe os ficheiros ou guarde a ligação como nota.',
+      duration: 10_000,
+      action: { label: 'Ver recebidos', onClick: () => navigate('/recebidos') },
+    });
+  }, [inbox, toast, navigate]);
   const caseCount = useLiveQuery(() => db.cases.filter((c) => !c.demo).count(), []);
 
   // Lembrete de cópia de segurança: uma vez por semana, quando há dossiers reais e a última cópia é antiga (ou não existe).
