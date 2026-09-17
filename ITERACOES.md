@@ -5,6 +5,8 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 **Estado do ciclo: iteração 4 de 10 concluída.**
 
+**Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
+
 ---
 
 ## Ponto de partida (iteração 1)

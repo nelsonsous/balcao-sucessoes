@@ -2,13 +2,13 @@
 
 > *Para imprimir Fluencia a cada dossier.*
 
-**Aplicação:** https://nelsonsous.github.io/balcao-sucessoes/ · **Manual e apresentação:** pasta [`docs/`](docs/)
+**Aplicação:** https://nelsonsous.github.io/balcao-sucessoes/ · **Manual do utilizador e apresentação:** ver [Documentação](#documentação)
 
 [![Publicar no GitHub Pages](https://github.com/nelsonsous/balcao-sucessoes/actions/workflows/deploy.yml/badge.svg)](https://github.com/nelsonsous/balcao-sucessoes/actions/workflows/deploy.yml)
 
 Aplicação web instalável (PWA) para gerir processos sucessórios: **perguntas certas → dossier certo → checklist adaptativa → semáforos → próxima ação**. Funciona offline e guarda os dados apenas no dispositivo.
 
-Reconstrução completa do protótipo `Balcao_das_Sucessoes.html` (HTML único com `localStorage`), mantendo os conceitos do projeto-piloto e elevando-os a nível profissional.
+Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-os a nível profissional.
 
 ## O que faz
 
@@ -27,7 +27,7 @@ Reconstrução completa do protótipo `Balcao_das_Sucessoes.html` (HTML único c
 | **Reconciliação** | Alterar o questionário atualiza a checklist sem perder trabalho: tarefas novas aparecem, as intocadas que deixam de se aplicar saem, as que tinham trabalho ficam “a rever”. |
 | **Interessados** | Qualidade sucessória, parentesco, cabeça-de-casal, menores/maiores acompanhados, procuração, aceitação/repúdio, NIF validado; sugestões automáticas a partir do questionário. |
 | **Património** | Imóveis, contas, participações, veículos, aforro e bens no estrangeiro, com campos próprios; passivo; estimativa da massa hereditária com **meação** do cônjuge. |
-| **Notas & contactos** | Notas fixadas, observações com gravação automática, registo de contactos com lembretes de seguimento — **por dossier** (no protótipo eram globais). |
+| **Notas & contactos** | Notas fixadas, observações com gravação automática, registo de contactos com lembretes de seguimento — tudo **por dossier**. |
 | **Histórico** | Registo automático de todas as alterações (quem, o quê, quando). |
 | **Dados** | IndexedDB local, cópia de segurança/importação JSON, dados de demonstração fictícios, pedido de armazenamento persistente. |
 | **PWA** | Instalável (desktop, Android, iOS), offline, atalhos, aviso de nova versão, tema claro/escuro, responsivo com navegação inferior no telemóvel. |
@@ -41,6 +41,15 @@ npm test           # testes do motor, calendário e calculadora (vitest)
 npm run build      # typecheck + build de produção em dist/
 npm run preview    # serve dist/ em http://localhost:4173 (com service worker)
 ```
+
+## Documentação
+
+| Documento | Formato |
+|---|---|
+| **Manual do utilizador** — todas as funcionalidades passo a passo, com figuras e anexos (fases e estados, questionário, catálogo das 72 tarefas, campos das minutas, roadmap, ficha técnica) | [Word (.docx)](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.docx) · [PDF](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.pdf) |
+| **Apresentação** — 20 diapositivos com notas do orador: desafio, princípios, motor de regras, cada área da aplicação, privacidade, números, tecnologia, roadmap e como começar | [PowerPoint (.pptx)](docs/Balcao-das-Sucessoes-Apresentacao.pptx) · [PDF](docs/Balcao-das-Sucessoes-Apresentacao.pdf) |
+
+As figuras usam apenas dados fictícios. O conteúdo jurídico é de apoio e deve ser validado pela equipa em cada caso.
 
 ## Publicar como PWA
 
