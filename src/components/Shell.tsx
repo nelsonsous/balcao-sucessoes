@@ -3,6 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
   Calculator,
+  CalendarClock,
   CalendarDays,
   CircleAlert,
   Command,
@@ -151,6 +152,9 @@ export function Shell({ children }: { children: ReactNode }) {
           <span className="nav-label">Ferramentas</span>
           <NavLink href="/calculadora" icon={Calculator}>
             Calculadora sucessória
+          </NavLink>
+          <NavLink href="/prazos" icon={CalendarClock}>
+            Calculadora de prazos
           </NavLink>
           <NavLink href="/minutas" icon={Wand2}>
             Minutas

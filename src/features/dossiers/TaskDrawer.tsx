@@ -20,6 +20,7 @@ import { PHASES, STATUSES } from '../../engine/phases';
 import { syncCaseTasks } from '../../engine/sync';
 import { useToast } from '../../components/Toast';
 import { Button, Field, Sheet, useConfirm } from '../../components/ui';
+import { DeadlineCalculator } from '../prazos/DeadlineCalculator';
 
 export function TaskDrawer({ task, onClose, caseRecord }: { task: TaskRecord | null; onClose: () => void; caseRecord: CaseRecord }) {
   const deathDate = caseRecord.deceased.deathDate;
@@ -28,6 +29,7 @@ export function TaskDrawer({ task, onClose, caseRecord }: { task: TaskRecord | n
   const toast = useToast();
   const confirm = useConfirm();
   const [notes, setNotes] = useState('');
+  const [calc, setCalc] = useState(false);
   const [title, setTitle] = useState('');
 
   useEffect(() => {
@@ -161,15 +163,20 @@ export function TaskDrawer({ task, onClose, caseRecord }: { task: TaskRecord | n
                   : 'Indique a data do óbito para calcular prazos legais'
             }
           >
-            <input
-              id="t-due"
-              type="date"
-              className={cx('input', ds === 'atrasado' && 'invalid')}
-              value={task.dueDate}
-              onChange={(e) =>
-                void updateTask(task, { dueDate: e.target.value, dueSource: e.target.value ? 'manual' : '' }, `Prazo de “${task.title}” alterado para ${formatDate(e.target.value)}`)
-              }
-            />
+            <div className="row" style={{ gap: 6 }}>
+              <input
+                id="t-due"
+                type="date"
+                className={cx('input', ds === 'atrasado' && 'invalid')}
+                value={task.dueDate}
+                onChange={(e) =>
+                  void updateTask(task, { dueDate: e.target.value, dueSource: e.target.value ? 'manual' : '' }, `Prazo de “${task.title}” alterado para ${formatDate(e.target.value)}`)
+                }
+              />
+              <Button size="sm" onClick={() => setCalc(true)} title="Contar dias corridos ou úteis, meses ou anos (com férias judiciais)">
+                Calcular…
+              </Button>
+            </div>
           </Field>
           <Field label="Responsável" htmlFor="t-assignee">
             <select
@@ -307,6 +314,16 @@ export function TaskDrawer({ task, onClose, caseRecord }: { task: TaskRecord | n
           {task.completedAt && ` · Concluída em ${formatDateTime(task.completedAt)}`}
         </div>
       </div>
+      <Sheet open={calc} onClose={() => setCalc(false)} variant="modal" title="Calcular prazo" subtitle="O resultado passa a ser o prazo desta tarefa, com a regra registada.">
+        <DeadlineCalculator
+          initialStart={deathDate || undefined}
+          applyLabel="Usar como prazo da tarefa"
+          onApply={async (r) => {
+            await updateTask(task, { dueDate: r.dueDate, dueSource: 'manual', dueLabel: r.label }, `Prazo de “${task.title}” calculado: ${r.label}`);
+            setCalc(false);
+          }}
+        />
+      </Sheet>
     </Sheet>
   );
 }

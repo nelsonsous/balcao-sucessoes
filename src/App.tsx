@@ -23,6 +23,7 @@ const SettingsPage = lazy(() => import('./features/settings/SettingsPage').then(
 const MyTasksPage = lazy(() => import('./features/tasks/MyTasksPage').then((m) => ({ default: m.MyTasksPage })));
 const TasksPage = lazy(() => import('./features/tasks/TasksPage').then((m) => ({ default: m.TasksPage })));
 const NewCaseWizard = lazy(() => import('./features/wizard/NewCaseWizard').then((m) => ({ default: m.NewCaseWizard })));
+const PrazosPage = lazy(() => import('./features/prazos/PrazosPage').then((m) => ({ default: m.PrazosPage })));
 
 const Loading = () => <div className="skeleton" style={{ height: 320 }} aria-busy="true" aria-label="A carregar" />;
 
@@ -64,6 +65,7 @@ export default function App() {
               <Route path="/minhas" component={MyTasksPage} />
               <Route path="/agenda" component={AgendaPage} />
               <Route path="/calculadora" component={CalculatorPage} />
+              <Route path="/prazos" component={PrazosPage} />
               <Route path="/minutas" component={TemplatesPage} />
               <Route path="/definicoes" component={SettingsPage} />
               <Route component={NotFound} />

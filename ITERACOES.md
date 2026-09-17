@@ -7,13 +7,13 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 2 — «10 vezes seguidas com melhorias e testes» (iterações 11–20)
 
-**Estado do ciclo 2: iterações 11–12 concluídas (12/20).**
+**Estado do ciclo 2: iterações 11–13 concluídas (13/20).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
 | 11 | ~~Testes de componentes e invariantes~~ | ✅ concluída |
 | 12 | ~~Motor jurídico aprofundado~~ | ✅ concluída |
-| 13 | **Prazos avançados** | Contagem em dias úteis ou corridos, suspensão em férias judiciais para prazos judiciais, prazos manuais com regra e data-âncora, avisos coerentes na agenda; testes. |
+| 13 | ~~Prazos avançados~~ | ✅ concluída |
 | 14 | **Partilha de dossier entre colegas** | Exportar um único dossier (com anexos, cifrado) e importar/juntar com deteção de conflitos e registo no histórico; testes. |
 | 15 | **Cópias automáticas e partilha para a app** | Cópias cifradas automáticas para uma pasta escolhida (File System Access API), rotação; receber ficheiros partilhados no telemóvel (Web Share Target) e anexá-los a um dossier; testes. |
 | 16 | **Anular ações e reciclagem** | «Anular» nas mudanças de estado e remoções, reciclagem com restauro (tarefas, interessados, bens, documentos), histórico filtrável; testes. |
@@ -25,6 +25,13 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
+
+### Iteração 13 — Prazos avançados ✅
+
+- **Motor de contagem de prazos** (`engine/prazos.ts`): dias corridos, dias úteis, meses e anos a contar de uma data-âncora, com as regras gerais — o dia do facto não conta (CC art. 279.º/b), termo em dia não útil transferido para o 1.º dia útil seguinte (CC art. 279.º/e; CPC art. 138.º/2, opcional), fim de mês nos prazos em meses (CC art. 279.º/c) e **suspensão nas férias judiciais** para prazos processuais (CPC art. 138.º/1), tanto em dias corridos como em dias úteis; explicação passo a passo, base legal e períodos suspensos; lista de prazos frequentes (contestação, apelação, reclamação de créditos, aceitação/repúdio, prazos administrativos, reclamação graciosa) como ponto de partida a validar.
+- **Calculadora de prazos** (`/prazos`, barra lateral e paleta): formulário com data, quantidade, unidade, prazo judicial e transferência; resultado com termo, passos e base legal; **agendar** o prazo na agenda (evento «Prazo», opcionalmente ligado a um dossier).
+- **Na gaveta da tarefa**: botão **Calcular…** ao lado do prazo, pré-preenchido com a data do óbito; o resultado passa a ser o prazo da tarefa com a regra registada («Regra do prazo») e uma entrada no histórico.
+- **Testes**: dias corridos com fim de semana, dias úteis com feriado (8 de dezembro), prazo judicial de verão (10/7 + 30 dias → 25/9) e de Natal em dias úteis, meses/anos em fim de mês, validação e descrição, propriedades (termo sempre posterior ao início, monótono, nunca em dia não útil com transferência) — **150 testes**.
 
 ### Iteração 12 — Motor jurídico aprofundado ✅
 
