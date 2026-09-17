@@ -3,9 +3,37 @@
 Ciclo pedido: **10 iterações seguidas** para analisar o protótipo, perceber os conceitos e construir uma aplicação muito melhor, a nível profissional, como PWA.
 Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é reaproveitado dela.
 
-**Estado do ciclo: 10 de 10 iterações concluídas — versão 2.0.**
+**Estado do ciclo 1: 10 de 10 iterações concluídas — versão 2.0.**
+
+## Ciclo 2 — «10 vezes seguidas com melhorias e testes» (iterações 11–20)
+
+**Estado do ciclo 2: iteração 11 de 10 concluída (11/20).**
+
+| # | Tema | Conteúdo previsto |
+|---|---|---|
+| 11 | ~~Testes de componentes e invariantes~~ | ✅ concluída |
+| 12 | **Motor jurídico aprofundado** | Novas regras e tarefas: direito de habitação do cônjuge/unido de facto, menores e autorização para a partilha, herdeiros ausentes ou no estrangeiro, participações sociais e registo comercial, veículos, seguros e contas conjuntas; IMT sobre tornas no mapa de partilha; testes por regra. |
+| 13 | **Prazos avançados** | Contagem em dias úteis ou corridos, suspensão em férias judiciais para prazos judiciais, prazos manuais com regra e data-âncora, avisos coerentes na agenda; testes. |
+| 14 | **Partilha de dossier entre colegas** | Exportar um único dossier (com anexos, cifrado) e importar/juntar com deteção de conflitos e registo no histórico; testes. |
+| 15 | **Cópias automáticas e partilha para a app** | Cópias cifradas automáticas para uma pasta escolhida (File System Access API), rotação; receber ficheiros partilhados no telemóvel (Web Share Target) e anexá-los a um dossier; testes. |
+| 16 | **Anular ações e reciclagem** | «Anular» nas mudanças de estado e remoções, reciclagem com restauro (tarefas, interessados, bens, documentos), histórico filtrável; testes. |
+| 17 | **Painel de equipa e análise** | Métricas por mês, fase e pessoa (tempo médio por fase, prazos cumpridos), gráficos SVG acessíveis com tabela alternativa; testes das agregações. |
+| 18 | **Pesquisa e vistas guardadas** | Filtros avançados na lista de dossiers, vistas guardadas com nome, pesquisa global em notas, contactos e documentos; testes. |
+| 19 | **Documentos avançados** | Pedidos de documentos por interessado, validade das certidões com avisos, pré-visualização de anexos, estados em lote; testes. |
+| 20 | **Consolidação** | Auditoria final (acessibilidade, E2E alargado), manual e apresentação atualizados, versão 2.1, resumo. |
+
+
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
+
+### Iteração 11 — Testes de componentes e invariantes ✅
+
+- **Testes de componentes** (jsdom + Testing Library, `src/test/setup.ts` e `src/test/render.tsx` com os contextos da aplicação): painel com dados fictícios (indicadores, saudação, próximas ações com ligações `?tarefa=`), checklist (lista por fase, abertura da gaveta, mudança de estado pelo semáforo com histórico, ações em massa, vista em quadro), paleta de comandos (navegação por Enter, pesquisa sem acentos e por referência) e ecrã de bloqueio (PIN errado/certo, bloquear agora).
+- **Testes de propriedades** (fast-check): quotas somam sempre 1, frações normalizadas e álgebra correta, legítima ∈ [0, 1], valores nunca NaN, cônjuge com ¼ garantido, determinismo; parsers robustos a qualquer texto (`parseAmount`, `parseShare`, `maskName`, `normalize`) e CSV sempre bem formado.
+- **Testes de biblioteca** novos: cópias de segurança (exportar/importar em modo substituir e juntar com anexos, cifradas, rejeição de ficheiros inválidos), importação para a calculadora (cônjuge, filhos, netos, repúdio, valores, notas), módulo internacional (estado, sugestões, estraneidade), documentos (geração, estados, anexos, ficheiros largados, classificação) e todas as ações CRUD (dossier, reconciliação, tarefas, interessados, bens, dívidas, notas, contactos, eventos, equipa).
+- **Cobertura de código** (v8) com limiar na publicação — motor e biblioteca: 84,6 % instruções, 88,3 % linhas, 82,7 % funções, 69,6 % ramos (`npm run test:coverage`).
+- **Correções encontradas pelos testes**: `documentFromFile` devolvia o registo sem o anexo (e a remoção deixava o ficheiro órfão) — agora devolve o registo atualizado, marca o documento como recebido e a remoção relê o registo; serialização das cópias sem `FileReader` (funciona também em service workers e Node); o Certificado Sucessório Europeu deixou de contar como documento que o cliente pode fornecer.
+- **134 testes** (19 → 24 ficheiros).
 
 ---
 

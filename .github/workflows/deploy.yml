@@ -25,7 +25,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm test
+      - name: Testes unitários, de componentes e de propriedades (com limiar de cobertura)
+        run: npm run test:coverage
       - run: npm run build
       - name: Testes ponta a ponta (Chrome do runner)
         run: npm run e2e

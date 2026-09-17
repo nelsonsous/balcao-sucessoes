@@ -1,5 +1,5 @@
 // Cópia de segurança: exportação/importação integral em JSON (anexos em base64).
-import { decryptText, encryptText, isEncryptedEnvelope, type EncryptedEnvelope } from './crypto';
+import { decryptText, encryptText, isEncryptedEnvelope, toBase64, type EncryptedEnvelope } from './crypto';
 import { db, setSetting } from './db';
 import type { FileRecord } from './types';
 import { downloadFile, nowIso, todayIso } from './utils';
@@ -38,13 +38,10 @@ export interface BackupFile {
   tables: Partial<Record<TableName, unknown[]>>;
 }
 
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result));
-    r.onerror = () => reject(r.error);
-    r.readAsDataURL(blob);
-  });
+/** Blob → data URL sem FileReader (funciona no navegador, no service worker e em Node). */
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  return `data:${blob.type || 'application/octet-stream'};base64,${toBase64(bytes)}`;
 }
 
 export function dataUrlToBlob(dataUrl: string): Blob {

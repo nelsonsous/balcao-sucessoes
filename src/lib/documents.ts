@@ -55,7 +55,7 @@ interface DesiredDoc {
 const GENERIC_HEIR_DOCS = /^(documentos? de identificacao( e nif| dos requerentes)?|nif dos herdeiros|certidoes de nascimento( dos descendentes|\/casamento dos herdeiros)?|documentos de identificacao e nif dos ascendentes)$/;
 
 /** Documentos que o escritório obtém ou produz (não se pedem ao cliente). */
-const NOT_FROM_CLIENT = /^(pedido de|relacao de bens|declarac(ao|oes) de (saldos|divida)|extratos|habilitacao de herdeiros|identificacao dos declarantes|procuracao forense|certidao permanente|certidao do registo automovel|certidao do testamento|pedido de informacao)/;
+const NOT_FROM_CLIENT = /^(pedido de|relacao de bens|certificado sucessorio|declarac(ao|oes) de (saldos|divida)|extratos|habilitacao de herdeiros|identificacao dos declarantes|procuracao forense|certidao permanente|certidao do registo automovel|certidao do testamento|pedido de informacao)/;
 
 export function clientCanProvide(d: Pick<DocumentRecord, 'name' | 'category'>): boolean {
   if (d.category === 'fiscal' || d.category === 'minutas') return false;
@@ -133,12 +133,14 @@ export async function updateDocument(d: DocumentRecord, patch: Partial<DocumentR
 }
 
 export async function deleteDocument(d: DocumentRecord): Promise<void> {
+  // Relê o registo: o objeto recebido pode estar desatualizado quanto ao anexo.
+  const current = (await db.documents.get(d.id)) ?? d;
   await db.transaction('rw', db.documents, db.files, async () => {
-    if (d.fileId) await db.files.delete(d.fileId);
+    if (current.fileId) await db.files.delete(current.fileId);
     await db.documents.delete(d.id);
   });
   await touchCase(d.caseId);
-  await logActivity(d.caseId, 'documento', `Documento removido: “${d.name}”`);
+  await logActivity(d.caseId, 'documento', `Documento removido: ${current.name}`);
 }
 
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
@@ -176,10 +178,12 @@ export async function removeAttachment(d: DocumentRecord): Promise<void> {
 /** Cria um documento a partir de um ficheiro largado no separador. */
 export async function documentFromFile(caseId: string, file: File): Promise<DocumentRecord> {
   const base = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'Documento';
-  const doc = newDocument(caseId, { name: base, category: categorize(base), source: 'anexo', key: docKey(base) + '|' + uid() });
+  // Um ficheiro largado no dossier é, por definição, um documento já recebido.
+  const doc = newDocument(caseId, { name: base, category: categorize(base), source: 'anexo', status: 'recebido', receivedAt: todayIso(), key: docKey(base) + '|' + uid() });
   await db.documents.add(doc);
   await attachFile(doc, file);
-  return doc;
+  // Devolve o registo já com o anexo (fileId, nome, tamanho) para quem o continuar a usar.
+  return (await db.documents.get(doc.id)) ?? doc;
 }
 
 export async function openAttachment(d: DocumentRecord, mode: 'view' | 'download'): Promise<boolean> {
