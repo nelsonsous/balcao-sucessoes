@@ -303,7 +303,7 @@ export function ImportDossierSheet({ open, onClose, onImported }: { open: boolea
                 ))}
               </fieldset>
             )}
-            <div className="table-wrap">
+            <div className="table-wrap" tabIndex={0} role="region" aria-label="Registos por tabela">
               <table className="table small">
                 <thead>
                   <tr>

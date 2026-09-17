@@ -135,7 +135,7 @@ export function AnalyticsPage() {
             </Card>
             <Card className="span-12">
               <CardHead icon={Users} title="Por pessoa" subtitle="Carga atual e desempenho no período (tarefas atribuídas ou, sem atribuição, dos dossiers de que é responsável)." />
-              <div className="table-wrap">
+              <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabela por pessoa">
                 <table className="table" data-testid="members-table">
                   <thead>
                     <tr>

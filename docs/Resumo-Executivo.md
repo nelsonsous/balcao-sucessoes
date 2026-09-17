@@ -1,6 +1,6 @@
 # Balcão das Sucessões — Resumo executivo
 
-**Aplicação:** https://nelsonsous.github.io/balcao-sucessoes/ · **Código:** https://github.com/nelsonsous/balcao-sucessoes · **Versão 2.0** · 17 de setembro de 2026
+**Aplicação:** https://nelsonsous.github.io/balcao-sucessoes/ · **Código:** https://github.com/nelsonsous/balcao-sucessoes · **Versão 2.1** · 17 de setembro de 2026
 
 ## O que é
 
@@ -8,8 +8,8 @@ Um balcão único, instalável em computador, tablet e telemóvel, para organiza
 
 ## Como funciona
 
-1. **Perguntas certas → dossier certo.** Um questionário de 24 perguntas descreve a sucessão (óbito e ligações internacionais, família, disposições, património e passivo, partilha).
-2. **A checklist é o motor.** 55 regras geram só as tarefas aplicáveis (até 72), em 10 fases, cada uma com orientação, documentos, referências legais e prazos calculados a partir da data do óbito (Imposto do Selo, IRS, prazos franceses, caducidade da aceitação).
+1. **Perguntas certas → dossier certo.** Um questionário de 27 perguntas descreve a sucessão (óbito e ligações internacionais, família — incluindo separação, herdeiros no estrangeiro ou de paradeiro desconhecido —, disposições, património e passivo, partilha).
+2. **A checklist é o motor.** 59 regras geram só as tarefas aplicáveis (até 80), em 10 fases, cada uma com orientação, documentos, referências legais e prazos calculados a partir da data do óbito (Imposto do Selo, IRS, prazos franceses, caducidade da aceitação).
 3. **O que está a bloquear? e a próxima ação.** Em cada dossier e para toda a equipa: prazos ultrapassados, tarefas críticas por iniciar, dependências de terceiros.
 4. **Memória prática.** Interessados, património e passivo, documentos com anexos, notas e registo de contactos — tudo no dossier.
 
@@ -24,16 +24,22 @@ Um balcão único, instalável em computador, tablet e telemóvel, para organiza
 | Internacional | Lei aplicável e competência (Reg. (UE) 650/2012), Certificado Sucessório Europeu, regime de documentos por país, prazos de referência em 16 países, entidades no estrangeiro |
 | Produtividade | Paleta de comandos (⌘K), «As minhas tarefas», modelos de dossier, quadro de dossiers por fase |
 | Segurança | Bloqueio por PIN com auto-bloqueio, cópias de segurança cifradas (AES-256-GCM), modo privacidade, importação do protótipo original, Content Security Policy |
+| Prazos | Calculadora de prazos (dias corridos/úteis, meses, anos, férias judiciais, dia útil seguinte) com explicação passo a passo, ligada à agenda e às tarefas |
+| Colaboração | Partilha de um dossier completo (com anexos) em ficheiro cifrado e junção noutro dispositivo com pré-visualização de conflitos e quatro regras; cópias automáticas cifradas para uma pasta (rotação); receção de ficheiros partilhados no Android (Web Share Target) |
+| Recuperação | «Anular» em todas as ações reversíveis (Ctrl/⌘+Z), reciclagem de 30 dias com reposição de tarefas, interessados, bens, documentos e dossiers inteiros, histórico pesquisável |
+| Análise | Painel de equipa por mês, fase e pessoa (prazos cumpridos, tempo até concluir cada fase, carga) com gráficos SVG acessíveis, tabela alternativa e CSV |
+| Pesquisa | Filtros avançados no endereço da página, chips, vistas predefinidas e guardadas com nome, pesquisa profunda e global (notas, contactos, documentos) |
+| Documentos avançados | Validade das certidões com avisos, pedidos de documentos por interessado (texto pronto, e-mail, marcação), pré-visualização de anexos e estados em lote |
 
 ## Qualidade e entrega
 
-- **94 testes unitários** e **10 passos ponta a ponta** (Chrome) executados antes de cada publicação; publicação automática por GitHub Actions.
-- **0 violações de acessibilidade** (axe-core, WCAG 2.2 AA) nos 16 ecrãs auditados; contraste, ordem de títulos, alvos de toque e teclado revistos.
-- Pacote inicial reduzido a 561 kB (172 kB comprimido) com carregamento a pedido por rota; fontes só nos subconjuntos latinos.
-- Manual do utilizador (18 capítulos, 7 anexos, 39 figuras) e apresentação (24 diapositivos) na pasta `docs/`.
+- **212 testes** (unitários, componentes com Testing Library e propriedades com fast-check, com limiar de cobertura) e **16 passos ponta a ponta** (Chrome) executados antes de cada publicação; publicação automática por GitHub Actions.
+- **0 violações de acessibilidade** (axe-core, WCAG 2.2 AA) nos 23 ecrãs auditados; contraste, ordem de títulos, alvos de toque, regiões com foco de teclado e gráficos com tabela alternativa.
+- Carregamento a pedido por rota e por separador (pacote inicial de 606 kB, 186 kB comprimido); fontes só nos subconjuntos latinos.
+- Manual do utilizador (27 capítulos, 7 anexos, 55 figuras) e apresentação (29 diapositivos) na pasta `docs/`.
 
 ## Limites e próximos passos possíveis
 
-- Os dados vivem em cada dispositivo: a partilha entre colegas faz-se por cópia de segurança (cifrada). Uma sincronização entre dispositivos exigiria um serviço com autenticação e cifra ponta a ponta.
+- Os dados vivem em cada dispositivo: a partilha entre colegas faz-se por ficheiro cifrado de dossier (com junção por regras) ou por cópia de segurança; as cópias automáticas para uma pasta sincronizada dão ao escritório um repositório central sem servidor. Trabalho simultâneo no mesmo dossier exigiria um serviço de sincronização num projeto próprio do escritório (por exemplo Supabase, região UE, um espaço por escritório, login dos membros), mantendo o IndexedDB como cache offline.
 - O conteúdo jurídico (regras, prazos, referências, análise internacional) é de apoio e deve ser validado pela equipa em cada caso; a manutenção das regras é feita em ficheiros legíveis (`src/engine/rules.ts`, `src/engine/international.ts`).
-- Ideias para uma fase seguinte: sincronização opcional entre dispositivos, assinatura e envio de documentos, integração com agendas do escritório, painel de equipa com métricas de produtividade.
+- Ideias para uma fase seguinte («modo escritório»): sincronização opcional entre dispositivos com a lógica de junção já existente como regra de conflitos, assinatura e envio de documentos, integração com agendas do escritório.

@@ -23,7 +23,7 @@ function niceMax(max: number): number {
 
 function DataTable({ categories, series, unit, caption }: { categories: string[]; series: Series[]; unit?: string; caption: string }) {
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" tabIndex={0} role="region" aria-label={caption}>
       <table className="table small">
         <caption className="sr-only">{caption}</caption>
         <thead>

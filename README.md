@@ -42,7 +42,7 @@ Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-o
 | **Análise da equipa** | Dossiers e prazos por mês, tempo até concluir cada fase (mediana), tarefas por fase e carga/desempenho por pessoa (prazos cumpridos, tempo de conclusão), com período e filtro por pessoa, gráficos SVG acessíveis com tabela alternativa e exportação CSV. |
 | **Pesquisa e vistas** | Filtros avançados (prioridade, etiqueta, fase, prazos, data do óbito, internacional) com chips e endereço partilhável, vistas predefinidas e guardadas com nome, pesquisa profunda em notas, contactos, documentos, interessados e bens, e pesquisa global na paleta. |
 | **Documentos avançados** | Validade das certidões com avisos (a expirar/expirada) e filtro, pedidos de documentos por interessado com texto pronto, e-mail e marcação como pedidos, pré-visualização de PDF/imagens/texto na aplicação e estados ou remoção em lote com «anular». |
-| **Qualidade** | 0 violações axe-core (WCAG 2.2 AA) em 16 ecrãs, divisão de código por rota e separador, fontes só em latino, 212 testes (unitários, componentes com Testing Library e propriedades com fast-check, cobertura com limiar) e 16 passos E2E com Chrome executados antes de cada publicação. |
+| **Qualidade** | 0 violações axe-core (WCAG 2.2 AA) em 23 ecrãs, divisão de código por rota e separador, fontes só em latino, 212 testes (unitários, componentes com Testing Library e propriedades com fast-check, cobertura com limiar) e 16 passos E2E com Chrome executados antes de cada publicação. |
 | **PWA** | Instalável (desktop, Android, iOS), offline, atalhos, aviso de nova versão, tema claro/escuro, responsivo com navegação inferior no telemóvel. |
 
 ## Começar
@@ -61,8 +61,8 @@ npm run preview    # serve dist/ em http://localhost:4173 (com service worker)
 
 | Documento | Formato |
 |---|---|
-| **Manual do utilizador** — 18 capítulos e 7 anexos com 39 figuras: todas as funcionalidades passo a passo (fases e estados, questionário, catálogo das tarefas geradas, campos das minutas, prazos por país, histórico das versões, ficha técnica) | [Word (.docx)](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.docx) · [PDF](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.pdf) |
-| **Apresentação** — 24 diapositivos com notas do orador: desafio, princípios, motor de regras, cada área da aplicação, relatórios, produtividade, internacional, segurança, números, tecnologia, percurso e como começar | [PowerPoint (.pptx)](docs/Balcao-das-Sucessoes-Apresentacao.pptx) · [PDF](docs/Balcao-das-Sucessoes-Apresentacao.pdf) |
+| **Manual do utilizador** — 27 capítulos e 7 anexos com 55 figuras: todas as funcionalidades passo a passo (fases e estados, questionário, catálogo das tarefas geradas, campos das minutas, prazos por país, histórico das versões, ficha técnica) | [Word (.docx)](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.docx) · [PDF](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.pdf) |
+| **Apresentação** — 29 diapositivos com notas do orador: desafio, princípios, motor de regras, cada área da aplicação, relatórios, produtividade, internacional, segurança, novidades 2.1 (prazos, partilha, cópias automáticas, anular e reciclagem, análise, pesquisa e documentos), números, tecnologia, percurso e como começar | [PowerPoint (.pptx)](docs/Balcao-das-Sucessoes-Apresentacao.pptx) · [PDF](docs/Balcao-das-Sucessoes-Apresentacao.pdf) |
 | **Resumo executivo** — uma página: o que é, como funciona, o que entrega, qualidade, limites e próximos passos | [Markdown](docs/Resumo-Executivo.md) |
 
 As figuras usam apenas dados fictícios. O conteúdo jurídico é de apoio e deve ser validado pela equipa em cada caso.

@@ -7,7 +7,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 2 — «10 vezes seguidas com melhorias e testes» (iterações 11–20)
 
-**Estado do ciclo 2: iterações 11–19 concluídas (19/20).**
+**Estado do ciclo 2: as 10 iterações (11–20) estão concluídas — versão 2.1.0 publicada.**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -20,11 +20,21 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 17 | ~~Painel de equipa e análise~~ | ✅ concluída |
 | 18 | ~~Pesquisa e vistas guardadas~~ | ✅ concluída |
 | 19 | ~~Documentos avançados~~ | ✅ concluída |
-| 20 | **Consolidação** | Auditoria final (acessibilidade, E2E alargado), manual e apresentação atualizados, versão 2.1, resumo. |
+| 20 | ~~Consolidação~~ | ✅ concluída |
 
 
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
+
+### Iteração 20 — Consolidação ✅
+
+- **Versão 2.1.0** (`package.json`; visível em Definições → Aplicação).
+- **Auditoria de acessibilidade** alargada a 23 ecrãs (novos: histórico, notas, calculadora de prazos, análise, reciclagem, recebidos): duas falhas encontradas na página de análise e corrigidas — contraste do indicador laranja (passa a usar o tom escuro do semáforo «em curso») e regiões de tabela com deslocamento sem foco de teclado (passam a ser regiões focáveis com nome, também na reciclagem, na importação e nas tabelas alternativas dos gráficos) — **0 violações** (WCAG 2.2 AA) em todos os ecrãs.
+- **Capturas de ecrã** regeneradas com dados fictícios (17 ecrãs novos: calculadora de prazos, partilha e importação de dossier, cópias automáticas, recebidos, anular, reciclagem, histórico filtrável, análise, filtros e vistas, documentos em lote, pedido por interessado, validade, pré-visualização).
+- **Manual do utilizador** regenerado (Word e PDF): oito capítulos novos (19–26: calculadora de prazos, partilha entre colegas, cópias automáticas, recebidos, anular e reciclagem, análise da equipa, pesquisa e vistas, documentos avançados), tabela de funcionalidades, perguntas frequentes, histórico das versões com os 20 ciclos, ficha técnica e anexos regenerados a partir do motor atual (27 perguntas, 59 regras, 80 tarefas); índice com números de página medidos.
+- **Apresentação** regenerada (PowerPoint e PDF): cinco diapositivos «Novidades 2.1», números atualizados (27 · 59 · 80 · 13 · 16 · 212 · 16 · 0), percurso com os 20 ciclos e instruções de instalação no iPhone atualizadas; validada e revista visualmente.
+- **Resumo executivo** atualizado (versão 2.1, novas áreas, qualidade, limites e recomendação para um futuro «modo escritório» com sincronização em projeto próprio).
+- **Verificação final**: 212 testes, cobertura acima dos limiares, 16 passos E2E e publicação em GitHub Pages.
 
 ### Iteração 19 — Documentos avançados ✅
 

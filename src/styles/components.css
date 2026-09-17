@@ -955,7 +955,7 @@ button.kpi[aria-pressed='true'] {
 }
 
 .kpi.tone-orange .kpi-value {
-  color: var(--st-curso);
+  color: var(--st-curso-fg);
 }
 
 .kpi.tone-orange .kpi-icon {

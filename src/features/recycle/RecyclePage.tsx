@@ -121,7 +121,7 @@ export function RecyclePage() {
           {rows && list.length === 0 ? (
             <Empty icon={Recycle} title="Reciclagem vazia" text="Quando remover algo num dossier, aparece aqui durante 30 dias." />
           ) : (
-            <div className="table-wrap">
+            <div className="table-wrap" tabIndex={0} role="region" aria-label="Itens na reciclagem">
               <table className="table">
                 <thead>
                   <tr>
