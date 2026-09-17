@@ -52,8 +52,9 @@ npm run preview    # serve dist/ em http://localhost:4173 (com service worker)
 
 | Documento | Formato |
 |---|---|
-| **Manual do utilizador** — todas as funcionalidades passo a passo, com figuras e anexos (fases e estados, questionário, catálogo das 72 tarefas, campos das minutas, roadmap, ficha técnica) | [Word (.docx)](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.docx) · [PDF](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.pdf) |
-| **Apresentação** — 20 diapositivos com notas do orador: desafio, princípios, motor de regras, cada área da aplicação, privacidade, números, tecnologia, roadmap e como começar | [PowerPoint (.pptx)](docs/Balcao-das-Sucessoes-Apresentacao.pptx) · [PDF](docs/Balcao-das-Sucessoes-Apresentacao.pdf) |
+| **Manual do utilizador** — 18 capítulos e 7 anexos com 39 figuras: todas as funcionalidades passo a passo (fases e estados, questionário, catálogo das 72 tarefas, campos das minutas, prazos por país, histórico das versões, ficha técnica) | [Word (.docx)](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.docx) · [PDF](docs/Balcao-das-Sucessoes-Manual-do-Utilizador.pdf) |
+| **Apresentação** — 24 diapositivos com notas do orador: desafio, princípios, motor de regras, cada área da aplicação, relatórios, produtividade, internacional, segurança, números, tecnologia, percurso e como começar | [PowerPoint (.pptx)](docs/Balcao-das-Sucessoes-Apresentacao.pptx) · [PDF](docs/Balcao-das-Sucessoes-Apresentacao.pdf) |
+| **Resumo executivo** — uma página: o que é, como funciona, o que entrega, qualidade, limites e próximos passos | [Markdown](docs/Resumo-Executivo.md) |
 
 As figuras usam apenas dados fictícios. O conteúdo jurídico é de apoio e deve ser validado pela equipa em cada caso.
 

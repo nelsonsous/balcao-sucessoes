@@ -3,7 +3,7 @@
 Ciclo pedido: **10 iterações seguidas** para analisar o protótipo, perceber os conceitos e construir uma aplicação muito melhor, a nível profissional, como PWA.
 Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é reaproveitado dela.
 
-**Estado do ciclo: iteração 9 de 10 concluída.**
+**Estado do ciclo: 10 de 10 iterações concluídas — versão 2.0.**
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
 
@@ -119,7 +119,15 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 - **Polimento móvel**: alvos de toque, sem overflow horizontal (verificado no E2E), áreas seguras e `prefers-reduced-motion` já existentes confirmados.
 - 94 testes unitários + 10 passos E2E.
 
-## Plano das próximas iterações
+## Iteração 10 — Entrega ✅
+
+- **Revisão final** de todas as áreas com a auditoria de acessibilidade a zero e os testes (94 unitários + 10 E2E) a passar; versão **2.0.0**.
+- **Manual do utilizador** regenerado (Word e PDF): 18 capítulos e 7 anexos, 39 figuras reais — novos capítulos para relatórios, produtividade, segurança e privacidade, separador internacional, quadro Kanban e ações em massa, modelos de dossier, paleta de comandos, cópias cifradas e importação do protótipo; anexos com o histórico das versões e os prazos de referência por país.
+- **Apresentação** regenerada (PowerPoint e PDF): 24 diapositivos com notas do orador, incluindo relatórios, produtividade, internacional e segurança; números atualizados; percurso dos dez ciclos.
+- **Resumo executivo** (`docs/Resumo-Executivo.md`): o que é, como funciona, o que entrega, qualidade, limites e próximos passos possíveis.
+- Pacote pronto a partilhar: aplicação publicada, código-fonte, documentação e histórico das iterações neste ficheiro.
+
+## Plano das iterações (todas concluídas)
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -131,7 +139,7 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 | 7 | ~~Segurança~~ | ✅ concluída |
 | 8 | ~~Internacional~~ | ✅ concluída |
 | 9 | ~~Qualidade~~ | ✅ concluída |
-| 10 | **Entrega** | Revisão final, guia de utilização, pacote pronto a partilhar, resumo executivo. |
+| 10 | ~~Entrega~~ | ✅ concluída |
 
 ## Registo técnico
 
