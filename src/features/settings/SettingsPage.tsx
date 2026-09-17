@@ -25,11 +25,14 @@ import { deleteCaseTemplate, deleteMember, saveMember } from '../../lib/actions'
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../lib/db';
 import { answeredCount } from '../../lib/caseTemplates';
-import { attachmentsSize, downloadBackup, importBackup, parseBackup, storageEstimate, wipeAll } from '../../lib/backup';
+import { attachmentsSize, importBackup, readBackupText, storageEstimate, wipeAll, type BackupFile } from '../../lib/backup';
+import { SecurityCard } from './SecurityCard';
+import { ExportSheet, LegacyImportSheet, PassphraseSheet } from './BackupSheets';
 import { formatBytes } from '../../lib/documents';
 import { requestPersistence, setSetting, useSettings, type AppSettings } from '../../lib/db';
 import { loadDemoData, removeDemoData } from '../../lib/demo';
 import { useInstall, useMembers } from '../../lib/hooks';
+import { formatDateTime } from '../../lib/utils';
 import type { MemberRecord } from '../../lib/types';
 import { MUNICIPAL_HOLIDAYS, resolveMunicipal } from '../../engine/calendar';
 import { notificationsSupported, showSystemNotification } from '../../components/Reminders';
@@ -45,6 +48,9 @@ export function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState({ userName: '', firmName: '', tagline: '', firmCity: '', firmAddress: '', firmEmail: '', firmPhone: '' });
   const [includeFiles, setIncludeFiles] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const [legacy, setLegacy] = useState(false);
+  const [pending, setPending] = useState<{ text: string; hint?: string } | null>(null);
   const [attachments, setAttachments] = useState<{ count: number; bytes: number } | null>(null);
   const [member, setMember] = useState<Partial<MemberRecord> | null>(null);
   const [storage, setStorage] = useState<{ usage: number; quota: number } | null>(null);
@@ -79,22 +85,47 @@ export function SettingsPage() {
     toast({ tone: 'success', title: 'Perfil guardado' });
   };
 
+  async function applyBackup(parsed: BackupFile) {
+    const n = parsed.tables.cases?.length ?? 0;
+    const replace = await confirm({
+      title: 'Importar cópia de segurança',
+      message: `A cópia contém ${n} dossier(s). Substituir todos os dados atuais por esta cópia? (Escolha “Cancelar” para juntar sem apagar.)`,
+      confirmLabel: 'Substituir tudo',
+      danger: true,
+    });
+    await importBackup(parsed, replace ? 'replace' : 'merge');
+    toast({ tone: 'success', title: 'Cópia importada', description: `${n} dossier(s) · ${replace ? 'dados substituídos' : 'dados juntos'}` });
+  }
+
   async function onImport(file: File) {
     try {
-      const parsed = parseBackup(await file.text());
-      const n = parsed.tables.cases?.length ?? 0;
-      const replace = await confirm({
-        title: 'Importar cópia de segurança',
-        message: `A cópia contém ${n} dossier(s). Substituir todos os dados atuais por esta cópia? (Escolha “Cancelar” para juntar sem apagar.)`,
-        confirmLabel: 'Substituir tudo',
-        danger: true,
-      });
-      await importBackup(parsed, replace ? 'replace' : 'merge');
-      toast({ tone: 'success', title: 'Cópia importada', description: `${n} dossier(s) · ${replace ? 'dados substituídos' : 'dados juntos'}` });
+      const text = await file.text();
+      const r = await readBackupText(text);
+      if ('needsPassphrase' in r) {
+        setPending({ text, hint: r.hint });
+        return;
+      }
+      await applyBackup(r.backup);
     } catch (e) {
       toast({ tone: 'error', title: 'Não foi possível importar', description: (e as Error).message });
     } finally {
       if (fileRef.current) fileRef.current.value = '';
+    }
+  }
+
+  async function onPassphrase(pass: string): Promise<boolean> {
+    if (!pending) return false;
+    try {
+      const r = await readBackupText(pending.text, pass);
+      if ('needsPassphrase' in r) return false;
+      setPending(null);
+      await applyBackup(r.backup);
+      return true;
+    } catch (e) {
+      if ((e as Error).name === 'WrongPassphraseError') return false;
+      setPending(null);
+      toast({ tone: 'error', title: 'Não foi possível importar', description: (e as Error).message });
+      return true;
     }
   }
 
@@ -154,6 +185,8 @@ export function SettingsPage() {
             </div>
           </div>
         </Card>
+
+        <SecurityCard />
 
         <CaseTemplatesCard />
 
@@ -278,23 +311,20 @@ export function SettingsPage() {
             <div className="callout warn">
               <Info aria-hidden />
               <div>
-                <strong>Faça cópias de segurança regulares.</strong> Limpar os dados do navegador apaga os dossiers. A cópia é um ficheiro
-                JSON com dados pessoais — guarde-o em local seguro.
+                <strong>Faça cópias de segurança regulares.</strong> Limpar os dados do navegador apaga os dossiers. Cifre a cópia com uma palavra-passe
+                para a guardar ou enviar com segurança.
+                {settings.lastBackupAt ? ` Última cópia: ${formatDateTime(settings.lastBackupAt)}.` : ' Ainda não fez nenhuma cópia.'}
               </div>
             </div>
             <div className="row wrap" style={{ gap: 8 }}>
-              <Button
-                variant="primary"
-                icon={Download}
-                onClick={async () => {
-                  const n = await downloadBackup({ includeFiles });
-                  toast({ tone: 'success', title: 'Cópia de segurança exportada', description: `${n} dossier(s)` });
-                }}
-              >
+              <Button variant="primary" icon={Download} onClick={() => setExporting(true)}>
                 Exportar cópia de segurança
               </Button>
               <Button icon={Upload} onClick={() => fileRef.current?.click()}>
                 Importar cópia
+              </Button>
+              <Button variant="ghost" onClick={() => setLegacy(true)} title="Trazer os dados do protótipo em HTML">
+                Importar do protótipo
               </Button>
               <label className="checkbox small">
                 <input type="checkbox" checked={includeFiles} onChange={(e) => setIncludeFiles(e.target.checked)} />
@@ -370,6 +400,9 @@ export function SettingsPage() {
       </div>
 
       <MemberSheet member={member} onClose={() => setMember(null)} />
+      <ExportSheet open={exporting} onClose={() => setExporting(false)} includeFiles={includeFiles} />
+      <PassphraseSheet open={Boolean(pending)} hint={pending?.hint} onSubmit={onPassphrase} onClose={() => setPending(null)} />
+      <LegacyImportSheet open={legacy} onClose={() => setLegacy(false)} />
     </div>
   );
 }

@@ -97,6 +97,16 @@ export interface AppSettings {
   appBadge: boolean;
   /** Pessoa da equipa que corresponde a quem usa este dispositivo ("As minhas tarefas"). */
   meId: string;
+  /** PIN de bloqueio (PinRecord em JSON) ou "" sem PIN. */
+  pinJson: string;
+  /** Minutos de inatividade até bloquear (0 = nunca). */
+  autoLockMinutes: number;
+  /** Bloquear quando a aplicação deixa de estar visível. */
+  lockOnHide: boolean;
+  /** Modo privacidade: nomes ocultos nas listas e no painel. */
+  privacyMode: boolean;
+  /** Data/hora da última cópia de segurança exportada. */
+  lastBackupAt: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -115,6 +125,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   notifications: false,
   appBadge: true,
   meId: '',
+  pinJson: '',
+  autoLockMinutes: 0,
+  lockOnHide: false,
+  privacyMode: false,
+  lastBackupAt: '',
 };
 
 export async function getSetting<K extends keyof AppSettings>(key: K): Promise<AppSettings[K]> {

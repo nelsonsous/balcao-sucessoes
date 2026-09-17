@@ -31,7 +31,8 @@ Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-o
 | **Património** | Imóveis, contas, participações, veículos, aforro e bens no estrangeiro, com campos próprios; passivo; estimativa da massa hereditária com **meação** do cônjuge. |
 | **Notas & contactos** | Notas fixadas, observações com gravação automática, registo de contactos com lembretes de seguimento — tudo **por dossier**. |
 | **Histórico** | Registo automático de todas as alterações (quem, o quê, quando). |
-| **Dados** | IndexedDB local, cópia de segurança/importação JSON, dados de demonstração fictícios, pedido de armazenamento persistente. |
+| **Dados** | IndexedDB local, cópia de segurança/importação JSON — opcionalmente **cifrada com palavra-passe (AES-256-GCM)** —, lembrete semanal de cópia, importação do protótipo original, dados de demonstração fictícios, pedido de armazenamento persistente. |
+| **Segurança** | Bloqueio por PIN (PBKDF2, esperas após falhas), auto-bloqueio por inatividade e ao mudar de aplicação, modo privacidade (nomes desfocados para partilhar o ecrã), Content Security Policy sem scripts inline. |
 | **PWA** | Instalável (desktop, Android, iOS), offline, atalhos, aviso de nova versão, tema claro/escuro, responsivo com navegação inferior no telemóvel. |
 
 ## Começar

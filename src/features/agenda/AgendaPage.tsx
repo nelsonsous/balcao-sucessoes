@@ -379,7 +379,7 @@ export function AgendaRow({
         <span className="agenda-title">{i.title}</span>
         <span className="agenda-sub">
           {i.source === 'evento' ? EVENT_KIND_LABELS[i.eventKind!] : i.source === 'prazo' ? `Prazo · ${i.subtitle}` : 'Contacto a retomar'}
-          {showCase && i.caseName ? ` · ${i.caseName}` : ''}
+          {showCase && i.caseName ? <> · <span className="pv">{i.caseName}</span></> : ''}
           {i.endTime ? ` · até ${i.endTime}` : ''}
         </span>
         {i.location && (

@@ -3,7 +3,7 @@
 Ciclo pedido: **10 iterações seguidas** para analisar o protótipo, perceber os conceitos e construir uma aplicação muito melhor, a nível profissional, como PWA.
 Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é reaproveitado dela.
 
-**Estado do ciclo: iteração 6 de 10 concluída.**
+**Estado do ciclo: iteração 7 de 10 concluída.**
 
 **Publicação (17 de setembro de 2026):** aplicação em https://nelsonsous.github.io/balcao-sucessoes/ (GitHub Pages, publicação automática por GitHub Actions a cada alteração: testes → build → deploy); código-fonte em https://github.com/nelsonsous/balcao-sucessoes; manual do utilizador (Word/PDF) e apresentação (PowerPoint/PDF) na pasta `docs/`.
 
@@ -94,6 +94,15 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 - **Dossiers em quadro por fase**: terceira vista da lista (cartões · tabela · quadro), uma coluna por fase atual com semáforo, progresso, próxima ação e responsável.
 - **76 testes** (novos: pontuação e ordenação da paleta, agrupamento das minhas tarefas, modelos-base geram checklists válidas, modelo a partir de dossier sem dados pessoais, ações em massa com histórico por dossier).
 
+## Iteração 7 — Segurança e privacidade ✅
+
+- **Bloqueio por PIN** (`lib/crypto.ts`, `lib/lock.ts`, `components/LockScreen.tsx`): PIN de 4–8 algarismos guardado como PBKDF2-SHA256 com sal (nunca em claro), ecrã de bloqueio a cobrir toda a aplicação ao abrir e a pedido (“Bloquear agora” na barra lateral, nas Definições e na paleta), **auto-bloqueio** por inatividade (1/5/15/30 min) e ao mudar de aplicação/separador, espera crescente após 5 tentativas falhadas (30 s → 10 min), PIN óbvios recusados, alteração com o PIN atual e remoção com confirmação.
+- **Cópias de segurança cifradas**: exportação com palavra-passe (AES-256-GCM, chave derivada por PBKDF2 com 250 000 iterações, sal e IV aleatórios, pista opcional guardada em claro); indicador de força; ficheiro `.cifrada.json`. Importação deteta o envelope, pede a palavra-passe e distingue palavra-passe errada de ficheiro inválido. Data da última cópia nas Definições e **lembrete semanal** quando há dossiers reais e a última cópia tem mais de 7 dias (ou nunca foi feita).
+- **Modo privacidade** (barra lateral, Definições e paleta): oculta por desfocagem os nomes de dossiers, falecidos, clientes e interessados nas listas, no painel, na agenda, nas minhas tarefas, na pesquisa, na paleta e nos documentos gerados — para partilhar o ecrã sem expor dados.
+- **Importação do protótipo original**: cola-se o JSON extraído do `localStorage` (instruções e comando prontos a copiar); converte respostas (rótulos → valores), estados das tarefas (casamento por semelhança de títulos ≥ 60 % de palavras significativas; as não reconhecidas passam a tarefas próprias com a fase certa), interessados (qualidade → papel, procuração), bens (tipo, país, valor), responsável (cria a pessoa na equipa), cliente, notas importantes, observações e registo de contactos; dossiers marcados com a etiqueta «Importado».
+- **Endurecimento**: Content Security Policy por `<meta>` (`default-src 'self'`, sem scripts inline — o script do tema passou para ficheiro externo —, `object-src 'none'`, `base-uri 'self'`), `Referrer-Policy: no-referrer`.
+- **86 testes** (novos: cifra/decifra e rejeição de palavra-passe errada ou ficheiro alterado, força da palavra-passe, PIN com sal e esperas, máscara de nomes, conversão das respostas do protótipo, casamento de tarefas por semelhança e importação completa com estados, interessados, bens, cliente, notas e contactos).
+
 ## Plano das próximas iterações
 
 | # | Tema | Conteúdo previsto |
@@ -103,7 +112,7 @@ Esta versão acrescenta, entre outros: notas e contactos por dossier, questioná
 | 4 | ~~Documentos & minutas~~ | ✅ concluída |
 | 5 | ~~Relatórios & relação de bens~~ | ✅ concluída |
 | 6 | ~~Produtividade~~ | ✅ concluída |
-| 7 | **Segurança** | Bloqueio por PIN, auto-bloqueio, cópias cifradas (AES-GCM), modo privacidade, importação do protótipo antigo. |
+| 7 | ~~Segurança~~ | ✅ concluída |
 | 8 | **Internacional** | Módulo França/UE aprofundado (CSE, lei aplicável, checklist notaire), textos multilingues (PT/FR/EN) para minutas e relatórios. |
 | 9 | **Qualidade** | Auditoria de acessibilidade (WCAG AA), desempenho (divisão de código, só subsets latinos das fontes), testes E2E, polimento móvel. |
 | 10 | **Entrega** | Revisão final, guia de utilização, pacote pronto a partilhar, resumo executivo. |

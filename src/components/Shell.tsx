@@ -7,10 +7,13 @@ import {
   CircleAlert,
   Command,
   Download,
+  Eye,
+  EyeOff,
   FolderOpen,
   LayoutDashboard,
   ListChecks,
   Lock,
+  LockKeyhole,
   Moon,
   Plus,
   Search,
@@ -27,6 +30,7 @@ import { isActiveCase, useInstall, useOnline, useOverviews } from '../lib/hooks'
 import { todayIso } from '../lib/utils';
 import { cx, normalize } from '../lib/utils';
 import { groupMyTasks } from '../lib/myTasks';
+import { lockNow } from '../lib/lock';
 import { CommandPalette } from './CommandPalette';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Avatar, Button, Sheet } from './ui';
@@ -98,6 +102,10 @@ export function Shell({ children }: { children: ReactNode }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [navigate]);
+
+  useEffect(() => {
+    document.body.classList.toggle('privacy', settings.privacyMode);
+  }, [settings.privacyMode]);
 
   const isDark =
     settings.theme === 'dark' ||
@@ -180,6 +188,22 @@ export function Shell({ children }: { children: ReactNode }) {
                 {settings.firmName}
               </div>
             </div>
+            <button
+              type="button"
+              className="btn ghost sm icon"
+              style={{ color: settings.privacyMode ? '#ffd166' : '#dfe4f5' }}
+              aria-pressed={settings.privacyMode}
+              aria-label={settings.privacyMode ? 'Desligar o modo privacidade' : 'Ligar o modo privacidade (oculta nomes)'}
+              title={settings.privacyMode ? 'Modo privacidade ligado — nomes ocultos' : 'Modo privacidade: ocultar nomes para partilhar o ecrã'}
+              onClick={() => void setSetting('privacyMode', !settings.privacyMode)}
+            >
+              {settings.privacyMode ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
+            </button>
+            {settings.pinJson && (
+              <button type="button" className="btn ghost sm icon" style={{ color: '#dfe4f5' }} aria-label="Bloquear agora" title="Bloquear agora (pede o PIN)" onClick={() => lockNow()}>
+                <LockKeyhole aria-hidden />
+              </button>
+            )}
             <button
               type="button"
               className="btn ghost sm icon"

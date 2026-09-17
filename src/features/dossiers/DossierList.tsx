@@ -224,9 +224,9 @@ export function DossierList() {
                 {filtered.map((o) => (
                   <tr key={o.c.id} className="clickable" onClick={() => navigate(`/dossiers/${o.c.id}`)}>
                     <td>
-                      <div className="strong">{o.c.name}</div>
+                      <div className="strong pv">{o.c.name}</div>
                       <div className="tiny subtle">
-                        {o.c.ref} · {o.c.deceased.name || '—'}
+                        {o.c.ref} · <span className="pv">{o.c.deceased.name || '—'}</span>
                       </div>
                     </td>
                     <td>

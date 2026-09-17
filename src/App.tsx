@@ -3,6 +3,8 @@ import { Route, Router, Switch } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import { FileQuestion } from 'lucide-react';
 import { applyTheme, getSetting } from './lib/db';
+import { initLock } from './lib/lock';
+import { LockScreen } from './components/LockScreen';
 import { Onboarding } from './components/Onboarding';
 import { Reminders } from './components/Reminders';
 import { PwaPrompts } from './components/PwaPrompts';
@@ -39,6 +41,8 @@ function NotFound() {
 export default function App() {
   useEffect(() => {
     void getSetting('theme').then(applyTheme);
+    void initLock();
+    void getSetting('privacyMode').then((on) => document.body.classList.toggle('privacy', on));
   }, []);
 
   return (
@@ -64,6 +68,7 @@ export default function App() {
         </Router>
         <Onboarding />
         <PwaPrompts />
+        <LockScreen />
       </ConfirmProvider>
     </ToastProvider>
   );

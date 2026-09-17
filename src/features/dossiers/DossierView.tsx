@@ -178,16 +178,22 @@ export function DossierView() {
               </span>
             ))}
           </div>
-          <h1>{c.name}</h1>
+          <h1 className="pv">{c.name}</h1>
           <div className="case-meta">
             <span>
               <strong>{c.ref}</strong>
             </span>
-            <span>De cujus: {c.deceased.name || '—'}</span>
+            <span>
+              De cujus: <span className="pv">{c.deceased.name || '—'}</span>
+            </span>
             <span>
               Óbito: {c.deceased.deathDate ? `${formatDate(c.deceased.deathDate)} (${relativeDays(c.deceased.deathDate)})` : '—'}
             </span>
-            {c.client.name && <span>Cliente: {c.client.name}</span>}
+            {c.client.name && (
+              <span>
+                Cliente: <span className="pv">{c.client.name}</span>
+              </span>
+            )}
           </div>
         </div>
         <div className="case-head-side">

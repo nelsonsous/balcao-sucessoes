@@ -7,7 +7,9 @@ import {
   CircleCheck,
   Database,
   Download,
+  EyeOff,
   FolderOpen,
+  Lock,
   LayoutDashboard,
   ListChecks,
   Moon,
@@ -23,6 +25,7 @@ import { isOpen } from '../engine/phases';
 import { downloadBackup } from '../lib/backup';
 import { db, setSetting, useSettings } from '../lib/db';
 import { useInstall } from '../lib/hooks';
+import { lockNow } from '../lib/lock';
 import { GROUP_LABELS, loadRecent, pushRecent, rankItems, type PaletteGroup, type PaletteItem } from '../lib/palette';
 import { cx } from '../lib/utils';
 import { useToast } from './Toast';
@@ -49,6 +52,8 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   'act-backup': Database,
   'act-tema': Moon,
   'act-instalar': Download,
+  'act-bloquear': Lock,
+  'act-privacidade': EyeOff,
 };
 
 /** Paleta de comandos (⌘K / Ctrl+K): ir para qualquer sítio, abrir dossiers, tarefas e minutas, executar ações. */
@@ -112,6 +117,15 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       },
     ];
     if (install.canPrompt && !install.standalone) out.push({ id: 'act-instalar', group: 'acoes', title: 'Instalar a aplicação', subtitle: 'Abre como app e funciona offline', run: () => void install.install() });
+    if (settings.pinJson) out.push({ id: 'act-bloquear', group: 'acoes', title: 'Bloquear agora', subtitle: 'Pede o PIN para continuar', keywords: 'pin bloqueio sair', run: () => lockNow() });
+    out.push({
+      id: 'act-privacidade',
+      group: 'acoes',
+      title: settings.privacyMode ? 'Desligar o modo privacidade' : 'Ligar o modo privacidade',
+      subtitle: 'Oculta nomes nas listas e no painel (partilha de ecrã)',
+      keywords: 'privacidade ocultar nomes discreto',
+      run: () => void setSetting('privacyMode', !settings.privacyMode),
+    });
     if (data) {
       const caseName = new Map(data.cases.map((c) => [c.id, c]));
       for (const c of data.cases.filter((x) => x.stage !== 'arquivado')) {
@@ -129,7 +143,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     const recent = loadRecent();
     const recents = recent.map((id) => out.find((i) => i.id === id)).filter((i): i is PaletteItem => Boolean(i)).map((i) => ({ ...i, id: `recent-${i.id}`, group: 'recentes' as PaletteGroup }));
     return [...recents, ...out];
-  }, [data, isDark, install, toast]);
+  }, [data, isDark, install, toast, settings.pinJson, settings.privacyMode]);
 
   const results = useMemo(() => rankItems(items, q), [items, q]);
 
@@ -217,6 +231,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                       role="option"
                       aria-selected={index === active}
                       data-index={index}
+                      data-group={item.group}
                       className={cx('palette-item', index === active && 'active')}
                       onMouseEnter={() => setActive(index)}
                       onClick={() => run(item)}

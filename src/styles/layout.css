@@ -548,3 +548,112 @@
     break-inside: avoid;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Ecrã de bloqueio (PIN) */
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(60% 50% at 80% 0%, color-mix(in srgb, var(--brand-600) 28%, transparent), transparent 70%),
+    linear-gradient(160deg, #0f1633, #151f45 60%, #121a36);
+  color: #fff;
+}
+
+.lock-card {
+  width: min(380px, 100%);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  padding: 32px 28px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+}
+
+.lock-card h1 {
+  font-size: 22px;
+  margin: 14px 0 4px;
+  color: #fff;
+}
+
+.lock-card .subtle {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.lock-mark {
+  width: 56px;
+  height: 56px;
+  font-size: 20px;
+  margin: 0 auto;
+}
+
+.lock-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.lock-input {
+  text-align: center;
+  font-size: 26px;
+  letter-spacing: 0.4em;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.lock-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.3em;
+}
+
+.lock-error {
+  margin: 10px 0 0;
+  color: #ffb4bd;
+  font-size: 13px;
+}
+
+.lock-foot {
+  margin-top: 16px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Modo privacidade: nomes e documentos desfocados (para partilhar o ecrã) */
+body.privacy .pv,
+body.privacy .case-card-title,
+body.privacy .board-card-title,
+body.privacy .li-title,
+body.privacy .agenda-title,
+body.privacy .paper,
+body.privacy #global-search-results .menu-item span,
+body.privacy .palette-item[data-group='dossiers'] span,
+body.privacy .palette-item[data-group='tarefas'] .palette-sub,
+body.privacy .party-name,
+body.privacy .task-sub .pv {
+  filter: blur(6px);
+  user-select: none;
+}
+
+body.privacy .paper:hover {
+  filter: none;
+}
+
+.code-block {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 6px 0;
+  user-select: all;
+}

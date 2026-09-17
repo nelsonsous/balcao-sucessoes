@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useAgendaItems } from '../lib/agenda';
-import { useSettings } from '../lib/db';
+import { db, useSettings } from '../lib/db';
 import { todayIso } from '../lib/utils';
 import { useToast } from './Toast';
 
 const SUMMARY_KEY = 'bs-daily-summary';
+const BACKUP_NAG_KEY = 'bs-backup-nag';
+const BACKUP_MAX_AGE_DAYS = 7;
 
 type BadgeNavigator = Navigator & {
   setAppBadge?: (n?: number) => Promise<void>;
@@ -50,6 +53,32 @@ export function Reminders() {
   const toast = useToast();
   const [, navigate] = useLocation();
   const [day, setDay] = useState(todayIso);
+  const caseCount = useLiveQuery(() => db.cases.filter((c) => !c.demo).count(), []);
+
+  // Lembrete de cópia de segurança: uma vez por semana, quando há dossiers reais e a última cópia é antiga (ou não existe).
+  useEffect(() => {
+    if (!settings.onboarded || !caseCount) return;
+    let last = '';
+    try {
+      last = localStorage.getItem(BACKUP_NAG_KEY) ?? '';
+    } catch {
+      /* ignora */
+    }
+    const ageDays = (iso: string) => (iso ? (Date.now() - new Date(iso).getTime()) / 86_400_000 : Infinity);
+    if (ageDays(settings.lastBackupAt) <= BACKUP_MAX_AGE_DAYS || (last && ageDays(last) < BACKUP_MAX_AGE_DAYS)) return;
+    try {
+      localStorage.setItem(BACKUP_NAG_KEY, new Date().toISOString());
+    } catch {
+      /* ignora */
+    }
+    toast({
+      key: 'backup-nag',
+      title: settings.lastBackupAt ? 'A última cópia de segurança tem mais de uma semana' : 'Ainda não fez nenhuma cópia de segurança',
+      description: 'Os dados vivem só neste dispositivo. Exporte uma cópia (pode cifrá-la com palavra-passe).',
+      duration: 12_000,
+      action: { label: 'Fazer cópia', onClick: () => navigate('/definicoes') },
+    });
+  }, [settings.onboarded, settings.lastBackupAt, caseCount, toast, navigate]);
 
   // Mudança de dia com a app aberta (ou ao voltar ao separador).
   useEffect(() => {

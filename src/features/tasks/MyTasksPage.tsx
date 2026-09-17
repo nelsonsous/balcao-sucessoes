@@ -87,7 +87,7 @@ export function MyTasksPage() {
                               </span>
                               <span className="task-sub">
                                 <span>
-                                  {c.ref} · {c.name} · {phaseLabel(t.phase)}
+                                  {c.ref} · <span className="pv">{c.name}</span> · {phaseLabel(t.phase)}
                                 </span>
                               </span>
                             </Link>

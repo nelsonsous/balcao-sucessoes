@@ -249,7 +249,7 @@ export function Dashboard() {
                       </div>
                       <div className="li-sub truncate">
                         {i.source === 'prazo' ? 'Prazo' : i.source === 'evento' ? i.subtitle : 'Contacto'}
-                        {i.caseName ? ` · ${i.caseName}` : ''} · {relativeDays(i.date)}
+                        {i.caseName ? <> · <span className="pv">{i.caseName}</span></> : ''} · {relativeDays(i.date)}
                       </div>
                     </div>
                   </Link>
@@ -332,7 +332,7 @@ export function Dashboard() {
                       {list.slice(0, 4).map((o) => (
                         <Link key={o.c.id} href={`/dossiers/${o.c.id}`} className={cx('pipe-item', o.health.level)}>
                           <span className={cx('dot', o.health.level)} aria-hidden />
-                          <span className="truncate">{o.c.name}</span>
+                          <span className="truncate pv">{o.c.name}</span>
                         </Link>
                       ))}
                       {list.length > 4 && <span className="tiny subtle">+{list.length - 4}</span>}
@@ -390,7 +390,7 @@ export function Dashboard() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="li-title truncate">{f.person || 'Contacto'}</div>
                       <div className="li-sub truncate">
-                        {m.caseById.get(f.caseId)?.c.name} · {f.summary}
+                        <span className="pv">{m.caseById.get(f.caseId)?.c.name}</span> · {f.summary}
                       </div>
                     </div>
                   </Link>

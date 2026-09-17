@@ -161,3 +161,10 @@ export function maskIban(iban: string): string {
   if (s.length < 8) return s;
   return `${s.slice(0, 4)} •••• ${s.slice(-4)}`;
 }
+
+/** Modo privacidade: "Maria Helena Dupont Silva" → "M. H. D. S." (mantém referências/números). */
+export function maskName(name: string): string {
+  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '';
+  return parts.map((p) => (/^[a-zà-ÿ]{1,3}$/i.test(p) && parts.length > 1 ? p.toLowerCase() : `${p[0]!.toUpperCase()}.`)).join(' ');
+}

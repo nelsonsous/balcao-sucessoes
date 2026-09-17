@@ -1,5 +1,6 @@
 // Cópia de segurança: exportação/importação integral em JSON (anexos em base64).
-import { db } from './db';
+import { decryptText, encryptText, isEncryptedEnvelope, type EncryptedEnvelope } from './crypto';
+import { db, setSetting } from './db';
 import type { FileRecord } from './types';
 import { downloadFile, nowIso, todayIso } from './utils';
 
@@ -75,11 +76,40 @@ export async function exportBackup(opts: { includeFiles?: boolean } = {}): Promi
   return { app: BACKUP_APP, version: BACKUP_VERSION, exportedAt: nowIso(), includesFiles: includeFiles, tables };
 }
 
-export async function downloadBackup(opts: { includeFiles?: boolean } = {}): Promise<number> {
+export interface DownloadOptions {
+  includeFiles?: boolean;
+  /** Com palavra-passe, o ficheiro é cifrado (AES-GCM) e só abre com ela. */
+  passphrase?: string;
+  hint?: string;
+}
+
+export async function downloadBackup(opts: DownloadOptions = {}): Promise<number> {
   const data = await exportBackup(opts);
-  const json = JSON.stringify(data);
-  downloadFile(`balcao-sucessoes-copia-${todayIso()}.json`, json, 'application/json');
+  let json = JSON.stringify(data);
+  let name = `balcao-sucessoes-copia-${todayIso()}.json`;
+  if (opts.passphrase) {
+    json = JSON.stringify(await encryptText(json, opts.passphrase, { hint: opts.hint }));
+    name = `balcao-sucessoes-copia-${todayIso()}.cifrada.json`;
+  }
+  downloadFile(name, json, 'application/json');
+  await setSetting('lastBackupAt', nowIso());
   return data.tables.cases?.length ?? 0;
+}
+
+/** Lê um ficheiro de cópia: devolve a cópia, ou indica que precisa de palavra-passe. */
+export async function readBackupText(text: string, passphrase?: string): Promise<{ backup: BackupFile } | { needsPassphrase: true; hint?: string }> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error('O ficheiro não é um JSON válido.');
+  }
+  if (isEncryptedEnvelope(parsed)) {
+    if (!passphrase) return { needsPassphrase: true, ...(parsed.hint ? { hint: parsed.hint } : {}) };
+    const plain = await decryptText(parsed as EncryptedEnvelope, passphrase);
+    return { backup: parseBackup(plain) };
+  }
+  return { backup: parseBackup(text) };
 }
 
 export function parseBackup(text: string): BackupFile {

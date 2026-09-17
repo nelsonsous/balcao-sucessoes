@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from './db';
+import { maskName } from './utils';
+import { db, useSettings } from './db';
 import type { CaseRecord, MemberRecord, TaskRecord } from './types';
 import {
   blockers,
@@ -58,6 +59,12 @@ export function buildOverview(c: CaseRecord, tasks: TaskRecord[]): CaseOverview 
 }
 
 /** Visão consolidada de todos os dossiers (tempo real). */
+/** Modo privacidade: devolve uma função que oculta nomes quando ativo. */
+export function usePrivacy(): { on: boolean; name: (s: string) => string } {
+  const settings = useSettings();
+  return { on: settings.privacyMode, name: settings.privacyMode ? maskName : (s: string) => s };
+}
+
 export function useOverviews(): CaseOverview[] | undefined {
   const data = useLiveQuery(async () => {
     const [cases, tasks] = await Promise.all([db.cases.toArray(), db.tasks.toArray()]);
