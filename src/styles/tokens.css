@@ -184,3 +184,25 @@
   --shadow-lg: 0 16px 56px rgba(0, 0, 0, 0.55);
   --ring: 0 0 0 3px rgba(107, 118, 227, 0.45);
 }
+
+/* ---------------------------------------------------------------------------
+   Alto contraste (Definições → Acessibilidade, ou a preferência do sistema):
+   texto secundário quase tão forte como o principal, contornos bem visíveis e
+   anel de foco sólido — calculado a partir das cores do tema, claro ou escuro. */
+:root[data-contrast='more'] {
+  --text-2: color-mix(in srgb, var(--text) 92%, var(--surface));
+  --text-3: color-mix(in srgb, var(--text) 84%, var(--surface));
+  --border: color-mix(in srgb, var(--text) 45%, var(--surface));
+  --border-strong: color-mix(in srgb, var(--text) 68%, var(--surface));
+  --ring: 0 0 0 3px var(--text);
+}
+
+@media (prefers-contrast: more) {
+  :root:not([data-contrast='x']) {
+    --text-2: color-mix(in srgb, var(--text) 92%, var(--surface));
+    --text-3: color-mix(in srgb, var(--text) 84%, var(--surface));
+    --border: color-mix(in srgb, var(--text) 45%, var(--surface));
+    --border-strong: color-mix(in srgb, var(--text) 68%, var(--surface));
+    --ring: 0 0 0 3px var(--text);
+  }
+}

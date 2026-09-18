@@ -28,6 +28,7 @@ import {
 import { Inbox, Recycle, TrendingUp, Workflow } from 'lucide-react';
 import { db, setSetting, useSettings } from '../lib/db';
 import { pageTitle, routeTitle } from '../lib/printing';
+import { HELP_EVENT, createKeymap, isTypingTarget } from '../lib/shortcuts';
 import { useInboxCount } from '../lib/shareInbox';
 import { useTrashCount } from '../lib/recycle';
 import { useAgendaItems } from '../lib/agenda';
@@ -37,6 +38,8 @@ import { cx, normalize } from '../lib/utils';
 import { groupMyTasks } from '../lib/myTasks';
 import { lockNow } from '../lib/lock';
 import { ErrorBoundary } from './ErrorBoundary';
+
+const ShortcutsHelp = lazy(() => import('../features/shortcuts/ShortcutsHelp').then((m) => ({ default: m.ShortcutsHelp })));
 
 /** O cronómetro (com o cálculo dos honorários) só carrega quando há um em curso. */
 const TimerChip = lazy(() => import('./TimerChip').then((m) => ({ default: m.TimerChip })));
@@ -112,25 +115,27 @@ export function Shell({ children }: { children: ReactNode }) {
     };
   }, [overviews]);
 
-  // Atalhos globais: N = nova sucessão, / = pesquisa
+  // Atalhos globais: ⌘/Ctrl+K paleta, / pesquisa, N nova sucessão, ? ajuda, G+letra ir para (lib/shortcuts.ts)
+  const [help, setHelp] = useState(false);
   useEffect(() => {
+    const keymap = createKeymap();
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setPalette((p) => !p);
-        return;
-      }
-      const el = e.target as HTMLElement;
-      if (el.closest('input, textarea, select, [contenteditable], dialog')) return;
-      if (e.key === '/') {
-        e.preventDefault();
-        document.getElementById('global-search')?.focus();
-      } else if (e.key.toLowerCase() === 'n' && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        navigate('/dossiers/novo');
-      }
+      const action = keymap(e, isTypingTarget(e.target));
+      if (!action) return;
+      e.preventDefault();
+      if (action.type === 'palette') setPalette((p) => !p);
+      else if (action.type === 'search') document.getElementById('global-search')?.focus();
+      else if (action.type === 'new') navigate('/dossiers/novo');
+      else if (action.type === 'help') setHelp(true);
+      else navigate(action.path);
     };
+    const onHelp = () => setHelp(true);
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener(HELP_EVENT, onHelp);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener(HELP_EVENT, onHelp);
+    };
   }, [navigate]);
 
   useEffect(() => {
@@ -334,6 +339,12 @@ export function Shell({ children }: { children: ReactNode }) {
           <ErrorBoundary resetKey={loc}>{children}</ErrorBoundary>
         </main>
       </div>
+
+      {help && (
+        <Suspense fallback={null}>
+          <ShortcutsHelp open onClose={() => setHelp(false)} />
+        </Suspense>
+      )}
 
       <Sheet open={iosHelp} onClose={() => setIosHelp(false)} variant="modal" title="Instalar no iPhone ou iPad" icon={Smartphone}>
         <ol className="stack" style={{ paddingLeft: 18, margin: 0 }}>

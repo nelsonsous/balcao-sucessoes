@@ -171,4 +171,7 @@ export function maskName(name: string): string {
 
 /** «smooth», exceto quando o sistema pede movimento reduzido. */
 export const scrollBehavior = (): ScrollBehavior =>
-  typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  typeof window !== 'undefined' &&
+  (document.documentElement.classList.contains('reduce-motion') || (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches))
+    ? 'auto'
+    : 'smooth';

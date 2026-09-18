@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'wouter';
+import { openShortcutsHelp } from '../../lib/shortcuts';
 import {
   BookmarkPlus,
   BellRing,
@@ -22,7 +23,7 @@ import {
   UserRound,
   Users,
 } from 'lucide-react';
-import { Recycle } from 'lucide-react';
+import { Keyboard, Recycle } from 'lucide-react';
 import { deleteCaseTemplate, deleteMember, saveMember } from '../../lib/actions';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../lib/db';
@@ -245,19 +246,51 @@ export function SettingsPage() {
         </Card>
 
         <Card>
-          <CardHead icon={Palette} title="Aparência" />
+          <CardHead icon={Palette} title="Aparência e acessibilidade" />
           <div className="card-body stack">
-            <Segmented<AppSettings['theme']>
-              label="Tema"
-              value={settings.theme}
-              onChange={(t) => void setSetting('theme', t)}
-              options={[
-                { value: 'system', label: 'Sistema', icon: Monitor },
-                { value: 'light', label: 'Claro', icon: Sun },
-                { value: 'dark', label: 'Escuro', icon: Moon },
-              ]}
-            />
-            <p className="subtle small">O tema escuro reduz o cansaço visual em sessões longas.</p>
+            <div className="field">
+              <span className="field-label">Tema</span>
+              <Segmented<AppSettings['theme']>
+                label="Tema"
+                value={settings.theme}
+                onChange={(t) => void setSetting('theme', t)}
+                options={[
+                  { value: 'system', label: 'Sistema', icon: Monitor },
+                  { value: 'light', label: 'Claro', icon: Sun },
+                  { value: 'dark', label: 'Escuro', icon: Moon },
+                ]}
+              />
+            </div>
+            <div className="field">
+              <span className="field-label">Animações</span>
+              <Segmented<AppSettings['motion']>
+                label="Animações"
+                value={settings.motion}
+                onChange={(v) => void setSetting('motion', v)}
+                options={[
+                  { value: 'sistema', label: 'Como o sistema' },
+                  { value: 'reduzido', label: 'Reduzidas' },
+                ]}
+              />
+            </div>
+            <div className="field">
+              <span className="field-label">Contraste</span>
+              <Segmented<AppSettings['contrast']>
+                label="Contraste"
+                value={settings.contrast}
+                onChange={(v) => void setSetting('contrast', v)}
+                options={[
+                  { value: 'sistema', label: 'Como o sistema' },
+                  { value: 'alto', label: 'Alto' },
+                ]}
+              />
+            </div>
+            <p className="subtle small">O tema escuro reduz o cansaço visual em sessões longas. «Reduzidas» desliga transições e deslocamentos suaves; «Alto» reforça textos, contornos e o anel de foco.</p>
+            <div>
+              <Button size="sm" icon={Keyboard} onClick={openShortcutsHelp}>
+                Atalhos de teclado
+              </Button>
+            </div>
           </div>
         </Card>
 

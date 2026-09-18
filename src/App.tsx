@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect } from 'react';
 import { Route, Router, Switch } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import { FileQuestion } from 'lucide-react';
-import { applyTheme, getSetting, useSettings } from './lib/db';
+import { applyA11y, applyTheme, getSetting, useSettings } from './lib/db';
 import { initLock } from './lib/lock';
 import { LockScreen } from './components/LockScreen';
 import { Onboarding } from './components/Onboarding';
@@ -76,6 +76,7 @@ function NotFound() {
 export default function App() {
   useEffect(() => {
     void getSetting('theme').then(applyTheme);
+    void Promise.all([getSetting('motion'), getSetting('contrast')]).then(([motion, contrast]) => applyA11y({ motion, contrast }));
     void initLock();
     void getSetting('privacyMode').then((on) => document.body.classList.toggle('privacy', on));
     void purgeTrash().catch(() => undefined);

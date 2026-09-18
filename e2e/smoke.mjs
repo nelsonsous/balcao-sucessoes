@@ -612,6 +612,50 @@ try {
     await page.waitForFunction(() => /Tudo em ordem/.test(document.querySelector('[data-testid="integrity"]')?.textContent || ''), { timeout: 8000 });
   });
 
+  await step('Teclado: ajuda «?», ir para com G, separadores com setas e quadro com Shift+setas', async () => {
+    await go('#/', 1000);
+    await page.evaluate(() => document.activeElement?.blur?.());
+    await page.keyboard.type('?');
+    await page.waitForFunction(() => /Atalhos de teclado/.test(document.querySelector('dialog[open]')?.textContent || ''), { timeout: 5000 });
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !document.querySelector('dialog[open]'), { timeout: 3000 });
+    await page.keyboard.press('g');
+    await page.keyboard.press('a');
+    await page.waitForFunction(() => location.hash === '#/agenda', { timeout: 3000 });
+    // separadores do dossier: ← → mudam de separador e levam o foco
+    await go(`#/dossiers/${caseId}/checklist`, 1500);
+    await page.focus('[role="tab"][aria-selected="true"]');
+    await page.keyboard.press('ArrowRight');
+    await page.waitForFunction(() => location.hash.endsWith('/interessados') && document.activeElement?.getAttribute('role') === 'tab' && /Interessados/.test(document.activeElement.textContent || ''), { timeout: 5000 });
+    await page.keyboard.press('Home');
+    await page.waitForFunction(() => document.querySelector('.task-row, .board') !== null, { timeout: 5000 });
+    // quadro: Shift+→ passa a tarefa para a coluna ao lado; ⌘/Ctrl+Z anula
+    await page.evaluate(() => localStorage.setItem('bs-checklist-view', 'quadro'));
+    await go(`#/dossiers/${caseId}`, 300);
+    await go(`#/dossiers/${caseId}/checklist`, 1500);
+    if (!(await page.$('.board'))) {
+      await page.click('[role="group"][aria-label="Vista"] button:nth-child(2)');
+      await page.waitForSelector('.board', { timeout: 5000 });
+    }
+    const count = (status) => page.$$eval(`[data-status="${status}"] [data-board-card]`, (els) => els.length);
+    const before = { pendente: await count('pendente'), curso: await count('em_curso') };
+    assert(before.pendente > 0, 'há tarefas pendentes no quadro');
+    const id = await page.$eval('[data-status="pendente"] [data-board-card]', (el) => el.getAttribute('data-board-card'));
+    await page.focus(`[data-board-card="${id}"]`);
+    await page.keyboard.down('Shift');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.up('Shift');
+    await page.waitForFunction((tid) => document.activeElement?.getAttribute('data-board-card') === tid && document.activeElement.closest('[data-status="em_curso"]'), { timeout: 5000 }, id);
+    assert((await count('em_curso')) === before.curso + 1, 'tarefa passou para «Em curso» e o foco seguiu-a');
+    await page.evaluate(() => document.activeElement?.blur?.());
+    await page.keyboard.down(process.platform === 'darwin' ? 'Meta' : 'Control');
+    await page.keyboard.press('z');
+    await page.keyboard.up(process.platform === 'darwin' ? 'Meta' : 'Control');
+    await page.waitForFunction((tid) => Boolean(document.querySelector(`[data-status="pendente"] [data-board-card="${tid}"]`)), { timeout: 5000 }, id);
+    await page.evaluate(() => localStorage.setItem('bs-checklist-view', 'lista'));
+    await go(`#/dossiers/${caseId}`, 300);
+  });
+
   await step('PIN: definir, bloquear e desbloquear', async () => {
     await go('#/definicoes', 1200);
     assert(await clickText('button', 'Definir PIN'), 'botão Definir PIN');

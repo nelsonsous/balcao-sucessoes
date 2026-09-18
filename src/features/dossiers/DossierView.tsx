@@ -49,6 +49,7 @@ import {
   Menu,
   Ring,
   Tabs,
+  tabPanelProps,
   useConfirm,
 } from '../../components/ui';
 import { CaseEditSheet } from './CaseEditSheet';
@@ -288,6 +289,8 @@ export function DossierView() {
       <div className="case-layout">
         <div className="stack case-main" style={{ minWidth: 0, gap: 16 }}>
           <Tabs<TabId>
+            idPrefix="dossier"
+            label="Secções do dossier"
             value={tab}
             onChange={setTab}
             items={[
@@ -304,6 +307,7 @@ export function DossierView() {
               { id: 'historico', label: 'Histórico', icon: History },
             ]}
           />
+          <div {...tabPanelProps('dossier', tab)}>
           {tab === 'checklist' && <ChecklistTab c={c} tasks={tasks} filter={filter} onFilter={setFilter} onOpen={openTask} />}
           <Suspense fallback={<TabLoading />}>
             {tab === 'interessados' && <PartiesTab c={c} />}
@@ -317,6 +321,7 @@ export function DossierView() {
             {tab === 'questionario' && <QuestionnaireTab c={c} />}
             {tab === 'historico' && <ActivityTab caseId={c.id} />}
           </Suspense>
+          </div>
         </div>
 
         <aside className="stack case-aside" style={{ gap: 16 }}>

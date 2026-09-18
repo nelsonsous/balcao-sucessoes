@@ -367,7 +367,7 @@ function DossierBoard({ list, memberMap }: { list: CaseOverview[]; memberMap: Ma
         const items = list.filter((o) => (o.phase ?? '__done') === col.id);
         if (!items.length && col.id !== '__done') return null;
         return (
-          <section key={col.id} className="board-col" role="listitem" aria-label={`${col.label}: ${items.length}`}>
+          <div key={col.id} className="board-col" role="listitem" aria-label={`${col.label}: ${items.length}`}>
             <header className="board-head">
               <span className="board-title">{col.label}</span>
               <span className="board-count tabular">{items.length}</span>
@@ -392,7 +392,7 @@ function DossierBoard({ list, memberMap }: { list: CaseOverview[]; memberMap: Ma
                 );
               })}
             </div>
-          </section>
+          </div>
         );
       })}
     </div>

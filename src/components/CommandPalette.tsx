@@ -20,7 +20,8 @@ import {
   Wand2,
   type LucideIcon,
 } from 'lucide-react';
-import { FileText, Inbox, MessageSquare, NotebookPen, Recycle, Stethoscope, TrendingUp, Workflow } from 'lucide-react';
+import { FileText, Inbox, Keyboard, MessageSquare, NotebookPen, Recycle, Stethoscope, TrendingUp, Workflow } from 'lucide-react';
+import { openShortcutsHelp } from '../lib/shortcuts';
 import { CHANNEL_LABELS } from '../lib/labels';
 import { DOC_STATUS } from '../lib/documents';
 import { formatDate } from '../lib/utils';
@@ -61,6 +62,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   'nav-/analise': TrendingUp,
   'nav-/regras': Workflow,
   'nav-/diagnostico': Stethoscope,
+  'act-atalhos': Keyboard,
   'nav-/definicoes': Settings,
   'act-nova': Plus,
   'act-backup': Database,
@@ -119,6 +121,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'nav-/reciclagem', group: 'navegacao', title: 'Reciclagem', subtitle: 'Itens apagados nos últimos 30 dias', keywords: 'lixo apagados repor restaurar', href: '/reciclagem' },
       { id: 'act-nova', group: 'acoes', title: 'Nova sucessão', subtitle: 'Assistente com questionário', shortcut: 'N', href: '/dossiers/novo' },
       { id: 'act-importar', group: 'acoes', title: 'Importar dossier partilhado', subtitle: 'Ficheiro enviado por um colega', keywords: 'partilha juntar colega importar', href: '/dossiers?importar=1' },
+      { id: 'act-atalhos', group: 'acoes', title: 'Atalhos de teclado', subtitle: '«?» em qualquer ecrã', keywords: 'teclado atalhos ajuda acessibilidade', run: () => openShortcutsHelp() },
       { id: 'act-anular', group: 'acoes', title: 'Anular a última ação', subtitle: 'Ctrl/⌘+Z fora dos campos de texto', keywords: 'undo desfazer voltar atrás', run: () => void undoLast() },
       {
         id: 'act-backup',

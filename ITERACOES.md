@@ -7,7 +7,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 3 — «10 vezes seguidas com melhorias e testes» (iterações 21–30)
 
-**Estado do ciclo 3: iterações 21–28 concluídas (8/10).**
+**Estado do ciclo 3: iterações 21–29 concluídas (9/10).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -19,10 +19,19 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 26 | ~~Impressão~~ | ✅ concluída |
 | 27 | ~~Diagnóstico e integridade~~ | ✅ concluída |
 | 28 | ~~Desempenho~~ | ✅ concluída |
-| 29 | **Teclado e acessibilidade avançada** | Atalhos com ajuda (?), quadro Kanban operável por teclado, movimento reduzido e alto contraste; testes com axe e teclado. |
+| 29 | ~~Teclado e acessibilidade avançada~~ | ✅ concluída |
 | 30 | **Consolidação** | Auditoria final, manual e apresentação atualizados (versão 2.2), resumo, envio. |
 
 Fora do ciclo, por depender de decisão e de uma conta do escritório: o «modo escritório» com sincronização entre dispositivos (por exemplo, Supabase na UE, num projeto próprio do escritório), que reaproveitaria a lógica de junção da iteração 14.
+
+### Iteração 29 — Teclado e acessibilidade avançada ✅
+
+- **Ajuda dos atalhos** com **«?»** em qualquer ecrã (também na paleta de comandos e nas Definições): paleta (⌘/Ctrl+K), pesquisa (/), nova sucessão (N), anular (⌘/Ctrl+Z), fechar (Esc) e o novo **«G» e depois a letra** para ir para uma página — G V visão geral, G D dossiers, G A agenda, G B bloqueios, G M as minhas tarefas, G C calculadora, G P prazos, G R regras, G S definições (`lib/shortcuts.ts`, lógica pura; só fora dos campos de texto). No Mac mostra ⌘, nos outros Ctrl.
+- **Quadro da checklist sem arrastar**: além de arrastar com o rato, cada cartão tem o botão **«Mudar o estado»** (um toque, também no telemóvel — o arrastar do HTML não funciona no iPhone; critério 2.5.7 das WCAG 2.2) e o **teclado**: setas para percorrer os cartões, **Shift + ← / →** para passar a tarefa para a coluna ao lado, Enter para abrir; o foco segue o cartão para a nova coluna e a instrução está disponível aos leitores de ecrã.
+- **Separadores segundo o padrão ARIA** (componente comum): uma só paragem de Tab, ← → Home End mudam de separador e levam o foco, e o painel fica ligado ao separador (`tabpanel`).
+- **Aparência e acessibilidade** (Definições): **animações** «como o sistema» ou «reduzidas» (sem transições nem deslocamentos suaves, também nos deslocamentos feitos pela aplicação) e **contraste** «como o sistema» ou «alto» (texto secundário quase tão forte como o principal, contornos visíveis, anel de foco sólido, ligações sublinhadas — calculado a partir do tema, claro ou escuro). O sistema também conta: `prefers-contrast: more` aplica o alto contraste e o **modo de cores forçadas do Windows** passa a ter contornos e foco visíveis. As escolhas aplicam-se antes do primeiro desenho (sem piscar).
+- **Acessibilidade verificada em 32 ecrãs e estados** (axe, WCAG 2.2 AA, incluindo quadro, ajuda dos atalhos e alto contraste claro/escuro): duas falhas encontradas e corrigidas — colunas dos quadros com um papel ARIA inválido (`section` com `role=listitem`) e o corpo da ajuda sem acesso ao deslocamento pelo teclado (as folhas só de leitura passam a poder receber foco) — **0 violações**.
+- **Testes**: atalhos (paleta mesmo a escrever, «?», «/», N, sequências G+letra com prazo, cancelamento ao escrever, ⌘/Ctrl), separadores (paragem única, setas, Home/End, painel ligado), quadro (percorrer, Shift+→ com o foco a seguir o cartão, botão «Mudar o estado»), ajuda, preferências (classe e atributo no `<html>`, deslocamento sem animação, guardadas para o arranque) — **314 testes**; novo passo E2E «Teclado: ajuda «?», ir para com G, separadores com setas e quadro com Shift+setas» (com ⌘/Ctrl+Z a anular a mudança) — **24 passos**.
 
 ### Iteração 28 — Desempenho ✅
 

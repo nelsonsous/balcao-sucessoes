@@ -291,17 +291,41 @@ export interface TabItem<T extends string> {
   count?: number;
 }
 
-export function Tabs<T extends string>({ items, value, onChange }: { items: TabItem<T>[]; value: T; onChange: (v: T) => void }) {
+/**
+ * Separadores segundo o padrão ARIA: uma só paragem de Tab (o separador ativo), ← → Home End
+ * mudam de separador e levam o foco consigo, e o painel fica ligado ao separador (tabPanelProps).
+ */
+export function Tabs<T extends string>({ items, value, onChange, idPrefix = 'tabs', label }: { items: TabItem<T>[]; value: T; onChange: (v: T) => void; idPrefix?: string; label?: string }) {
+  const refs = useRef(new Map<T, HTMLButtonElement>());
+  const go = (index: number) => {
+    const t = items[(index + items.length) % items.length];
+    if (!t) return;
+    onChange(t.id);
+    refs.current.get(t.id)?.focus();
+  };
   return (
-    <div className="tabs" role="tablist">
-      {items.map((t) => (
+    <div className="tabs" role="tablist" aria-label={label}>
+      {items.map((t, i) => (
         <button
           key={t.id}
+          ref={(el) => {
+            if (el) refs.current.set(t.id, el);
+            else refs.current.delete(t.id);
+          }}
+          id={`${idPrefix}-${t.id}`}
           type="button"
           role="tab"
           className="tab"
           aria-selected={t.id === value}
+          aria-controls={`${idPrefix}-panel`}
+          tabIndex={t.id === value ? 0 : -1}
           onClick={() => onChange(t.id)}
+          onKeyDown={(e) => {
+            const next = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1 : null;
+            if (next === null) return;
+            e.preventDefault();
+            go(next);
+          }}
         >
           {t.icon && <t.icon aria-hidden />}
           {t.label}
@@ -311,6 +335,9 @@ export function Tabs<T extends string>({ items, value, onChange }: { items: TabI
     </div>
   );
 }
+
+/** Propriedades do painel ligado aos separadores (mesmo idPrefix). */
+export const tabPanelProps = (idPrefix: string, value: string) => ({ role: 'tabpanel' as const, id: `${idPrefix}-panel`, 'aria-labelledby': `${idPrefix}-${value}` });
 
 // ---------------------------------------------------------------------------
 // Menu contextual
@@ -525,6 +552,7 @@ export function Sheet({
   variant = 'drawer',
   icon: Icon,
   wide,
+  scrollFocusable,
 }: {
   open: boolean;
   onClose: () => void;
@@ -536,6 +564,8 @@ export function Sheet({
   icon?: LucideIcon;
   /** Gaveta larga (tabelas de pré-visualização). */
   wide?: boolean;
+  /** Conteúdo só de leitura: o corpo recebe foco para se deslocar com o teclado. */
+  scrollFocusable?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -576,7 +606,9 @@ export function Sheet({
             </div>
             <Button variant="ghost" iconOnly icon={X} aria-label="Fechar" onClick={onClose} />
           </div>
-          <div className="sheet-body">{children}</div>
+          <div className="sheet-body" {...(scrollFocusable ? { tabIndex: 0, role: 'region', 'aria-label': 'Conteúdo' } : {})}>
+            {children}
+          </div>
           {footer && <div className="sheet-foot">{footer}</div>}
         </div>
       )}

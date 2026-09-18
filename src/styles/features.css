@@ -2467,3 +2467,21 @@ dialog.palette::backdrop {
   content-visibility: auto;
   contain-intrinsic-size: auto 160px;
 }
+
+/* Atalhos de teclado */
+.shortcuts-table td {
+  padding: 6px 8px;
+  vertical-align: top;
+}
+.shortcut-keys {
+  white-space: nowrap;
+  width: 1%;
+}
+.shortcut-keys .kbd {
+  margin: 0 1px;
+}
+
+/* Quadro: mudar o estado sem arrastar */
+.board-move {
+  flex: none;
+}

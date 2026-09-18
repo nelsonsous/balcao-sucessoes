@@ -211,3 +211,47 @@ p a,
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* Animações reduzidas escolhidas na aplicação (além da preferência do sistema). */
+html.reduce-motion {
+  scroll-behavior: auto !important;
+}
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Alto contraste: ligações de texto sublinhadas. */
+[data-contrast='more'] main p a,
+[data-contrast='more'] main li a:not(.btn),
+[data-contrast='more'] main td a {
+  text-decoration: underline;
+}
+
+/* Modo de alto contraste do Windows (cores forçadas): contornos em vez de fundos e foco bem visível. */
+@media (forced-colors: active) {
+  .status-pill,
+  .badge,
+  .kpi,
+  .card,
+  .board-card,
+  .rule-item,
+  .integrity-item,
+  .segmented button[aria-pressed='true'],
+  .tab[aria-selected='true'] {
+    border: 1px solid CanvasText;
+  }
+  :focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px;
+  }
+  .progress > span,
+  .phase-mini > span,
+  .dot {
+    forced-color-adjust: none;
+  }
+}

@@ -119,6 +119,10 @@ export interface AppSettings {
   firmPhone: string;
   tagline: string;
   theme: 'system' | 'light' | 'dark';
+  /** Animações: as do sistema ou sempre reduzidas. */
+  motion: 'sistema' | 'reduzido';
+  /** Contraste: o do sistema ou sempre alto. */
+  contrast: 'sistema' | 'alto';
   onboarded: boolean;
   refCounter: number;
   /** Chave de MUNICIPAL_HOLIDAYS, ou "DD-MM" personalizado, ou "" (nenhum). */
@@ -173,6 +177,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   firmPhone: '',
   tagline: 'Para imprimir Fluencia a cada dossier.',
   theme: 'system',
+  motion: 'sistema',
+  contrast: 'sistema',
   onboarded: false,
   refCounter: 0,
   municipalHoliday: '',
@@ -209,6 +215,26 @@ export async function getSetting<K extends keyof AppSettings>(key: K): Promise<A
 export async function setSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): Promise<void> {
   await db.settings.put({ key, value });
   if (key === 'theme') applyTheme(value as AppSettings['theme']);
+  if (key === 'motion' || key === 'contrast') applyA11y({ [key]: value } as Partial<Pick<AppSettings, 'motion' | 'contrast'>>);
+}
+
+/**
+ * Preferências de acessibilidade no <html>: classe «reduce-motion» e data-contrast="more".
+ * Ficam também no localStorage para o theme-init.js as aplicar antes do primeiro desenho.
+ */
+export function applyA11y(p: Partial<Pick<AppSettings, 'motion' | 'contrast'>>): void {
+  const root = document.documentElement;
+  if (p.motion !== undefined) root.classList.toggle('reduce-motion', p.motion === 'reduzido');
+  if (p.contrast !== undefined) {
+    if (p.contrast === 'alto') root.dataset.contrast = 'more';
+    else delete root.dataset.contrast;
+  }
+  try {
+    const cur = JSON.parse(localStorage.getItem('bs-a11y') ?? '{}') as Record<string, string>;
+    localStorage.setItem('bs-a11y', JSON.stringify({ ...cur, ...p }));
+  } catch {
+    /* modo privado: ignora */
+  }
 }
 
 export function useSettings(): AppSettings {
