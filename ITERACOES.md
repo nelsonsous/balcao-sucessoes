@@ -7,7 +7,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 3 — «10 vezes seguidas com melhorias e testes» (iterações 21–30)
 
-**Estado do ciclo 3: iterações 21–25 concluídas (5/10).**
+**Estado do ciclo 3: iterações 21–26 concluídas (6/10).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -16,13 +16,22 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 23 | ~~Honorários e despesas~~ | ✅ concluída |
 | 24 | ~~Regras do escritório~~ | ✅ concluída |
 | 25 | ~~Importar de folhas de cálculo~~ | ✅ concluída |
-| 26 | **Impressão** | Estilos de impressão para dossier, checklist, agenda e análise; resumo de uma página do dossier; testes. |
+| 26 | ~~Impressão~~ | ✅ concluída |
 | 27 | **Diagnóstico e integridade** | Página de diagnóstico (versão, service worker, armazenamento, persistência) e verificação de integridade da base (órfãos, referências partidas) com reparação; testes. |
 | 28 | **Desempenho** | Pacote inicial mais pequeno (carregamento a pedido dos módulos pesados), orçamento de tamanho verificado no CI, listas longas fluidas; testes. |
 | 29 | **Teclado e acessibilidade avançada** | Atalhos com ajuda (?), quadro Kanban operável por teclado, movimento reduzido e alto contraste; testes com axe e teclado. |
 | 30 | **Consolidação** | Auditoria final, manual e apresentação atualizados (versão 2.2), resumo, envio. |
 
 Fora do ciclo, por depender de decisão e de uma conta do escritório: o «modo escritório» com sincronização entre dispositivos (por exemplo, Supabase na UE, num projeto próprio do escritório), que reaproveitaria a lógica de junção da iteração 14.
+
+### Iteração 26 — Impressão ✅
+
+- **Imprimir os ecrãs** (Ctrl/⌘+P ou os novos botões **«Imprimir»** na checklist, na agenda e na análise da equipa, e «Imprimir esta página» no menu do dossier): nova folha de estilos de impressão (`styles/print.css`) — **papel branco mesmo no tema escuro**, só o conteúdo (sem barra lateral, barra superior, menus, botões, filtros, pesquisa nem cartões laterais), **cabeçalho do escritório** com a data e quem imprimiu, **numeração «Página N de M»** (Chrome 131+; os relatórios mantêm as margens de documento), linhas que não se partem entre páginas, cabeçalhos de tabela repetidos, tabelas e regiões com deslocamento mostradas por inteiro, semáforos e gráficos com as cores reais; a agenda sai em mês ou lista a toda a largura (as caixas de «feito» ficam para marcar à mão).
+- **A checklist sai inteira**: as fases recolhidas abrem-se durante a impressão (`lib/printing.ts` — acompanha `beforeprint`/`afterprint` e a media «print», com atualização síncrona antes de o navegador compor a página) e o papel indica o filtro aplicado («Checklist — Em aberto · 39 tarefas»).
+- **Resumo do dossier (1 página)** — novo tipo de relatório (pré-visualização, Word, PDF e arquivo no dossier): identificação, estado (progresso, fase, bloqueios, interessados com cabeça-de-casal e procurações, património, documentos), **o que tratar primeiro** (atrasadas, críticas e seguintes — até 5), **próximos prazos e marcações** (até 5, prazos e agenda por data), documentos em falta (até 5 «e mais N»); títulos longos cortados e letra compacta na impressão — verificado com PDF real: **uma folha A4** em todos os dossiers de demonstração.
+- **Títulos das páginas** no separador do navegador («Agenda — Balcão das Sucessões», «BS-2026-004 · Herança … — Balcão das Sucessões»; em modo privacidade só a referência) e nome sugerido do PDF ao imprimir («Checklist BS-2026-004 2026-09-18»).
+- **Higiene do código-fonte** alargada aos espaços não separáveis e finos literais (um encontrado num teste, passado a escape).
+- **Testes**: impressão (estado durante a impressão, título do PDF reposto com e sem «afterprint», títulos por rota), checklist (fases recolhidas abrem-se ao imprimir e o papel diz o filtro; botão Imprimir), resumo (listas limitadas, ordem por urgência e por data, cortes, «e mais N», dossier vazio) — **282 testes**; novo passo E2E «Impressão: checklist completa em papel branco e resumo do dossier numa só página» (media «print» no Chrome real com tema escuro e PDF gerado para contar as páginas) — **21 passos**, também com a CPU 4× mais lenta; 0 violações de acessibilidade na checklist, agenda e análise.
 
 ### Iteração 25 — Importar de folhas de cálculo ✅
 

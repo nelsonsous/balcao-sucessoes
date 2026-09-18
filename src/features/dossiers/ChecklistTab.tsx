@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CheckSquare, ChevronDown, KanbanSquare, Lightbulb, List, ListChecks, Plus, Search, Trash2, TriangleAlert, X } from 'lucide-react';
+import { CheckSquare, ChevronDown, KanbanSquare, Lightbulb, List, ListChecks, Plus, Printer, Search, Trash2, TriangleAlert, X } from 'lucide-react';
 import { addCustomTask, bulkSetStatus, bulkUpdateTasks, deleteManualTasks, setTaskStatus } from '../../lib/actions';
 import { useMemberMap, useMembers } from '../../lib/hooks';
 import { ChecklistBoard } from './ChecklistBoard';
 import { STATUSES } from '../../engine/phases';
 import { isOfficeKey } from '../../engine/officeRules';
 import type { CaseRecord, MemberRecord, PhaseId, Status, TaskRecord } from '../../lib/types';
-import { cx, normalize } from '../../lib/utils';
+import { cx, normalize, todayIso } from '../../lib/utils';
+import { printPage, usePrinting } from '../../lib/printing';
 import { dueState } from '../../engine/deadlines';
 import { PHASES, isOpen } from '../../engine/phases';
 import { PHASE_ICONS } from '../../components/icons';
@@ -69,6 +70,8 @@ export function ChecklistTab({
   const confirm = useConfirm();
   const [q, setQ] = useState('');
   const [collapsed, setCollapsed] = useState<Set<PhaseId>>(new Set());
+  // Ao imprimir, as fases recolhidas abrem-se (o papel mostra a checklist inteira do filtro atual).
+  const printing = usePrinting();
   const [adding, setAdding] = useState(false);
   const [view, setView] = useState<ChecklistView>(loadView);
   const [selecting, setSelecting] = useState(false);
@@ -171,6 +174,9 @@ export function ChecklistTab({
             {selecting ? 'Cancelar' : 'Selecionar'}
           </Button>
         )}
+        <Button icon={Printer} size="sm" onClick={() => printPage(`Checklist ${c.ref} ${todayIso()}`)} title="Imprimir a checklist (as fases recolhidas também saem no papel)">
+          Imprimir
+        </Button>
         <Segmented<ChecklistView>
           label="Vista"
           value={view}
@@ -184,6 +190,10 @@ export function ChecklistTab({
           ]}
         />
       </div>
+
+      <p className="print-only small">
+        Checklist — {FILTERS.find((f) => f.value === filter)?.label ?? statusFilterLabel ?? 'Todas'} · {visible.length} {visible.length === 1 ? 'tarefa' : 'tarefas'}
+      </p>
 
       {selecting && (
         <div className="bulk-bar" role="region" aria-label="Ações em massa">
@@ -290,7 +300,7 @@ export function ChecklistTab({
           const all = tasks.filter((t) => t.phase === p.id && !t.obsolete);
           const done = all.filter((t) => t.status === 'concluido' || t.status === 'na').length;
           const Icon = PHASE_ICONS[p.id];
-          const isCollapsed = collapsed.has(p.id);
+          const isCollapsed = !printing && collapsed.has(p.id);
           return (
             <Card key={p.id} className="phase-card">
               <button type="button" className="phase-head" aria-expanded={!isCollapsed} onClick={() => toggle(p.id)}>

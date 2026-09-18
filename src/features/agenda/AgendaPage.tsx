@@ -3,6 +3,7 @@ import { useLocation, useSearch } from 'wouter';
 import {
   CalendarDays,
   CalendarPlus,
+  Printer,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -29,6 +30,7 @@ import { newEvent, useSettings } from '../../lib/db';
 import type { MemberRecord } from '../../lib/types';
 import { useMemberMap, useMembers } from '../../lib/hooks';
 import { cx, daysFromToday, formatDate, parseIsoDate, relativeDays, todayIso } from '../../lib/utils';
+import { printPage } from '../../lib/printing';
 import { MONTHS_LONG, WEEKDAYS_SHORT, addDaysIso, judicialHoliday, monthMatrix, weekdayLong } from '../../engine/calendar';
 import { useToast } from '../../components/Toast';
 import { Avatar, Button, Card, Empty, Menu, Segmented } from '../../components/ui';
@@ -157,6 +159,9 @@ export function AgendaPage() {
               </button>
             )}
           />
+          <Button icon={Printer} onClick={() => printPage(`Agenda ${view === 'mes' ? `${MONTHS_LONG[cursor.m]} ${cursor.y}` : today}`)} title="Imprimir o mês ou a lista visível">
+            Imprimir
+          </Button>
           <Button variant="primary" icon={CalendarPlus} onClick={() => newAt(selected >= today ? selected : today)}>
             Novo evento
           </Button>

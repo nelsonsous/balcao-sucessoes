@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { calculate, emptyCalcInput, newPerson } from '../engine/succession';
 import { blocksToText } from '../engine/templates';
-import { db, emptyAnswers, newAsset, newCase, newDebt, newParty, newTask } from './db';
+import { db, emptyAnswers, newAsset, newCase, newDebt, newDocument, newEvent, newParty, newTask } from './db';
 import { buildReport, describeAsset, estateTotals, estateValue, loadCaseBundle, parseShare, partilhaSummary, verbas, writePartilha } from './reports';
 
 const caseWith = (over: Partial<ReturnType<typeof newCase>> = {}) => ({ ...newCase({ name: 'Sucessão Teste', ref: 'BS-TEST-001' }), ...over });
@@ -167,5 +167,66 @@ describe('relatórios do dossier', () => {
     expect(ptxt).toContain('Acordo verbal');
     expect(ptxt).toContain('IMT');
     expect(partilha.fileBase).toMatch(/^mapa-de-partilha-bs-test-001-\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe('resumo de uma página', () => {
+  const tableAfter = (blocks: ReturnType<typeof buildReport>['blocks'], heading: string) => {
+    const i = blocks.findIndex((b) => b.type === 'h2' && b.lines[0]?.[0]?.text === heading);
+    return blocks[i + 1]!;
+  };
+  const text = (cells: Array<{ text: string }>) => cells.map((r) => r.text).join('');
+
+  it('mostra o essencial com listas limitadas (cabe numa folha)', async () => {
+    const c = caseWith({ id: 'c-resumo', name: 'Herança Resumo', client: { ...newCase().client, name: 'Ana Cliente' } });
+    c.deceased = { ...c.deceased, name: 'Manuel Resumo', deathDate: '2026-01-10', deathCity: 'Lisboa' };
+    await db.cases.put(c);
+    const day = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
+    const long = 'Tarefa com um título muito comprido que não cabe numa linha do resumo porque descreve demasiados pormenores do processo';
+    await db.tasks.bulkAdd([
+      ...Array.from({ length: 9 }, (_, i) => newTask(c.id, { title: `Tarefa ${i + 1}`, phase: 'abertura', status: 'pendente', order: i, dueDate: day(i + 1) })),
+      newTask(c.id, { title: 'Atrasada', phase: 'fiscal', status: 'pendente', order: 50, dueDate: day(-3) }),
+      newTask(c.id, { title: long, phase: 'fiscal', status: 'pendente', order: 51, critical: true }),
+      newTask(c.id, { title: 'Concluída', phase: 'abertura', status: 'concluido', order: 60 }),
+    ]);
+    await db.events.bulkAdd(Array.from({ length: 7 }, (_, i) => newEvent({ caseId: c.id, title: `Reunião ${i + 1}`, kind: 'reuniao', date: day(i + 2), time: '10:00' })));
+    await db.documents.bulkAdd(Array.from({ length: 8 }, (_, i) => newDocument(c.id, { name: `Documento ${i + 1}`, status: i === 0 ? 'pedido' : 'em_falta' })));
+    await db.parties.bulkAdd([newParty(c.id, { name: 'Rita Herdeira', roles: ['herdeiro'], isHeadOfEstate: true, poa: 'recebida' }), newParty(c.id, { name: 'Rui Herdeiro', roles: ['herdeiro'], poa: 'a_pedir' })]);
+    await db.assets.add(newAsset(c.id, { description: 'Casa', value: 200000, ownership: 'proprio' }));
+
+    const r = buildReport('resumo', await loadCaseBundle(c));
+    expect(r.title).toBe('Resumo do dossier — Herança Resumo');
+    expect(r.fileBase).toMatch(/^resumo-1-pagina-bs-test-001-/);
+    const txt = blocksToText(r.blocks);
+    expect(txt).toContain('Manuel Resumo');
+    expect(txt).toContain('Ana Cliente');
+    expect(txt).toContain('cabeça-de-casal: Rita Herdeira · procurações 1/2');
+    expect(txt).toMatch(/Ativo 200\s?000,00\s?€/);
+
+    const first = tableAfter(r.blocks, 'A tratar primeiro');
+    expect(first.rows!.length - 1).toBe(5);
+    // primeiro o que está atrasado, depois as críticas; títulos longos cortados
+    expect(text(first.rows![1]![0]!)).toBe('Atrasada');
+    expect(text(first.rows![2]![0]!)).toMatch(/^★ Tarefa com um título muito comprido.*…$/);
+    expect(text(first.rows![2]![0]!).length).toBeLessThanOrEqual(92);
+
+    const upcoming = tableAfter(r.blocks, 'Próximos prazos e marcações');
+    expect(upcoming.rows!.length - 1).toBe(5);
+    const dates = upcoming.rows!.slice(1).map((row) => text(row[0]!).split('/').reverse().join('-'));
+    expect([...dates].sort()).toEqual(dates);
+    expect(upcoming.rows!.slice(1).some((row) => text(row[2]!).includes('10:00 — Reunião 1'))).toBe(true);
+
+    expect(txt).toContain('Documento 1 (pedido); Documento 2; Documento 3; Documento 4; Documento 5; e mais 3.');
+    expect(txt).toContain('validar pela equipa');
+  });
+
+  it('dossier vazio: frases curtas em vez de tabelas', async () => {
+    const c = caseWith({ id: 'c-vazio', name: 'Herança Vazia' });
+    await db.cases.put(c);
+    const txt = blocksToText(buildReport('resumo', await loadCaseBundle(c)).blocks);
+    expect(txt).toContain('Sem tarefas em aberto.');
+    expect(txt).toContain('Sem prazos nem marcações futuras.');
+    expect(txt).toContain('Nenhum documento em falta.');
+    expect(txt).toContain('cabeça-de-casal: por designar');
   });
 });

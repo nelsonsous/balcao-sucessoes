@@ -1,0 +1,243 @@
+/* ---------------------------------------------------------------------------
+   Impressão dos ecrãs (Ctrl/⌘+P ou botões «Imprimir»): papel branco mesmo no tema
+   escuro, só o conteúdo (sem menus, botões nem barras), tabelas por inteiro,
+   linhas que não se partem entre páginas, cabeçalho do escritório e paginação.
+   Os relatórios e minutas imprimem-se à parte (modo «print-doc», em documents.css).
+   --------------------------------------------------------------------------- */
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  /* Cores claras sempre (o tema escuro gastaria tinta e ficaria ilegível). */
+  :root,
+  :root[data-theme='dark'],
+  :root:not([data-theme='light']) {
+    color-scheme: light;
+    --bg: #ffffff;
+    --bg-accent: none;
+    --surface: #ffffff;
+    --surface-2: #f6f7fb;
+    --surface-3: #eef1f7;
+    --surface-hover: #ffffff;
+    --border: #d5dae6;
+    --border-strong: #b9c0d3;
+    --text: #0f1426;
+    --text-2: #3a4360;
+    --text-3: #525b77;
+    --link: #0f1426;
+    --primary: #2d39b9;
+    --primary-soft: #eef0fd;
+    --primary-soft-text: #252f99;
+    --st-pendente-bg: #fdecef;
+    --st-pendente-fg: #a2202f;
+    --st-pendente-border: #f5c9cf;
+    --st-curso-bg: #fff3e1;
+    --st-curso-fg: #93540a;
+    --st-curso-border: #f6ddb5;
+    --st-aguarda-bg: #e9f1fd;
+    --st-aguarda-fg: #1d57a5;
+    --st-aguarda-border: #c8dcf7;
+    --st-concluido-bg: #e6f6ed;
+    --st-concluido-fg: #1a6f43;
+    --st-concluido-border: #bfe6cf;
+    --st-na-bg: #eff1f5;
+    --st-na-fg: #5a6379;
+    --st-na-border: #dde1e9;
+    --danger-soft: #fdecef;
+    --warning-soft: #fff6e6;
+    --warning-border: #f3dcae;
+    --info-soft: #eef4fe;
+    --shadow-xs: none;
+    --shadow-sm: none;
+    --shadow: none;
+    --shadow-lg: none;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: var(--text);
+  }
+
+  body {
+    font-size: 10.5pt;
+  }
+
+  /* Folha A4 para tudo; os ecrãs usam a página «ecra» (margens menores e numeração) —
+     os relatórios e minutas mantêm as margens de documento (documents.css). */
+  @page {
+    size: A4;
+  }
+
+  @page ecra {
+    margin: 14mm 12mm 16mm;
+
+    @bottom-right {
+      content: 'Página ' counter(page) ' de ' counter(pages);
+      font-family: system-ui, sans-serif;
+      font-size: 8pt;
+      color: #6b7280;
+    }
+  }
+
+  body:not(.print-doc-mode) #root {
+    page: ecra;
+  }
+
+  /* Só o conteúdo. */
+  .sidebar,
+  .topbar,
+  .mobile-nav,
+  .toasts,
+  .no-print,
+  .page-actions,
+  .tabs,
+  .skeleton,
+  .timer-chip,
+  .task-select,
+  .phase-head .chev,
+  .status-pill > svg,
+  .day-panel,
+  .cal-legend,
+  [role='menu'],
+  .toolbar .btn,
+  .toolbar .segmented,
+  .toolbar select,
+  .toolbar input,
+  .toolbar .input,
+  .toolbar .search,
+  .toolbar .input-group,
+  .toolbar .checkbox,
+  .btn.icon,
+  .rule-item-side .checkbox,
+  .bulk-bar,
+  .chart-head .btn,
+  .link-btn,
+  .skip-link,
+  .breadcrumb,
+  .case-aside,
+  .case-head-side select,
+  .case-head-side .btn {
+    display: none !important;
+  }
+
+  /* Dossier: o separador impresso ocupa a largura toda (os cartões laterais estão no «Resumo»). */
+  .case-layout {
+    display: block !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .shell,
+  .main {
+    display: block !important;
+  }
+
+  .content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+
+  /* Cabeçalho do escritório no topo da impressão. */
+  .print-header {
+    display: flex !important;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #b9c0d3;
+    font-size: 8.5pt;
+    color: #525b77;
+  }
+  .print-header strong {
+    color: #0f1426;
+  }
+
+  /* Cartões: sem sombras; podem partir-se entre páginas, as linhas não. */
+  .card,
+  .kpi {
+    box-shadow: none !important;
+  }
+  .card {
+    break-inside: auto;
+  }
+  .task-row,
+  tr,
+  .kpi,
+  .rule-item,
+  .doc-row,
+  .cal-week,
+  .agenda-group > *,
+  li {
+    break-inside: avoid;
+  }
+  h1,
+  h2,
+  h3,
+  .phase-head,
+  .card-head {
+    break-after: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
+
+  /* Nada fica escondido atrás de barras de deslocamento. */
+  .table-wrap,
+  [role='region'],
+  .ftree-scroll,
+  .kanban,
+  .board {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  /* Semáforos, etiquetas, barras e gráficos com as cores reais. */
+  .badge,
+  .status-pill,
+  .progress,
+  .phase-mini,
+  .ring,
+  .avatar,
+  .kpi,
+  svg[role='img'],
+  .pip,
+  .dot {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Botões que ficam (semáforos, cabeçalhos de fase) parecem texto. */
+  .status-pill,
+  .phase-head,
+  .task-main {
+    cursor: default;
+  }
+  .phase-head {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+
+  /* Agenda: o mês ou a lista a toda a largura. */
+  .agenda-layout {
+    display: block !important;
+  }
+  .cal {
+    font-size: 8.5pt;
+  }
+
+  /* Grelhas de indicadores numa só linha de papel. */
+  .kpi-row {
+    grid-template-columns: repeat(auto-fit, minmax(28mm, 1fr)) !important;
+  }
+}

@@ -20,6 +20,7 @@ import {
   NotebookPen,
   Pencil,
   Pin,
+  Printer,
   Receipt,
   Scale,
   Share2,
@@ -28,10 +29,11 @@ import {
   Users,
 } from 'lucide-react';
 import { duplicateCase, removeCase, updateCase } from '../../lib/actions';
-import { db } from '../../lib/db';
+import { db, useSettings } from '../../lib/db';
 import { buildOverview, useMemberMap } from '../../lib/hooks';
+import { printPage, useDocumentTitle } from '../../lib/printing';
 import type { CaseRecord, CaseStage, TaskRecord } from '../../lib/types';
-import { cx, formatDate, relativeDays } from '../../lib/utils';
+import { cx, formatDate, relativeDays, todayIso } from '../../lib/utils';
 import { phaseLabel } from '../../engine/phases';
 import { PHASE_ICONS } from '../../components/icons';
 import { useToast } from '../../components/Toast';
@@ -118,6 +120,9 @@ export function DossierView() {
   const members = useMemberMap();
   const toast = useToast();
   const confirm = useConfirm();
+  const { privacyMode } = useSettings();
+  // Título do separador (e nome do PDF ao imprimir); em modo privacidade só a referência.
+  useDocumentTitle(data?.c ? (privacyMode ? data.c.ref : `${data.c.ref} · ${data.c.name}`) : undefined);
 
   const overview = useMemo(() => (data?.c ? buildOverview(data.c, data.tasks ?? []) : null), [data]);
 
@@ -250,6 +255,7 @@ export function DossierView() {
               },
               { label: 'Guardar como modelo', description: 'Questionário e tarefas próprias', icon: BookmarkPlus, onSelect: () => setSavingTemplate(true) },
               { label: 'Partilhar com colega…', description: 'Ficheiro cifrado com anexos', icon: Share2, onSelect: () => setSharing(true) },
+              { label: 'Imprimir esta página', description: 'Ou «Relatório» → Resumo numa página', icon: Printer, onSelect: () => printPage(`${c.ref} ${todayIso()}`) },
               { label: 'Eliminar dossier', icon: Trash2, danger: true, separatorBefore: true, onSelect: () => void onDelete() },
             ]}
             button={(p) => (

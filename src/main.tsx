@@ -10,6 +10,7 @@ import './styles/agenda.css';
 import './styles/calculator.css';
 import './styles/documents.css';
 import './styles/touch.css';
+import './styles/print.css';
 import App from './App';
 
 createRoot(document.getElementById('root')!).render(

@@ -376,6 +376,31 @@ dialog.sheet .sheet-panel:has(.composer) {
   @page {
     margin: 2.2cm 2cm;
   }
+
+  /* Resumo de uma página: letra e tabelas mais compactas para caber numa folha A4. */
+  body.print-doc-mode .print-doc[data-kind='resumo'] .paper {
+    font-size: 10pt;
+    line-height: 1.35;
+  }
+  body.print-doc-mode .print-doc[data-kind='resumo'] .paper h1 {
+    font-size: 15pt;
+    margin: 0 0 4pt;
+  }
+  body.print-doc-mode .print-doc[data-kind='resumo'] .paper h2 {
+    font-size: 11.5pt;
+    margin: 9pt 0 3pt;
+  }
+  body.print-doc-mode .print-doc[data-kind='resumo'] .paper p {
+    margin: 0 0 3pt;
+  }
+  body.print-doc-mode .print-doc[data-kind='resumo'] table.doc-table {
+    font-size: 9pt;
+    margin: 2pt 0 6pt;
+  }
+  body.print-doc-mode .print-doc[data-kind='resumo'] table.doc-table th,
+  body.print-doc-mode .print-doc[data-kind='resumo'] table.doc-table td {
+    padding: 2.5pt 4pt;
+  }
 }
 
 /* Tabelas e notas nos documentos gerados (relatórios, relação de bens) */

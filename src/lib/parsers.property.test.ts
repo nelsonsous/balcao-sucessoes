@@ -16,7 +16,7 @@ describe('parsers robustos a qualquer entrada', () => {
   it('parseAmount lê os formatos portugueses e ingleses', () => {
     fc.assert(
       fc.property(fc.integer({ min: 0, max: 9_999_999 }), fc.integer({ min: 0, max: 99 }), (int, cents) => {
-        const pt = `${int.toLocaleString('pt-PT')},${String(cents).padStart(2, '0')}`.replace(/ | /g, ' ');
+        const pt = `${int.toLocaleString('pt-PT')},${String(cents).padStart(2, '0')}`.replace(/\u00a0|\u202f/g, ' ');
         expect(parseAmount(pt)).toBeCloseTo(int + cents / 100, 2);
         expect(parseAmount(`${int}.${String(cents).padStart(2, '0')}`)).toBeCloseTo(int + cents / 100, 2);
       }),

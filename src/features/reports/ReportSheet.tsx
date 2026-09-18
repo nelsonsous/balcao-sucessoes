@@ -109,7 +109,7 @@ export function ReportSheet({ c, kind, onClose, onKind }: { c: CaseRecord; kind:
       {printing &&
         ready &&
         createPortal(
-          <div className="print-doc">
+          <div className="print-doc" data-kind={ready.kind}>
             <DocPreview blocks={ready.blocks} />
           </div>,
           document.body,

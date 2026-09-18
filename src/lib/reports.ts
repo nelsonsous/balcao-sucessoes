@@ -16,10 +16,11 @@ import type { AssetRecord, AssetType, CaseRecord, ContactLogRecord, DebtRecord, 
 import { categoryLabel, feeSummary, formatDuration, readFees } from './fees';
 import { daysFromToday, formatDate, formatEur, todayIso } from './utils';
 
-export type ReportKind = 'interno' | 'cliente' | 'bens' | 'partilha' | 'honorarios';
+export type ReportKind = 'interno' | 'resumo' | 'cliente' | 'bens' | 'partilha' | 'honorarios';
 
 export const REPORT_KINDS: Array<{ id: ReportKind; label: string; description: string }> = [
   { id: 'interno', label: 'Relatório interno', description: 'Estado completo do dossier para a equipa: bloqueios, tarefas, interessados, património, documentos e agenda.' },
+  { id: 'resumo', label: 'Resumo (1 página)', description: 'O essencial numa só folha: estado, bloqueios, o que tratar primeiro, próximos prazos e documentos em falta — para levar a uma reunião.' },
   { id: 'cliente', label: 'Ponto de situação (cliente)', description: 'Linguagem simples, sem notas internas: o que está feito, o que falta, o que precisamos e os próximos passos.' },
   { id: 'bens', label: 'Relação de bens', description: 'Verbas do ativo e do passivo com os elementos de identificação, para a participação do Imposto do Selo e para a partilha.' },
   { id: 'partilha', label: 'Mapa de partilha', description: 'Quotas de cada herdeiro, bens atribuídos e tornas a pagar ou a receber.' },
@@ -604,6 +605,85 @@ function internalBlocks(b: CaseBundle): DocBlock[] {
 }
 
 // ---------------------------------------------------------------------------
+// Resumo de uma página
+
+/** Limites do resumo: o conteúdo tem de caber numa folha A4. */
+export const RESUMO_LIMITS = { first: 5, upcoming: 5, docs: 5, title: 90 } as const;
+
+const cut = (s: string, n: number = RESUMO_LIMITS.title) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
+
+function resumoBlocks(b: CaseBundle): DocBlock[] {
+  const { c, parties, assets, debts, tasks, docs, events, members } = b;
+  const stats = taskStats(tasks);
+  const bl = blockers(tasks);
+  const phase = currentPhase(tasks);
+  const tot = estateTotals(c, assets, debts);
+  const name = (id: string) => members.find((m) => m.id === id)?.name ?? '';
+  const today = todayIso();
+  const out = header(b, `Resumo do dossier — ${c.name}`, 'Resumo de uma página');
+
+  out.push(
+    lines([
+      [
+        R('De cujus: ', true),
+        R(dash(c.deceased.name)),
+        R('   Óbito: ', true),
+        R(c.deceased.deathDate ? `${formatDate(c.deceased.deathDate)}${c.deceased.deathCity ? `, ${c.deceased.deathCity}` : ''}` : '—'),
+      ],
+      [R('Cliente: ', true), R(dash(c.client.name)), R('   Situação: ', true), R(STAGE_LABELS[c.stage]), R('   Prioridade: ', true), R(PRIORITY_LABELS[c.priority])],
+    ]),
+  );
+
+  const heirs = parties.filter((x) => x.roles.includes('herdeiro')).length;
+  const head = parties.find((x) => x.isHeadOfEstate);
+  const poaNeeded = parties.filter((x) => x.poa !== 'na').length;
+  const poaDone = parties.filter((x) => x.poa === 'recebida').length;
+  const missing = docs.filter((d) => d.status === 'em_falta' || d.status === 'pedido').sort(byCategoryThenName);
+  const okDocs = docs.filter((d) => d.status === 'recebido' || d.status === 'validado').length;
+  out.push(h2('Estado'));
+  out.push(
+    tableBlock(
+      ['Indicador', 'Situação'],
+      [
+        ['Progresso', `${stats.pct}% — ${stats.done} de ${stats.applicable} tarefas concluídas`],
+        ['Fase atual', phase ? phaseLabel(phase) : 'Sem trabalho em aberto'],
+        ['Bloqueios', `${bl.overdue.length} prazo(s) ultrapassado(s) · ${bl.criticalPending.length} crítica(s) por iniciar · ${bl.awaiting.length} a aguardar terceiros`],
+        ['Interessados', `${parties.length} (${heirs} herdeiro(s)) · cabeça-de-casal: ${head?.name ?? 'por designar'} · procurações ${poaDone}/${poaNeeded}`],
+        ['Património', `Ativo ${money(tot.gross)} · Passivo ${money(tot.liabilities)} · Herança (estimativa) ${money(tot.net)}${tot.unvalued ? ` · ${tot.unvalued} bem(ns) sem valor` : ''}`],
+        ['Documentos', `${okDocs} recebido(s)/validado(s) · ${missing.length} em falta ou pedido(s)`],
+      ],
+      { widths: [2, 7] },
+    ),
+  );
+
+  out.push(h2('A tratar primeiro'));
+  const seen = new Set<string>();
+  const first = [...bl.overdue, ...bl.criticalPending, ...rankOpenTasks(tasks)].filter((t) => (seen.has(t.id) ? false : (seen.add(t.id), true))).slice(0, RESUMO_LIMITS.first);
+  if (!first.length) out.push(p('Sem tarefas em aberto.'));
+  else out.push(tableBlock(['Tarefa', 'Prazo', 'Responsável'], first.map((t) => [`${t.critical ? '★ ' : ''}${cut(t.title)}`, dueText(t), name(t.assigneeId) || '—']), { widths: [6.5, 2.3, 2] }));
+
+  out.push(h2('Próximos prazos e marcações'));
+  const upcoming = [
+    ...tasks.filter((t) => isOpen(t.status) && t.dueDate && t.dueDate >= today).map((t) => ({ date: t.dueDate, what: cut(t.title), kind: 'Prazo' })),
+    ...events.filter((e) => !e.done && e.date >= today).map((e) => ({ date: e.date, what: cut(`${e.time ? `${e.time} — ` : ''}${e.title || EVENT_KIND_LABELS[e.kind]}${e.location ? ` (${e.location})` : ''}`), kind: EVENT_KIND_LABELS[e.kind] })),
+  ]
+    .sort((x, y) => x.date.localeCompare(y.date))
+    .slice(0, RESUMO_LIMITS.upcoming);
+  if (!upcoming.length) out.push(p('Sem prazos nem marcações futuras.'));
+  else out.push(tableBlock(['Data', 'Tipo', 'O quê'], upcoming.map((u) => [formatDate(u.date), u.kind, u.what]), { widths: [1.6, 1.6, 7] }));
+
+  out.push(h2('Documentos em falta'));
+  if (!missing.length) out.push(p('Nenhum documento em falta.'));
+  else {
+    const names = missing.slice(0, RESUMO_LIMITS.docs).map((d) => `${cut(d.name, 60)}${d.status === 'pedido' ? ' (pedido)' : ''}`);
+    const more = missing.length - names.length;
+    out.push(p(`${names.join('; ')}${more > 0 ? `; e mais ${more}` : ''}.`));
+  }
+  out.push(small(`Resumo gerado em ${formatDate(today)}. Para o detalhe completo, ver o relatório interno. Conteúdo de apoio — prazos e referências a validar pela equipa.`));
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Ponto de situação para o cliente (PT / FR / EN)
 
 const PHASE_T: Record<TemplateLanguage, Record<string, string>> = {
@@ -836,7 +916,18 @@ const slug = (s: string) =>
     .slice(0, 50);
 
 export function buildReport(kind: ReportKind, b: CaseBundle, lang: TemplateLanguage = 'pt'): BuiltReport {
-  const blocks = kind === 'interno' ? internalBlocks(b) : kind === 'cliente' ? clientBlocks(b, lang) : kind === 'bens' ? relacaoBensBlocks(b) : kind === 'honorarios' ? honorariosBlocks(b) : mapaPartilhaBlocks(b);
+  const blocks =
+    kind === 'interno'
+      ? internalBlocks(b)
+      : kind === 'resumo'
+        ? resumoBlocks(b)
+        : kind === 'cliente'
+          ? clientBlocks(b, lang)
+          : kind === 'bens'
+            ? relacaoBensBlocks(b)
+            : kind === 'honorarios'
+              ? honorariosBlocks(b)
+              : mapaPartilhaBlocks(b);
   const title = blocks[0]?.lines[0]?.map((r) => r.text).join('') ?? REPORT_KINDS.find((k) => k.id === kind)!.label;
   const label = REPORT_KINDS.find((k) => k.id === kind)!.label;
   return { kind, title, blocks, fileBase: `${slug(label)}${lang !== 'pt' ? `-${lang}` : ''}-${slug(b.c.ref)}-${todayIso()}` };

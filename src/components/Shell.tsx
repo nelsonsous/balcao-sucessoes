@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Inbox, Recycle, TrendingUp, Workflow } from 'lucide-react';
 import { db, setSetting, useSettings } from '../lib/db';
+import { pageTitle, routeTitle } from '../lib/printing';
 import { useInboxCount } from '../lib/shareInbox';
 import { useTrashCount } from '../lib/recycle';
 import { useAgendaItems } from '../lib/agenda';
@@ -57,6 +58,25 @@ function NavLink({ href, icon: Icon, children, count, alert, exact }: {
       <span>{children}</span>
       {count !== undefined && count > 0 && <span className={cx('nav-count', alert && 'alert')}>{count}</span>}
     </Link>
+  );
+}
+
+/** Cabeçalho que só aparece no papel: escritório, data e quem imprimiu. */
+function PrintHeader({ firm, user }: { firm: string; user: string }) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const onBefore = () => setNow(new Date());
+    window.addEventListener('beforeprint', onBefore);
+    return () => window.removeEventListener('beforeprint', onBefore);
+  }, []);
+  return (
+    <div className="print-only print-header" aria-hidden>
+      <strong>{firm || 'Balcão das Sucessões'}</strong>
+      <span>
+        Impresso em {now.toLocaleDateString('pt-PT')} às {now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+        {user ? ` por ${user}` : ''}
+      </span>
+    </div>
   );
 }
 
@@ -114,6 +134,11 @@ export function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.body.classList.toggle('privacy', settings.privacyMode);
   }, [settings.privacyMode]);
+
+  useEffect(() => {
+    const label = routeTitle(loc);
+    if (label || !loc.startsWith('/dossiers/')) document.title = pageTitle(label);
+  }, [loc]);
 
   const isDark =
     settings.theme === 'dark' ||
@@ -299,6 +324,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </header>
 
         <main className="content" key={loc.split('/').slice(0, 3).join('/')}>
+          <PrintHeader firm={settings.firmName} user={settings.userName} />
           <ErrorBoundary resetKey={loc}>{children}</ErrorBoundary>
         </main>
       </div>

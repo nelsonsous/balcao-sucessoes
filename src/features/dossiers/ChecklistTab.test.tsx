@@ -68,4 +68,21 @@ describe('Checklist do dossier', () => {
     expect(screen.getByRole('listitem', { name: /Pendente: 2 tarefa/ })).toBeInTheDocument();
     expect(screen.getByRole('listitem', { name: /Concluída: 1 tarefa/ })).toBeInTheDocument();
   });
+
+  it('ao imprimir, as fases recolhidas abrem-se e o papel diz o filtro; o botão Imprimir chama a impressão', async () => {
+    localStorage.removeItem('bs-checklist-view'); // vista «Lista» (outro teste deixa o «Quadro» guardado)
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    renderApp(<ChecklistTab c={c} tasks={tasks} filter="abertas" onFilter={() => undefined} onOpen={() => undefined} />);
+    await screen.findByText('Obter certidão de óbito');
+    fireEvent.click(screen.getAllByRole('button', { expanded: true }).find((b) => b.classList.contains('phase-head') && b.textContent?.startsWith('Abertura'))!);
+    await waitFor(() => expect(screen.queryByText('Obter certidão de óbito')).not.toBeInTheDocument());
+    fireEvent(window, new Event('beforeprint'));
+    expect(screen.getByText('Obter certidão de óbito')).toBeInTheDocument();
+    expect(screen.getByText(/Checklist — Em aberto · 3 tarefas/)).toBeInTheDocument();
+    fireEvent(window, new Event('afterprint'));
+    await waitFor(() => expect(screen.queryByText('Obter certidão de óbito')).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Imprimir' }));
+    expect(print).toHaveBeenCalledTimes(1);
+    print.mockRestore();
+  });
 });

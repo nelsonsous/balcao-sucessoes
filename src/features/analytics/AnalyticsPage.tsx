@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { CalendarClock, CircleAlert, CircleCheck, Clock, FileSpreadsheet, FolderOpen, Hourglass, Timer, TrendingUp, Users } from 'lucide-react';
+import { CalendarClock, CircleAlert, CircleCheck, Clock, FileSpreadsheet, FolderOpen, Hourglass, Printer, Timer, TrendingUp, Users } from 'lucide-react';
 import { formatDuration } from '../../lib/fees';
 import { PERIOD_LABELS, analyze, daysLabel, membersCsv, monthsCsv, pct, type Period } from '../../lib/analytics';
 import { csvName, downloadCsv } from '../../lib/csv';
 import { db } from '../../lib/db';
 import { useMembers } from '../../lib/hooks';
+import { printPage } from '../../lib/printing';
+import { todayIso } from '../../lib/utils';
 import { BarChart, HBarChart } from '../../components/charts';
 import { Avatar, Button, Card, CardHead, Empty, KpiCard, Progress, Segmented } from '../../components/ui';
 
@@ -48,8 +50,14 @@ export function AnalyticsPage() {
           <Button icon={FileSpreadsheet} onClick={exportCsv} disabled={loading} title="Exportar as tabelas (CSV)">
             CSV
           </Button>
+          <Button icon={Printer} onClick={() => printPage(`Análise da equipa ${todayIso()}`)} disabled={loading} title="Imprimir os indicadores, gráficos e tabelas">
+            Imprimir
+          </Button>
         </div>
       </div>
+      <p className="print-only small" style={{ marginBottom: 8 }}>
+        Período: {PERIOD_LABELS[period]} · {members.find((m) => m.id === memberId)?.name ?? 'Toda a equipa'}
+      </p>
 
       <div className="toolbar" style={{ gap: 10, marginBottom: 14 }}>
         <Segmented label="Período" value={String(period)} onChange={(v) => setPeriod(Number(v) as Period)} options={PERIODS.map((p) => ({ value: String(p), label: PERIOD_LABELS[p] }))} />

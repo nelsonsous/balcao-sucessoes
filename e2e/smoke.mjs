@@ -529,6 +529,55 @@ try {
     assert(text.includes('Pessoa Importada Um') && text.includes('Pessoa Importada Dois'), 'interessados importados na lista');
   });
 
+  await step('Impressão: checklist completa em papel branco e resumo do dossier numa só página', async () => {
+    await go(`#/dossiers/${caseId}/checklist`, 1500);
+    const total = await page.$$eval('.task-row', (r) => r.length);
+    await page.click('.phase-head');
+    await sleep(300);
+    const shown = await page.$$eval('.task-row', (r) => r.length);
+    assert(shown < total, 'fase recolhida no ecrã');
+    const theme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    await page.emulateMediaType('print');
+    await sleep(400);
+    const paper = await page.evaluate(() => ({
+      rows: document.querySelectorAll('.task-row').length,
+      sidebar: getComputedStyle(document.querySelector('.sidebar')).display,
+      topbar: getComputedStyle(document.querySelector('.topbar')).display,
+      bg: getComputedStyle(document.body).backgroundColor,
+      header: getComputedStyle(document.querySelector('.print-header')).display,
+      aside: getComputedStyle(document.querySelector('.case-aside')).display,
+    }));
+    await page.emulateMediaType(null);
+    await page.evaluate((t) => (t ? document.documentElement.setAttribute('data-theme', t) : document.documentElement.removeAttribute('data-theme')), theme);
+    await page.click('.phase-head');
+    assert(paper.rows === total, `no papel, as fases recolhidas abrem-se (${paper.rows}/${total})`);
+    assert(paper.sidebar === 'none' && paper.topbar === 'none' && paper.aside === 'none', 'sem barras nem cartões laterais no papel');
+    assert(paper.bg === 'rgb(255, 255, 255)', `papel branco mesmo no tema escuro (${paper.bg})`);
+    assert(paper.header !== 'none', 'cabeçalho do escritório no papel');
+    // Resumo: a impressão real é substituída para gerar o PDF sem diálogo
+    await page.evaluate(() => {
+      window.__print = window.print;
+      window.print = () => undefined;
+    });
+    await go(`#/dossiers/${caseId}`, 1000);
+    assert(await clickText('main button', 'Relatório'), 'botão Relatório');
+    await page.waitForSelector('dialog[open] .report-kinds', { timeout: 5000 });
+    assert(await clickText('dialog[open] .report-kinds button', 'Resumo'), 'tipo «Resumo (1 página)»');
+    await page.waitForFunction(() => /Resumo do dossier/.test(document.querySelector('dialog[open] .composer-preview')?.textContent || ''), { timeout: 8000 });
+    assert(await clickText('dialog[open] .sheet-foot button', 'PDF'), 'botão PDF');
+    await page.waitForSelector('.print-doc[data-kind="resumo"]', { timeout: 5000 });
+    const pdf = Buffer.from(await page.pdf({ format: 'A4', printBackground: true })).toString('latin1');
+    const pages = Number(/\/Type\s*\/Pages[^>]*\/Count\s+(\d+)/.exec(pdf)?.[1] ?? (pdf.match(/\/Type\s*\/Page[^s]/g) || []).length);
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event('afterprint'));
+      window.print = window.__print;
+    });
+    await page.keyboard.press('Escape');
+    await sleep(400);
+    assert(pages === 1, `resumo numa só página A4 (${pages})`);
+  });
+
   await step('PIN: definir, bloquear e desbloquear', async () => {
     await go('#/definicoes', 1200);
     assert(await clickText('button', 'Definir PIN'), 'botão Definir PIN');
