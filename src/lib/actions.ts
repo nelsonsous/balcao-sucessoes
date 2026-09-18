@@ -6,10 +6,14 @@ import {
   deleteCaseCascade,
   logActivity,
   newCase,
+  newAsset,
+  newDebt,
+  newParty,
   newTask,
   nextCaseRef,
   touchCase,
 } from './db';
+import { ENTITY_LABELS, type ImportEntity, type ImportRow } from './sheetImport';
 import type { AssetRecord, CaseRecord, CaseTemplateRecord, ContactLogRecord, DebtRecord, EventRecord, MemberRecord, NoteRecord, PartyRecord, Status, TaskRecord, TrashRecord } from './types';
 import { restoreTrash, trashCase, trashRecord } from './recycle';
 import { pushUndo } from './undo';
@@ -163,6 +167,44 @@ export async function deleteDebt(d: DebtRecord): Promise<void> {
   const entry = await trashRecord('debts', d, d.creditor || 'credor por indicar');
   await logActivity(d.caseId, 'passivo', `Dívida removida (na reciclagem): ${d.creditor}`);
   pushUndo(`Dívida removida: ${d.creditor || 'credor por indicar'}`, () => restoreTrash(entry.id).then(() => undefined), 'Fica 30 dias na reciclagem.');
+}
+
+/** Cria os registos importados de uma folha de cálculo (com histórico e «anular»). */
+export async function importSheetRows(caseId: string, entity: ImportEntity, rows: ImportRow[]): Promise<number> {
+  if (!rows.length) return 0;
+  const n = rows.length;
+  const what = n === 1 ? ENTITY_LABELS[entity].one : ENTITY_LABELS[entity].many;
+  let ids: string[];
+  let kind: 'interessado' | 'patrimonio' | 'passivo';
+  if (entity === 'parties') {
+    const recs = rows.map((r) => newParty(caseId, r.values as Partial<PartyRecord>));
+    if (recs.some((p) => p.isHeadOfEstate)) {
+      // Só pode haver um cabeça-de-casal por dossier (a importação já só marca um).
+      const current = await db.parties.where('caseId').equals(caseId).filter((p) => p.isHeadOfEstate).count();
+      if (current) for (const p of recs) p.isHeadOfEstate = false;
+    }
+    await db.parties.bulkAdd(recs);
+    ids = recs.map((r) => r.id);
+    kind = 'interessado';
+  } else if (entity === 'assets') {
+    const recs = rows.map((r) => newAsset(caseId, r.values as Partial<AssetRecord>));
+    await db.assets.bulkAdd(recs);
+    ids = recs.map((r) => r.id);
+    kind = 'patrimonio';
+  } else {
+    const recs = rows.map((r) => newDebt(caseId, r.values as Partial<DebtRecord>));
+    await db.debts.bulkAdd(recs);
+    ids = recs.map((r) => r.id);
+    kind = 'passivo';
+  }
+  await touchCase(caseId);
+  await logActivity(caseId, kind, `Importado(s) de uma folha de cálculo: ${n} ${what}`);
+  pushUndo(`Importação: ${n} ${what}`, async () => {
+    await db.table(entity).bulkDelete(ids);
+    await touchCase(caseId);
+    await logActivity(caseId, kind, `Anulada a importação de ${n} ${what}`);
+  });
+  return n;
 }
 
 // ---------------- Notas e contactos

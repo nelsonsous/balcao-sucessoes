@@ -524,6 +524,7 @@ export function Sheet({
   footer,
   variant = 'drawer',
   icon: Icon,
+  wide,
 }: {
   open: boolean;
   onClose: () => void;
@@ -533,6 +534,8 @@ export function Sheet({
   footer?: ReactNode;
   variant?: 'drawer' | 'modal';
   icon?: LucideIcon;
+  /** Gaveta larga (tabelas de pré-visualização). */
+  wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -549,7 +552,7 @@ export function Sheet({
   return (
     <dialog
       ref={ref}
-      className={cx('sheet', variant === 'modal' && 'modal')}
+      className={cx('sheet', variant === 'modal' && 'modal', wide && 'wide')}
       aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();

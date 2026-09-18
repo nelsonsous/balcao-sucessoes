@@ -5,6 +5,7 @@ import {
   Building,
   Crown,
   FileSignature,
+  FileSpreadsheet,
   Mail,
   Phone,
   Plus,
@@ -23,6 +24,7 @@ import type { CaseRecord, Kinship, PartyRecord, PartyRole } from '../../lib/type
 import { cx } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
 import { Avatar, Button, Card, Empty, Field, Sheet, useConfirm } from '../../components/ui';
+import { ImportSheet } from '../import/ImportSheet';
 
 interface Suggestion {
   label: string;
@@ -58,6 +60,7 @@ function suggestions(c: CaseRecord, parties: PartyRecord[]): Suggestion[] {
 export function PartiesTab({ c }: { c: CaseRecord }) {
   const parties = useLiveQuery(() => db.parties.where('caseId').equals(c.id).sortBy('createdAt'), [c.id]);
   const [editing, setEditing] = useState<{ p: PartyRecord; isNew: boolean } | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const list = parties ?? [];
   const sugg = useMemo(() => suggestions(c, list), [c, list]);
@@ -77,10 +80,14 @@ export function PartiesTab({ c }: { c: CaseRecord }) {
           <p className="subtle small">Quem são? Qual a qualidade? Como contactar?</p>
         </div>
         <span className="spacer" />
+        <Button icon={FileSpreadsheet} onClick={() => setImporting(true)} title="Colar do Excel ou abrir um CSV">
+          Importar
+        </Button>
         <Button variant="primary" icon={UserPlus} onClick={() => openNew()}>
           Adicionar interessado
         </Button>
       </div>
+      <ImportSheet c={c} entity={importing ? 'parties' : null} allowed={['parties']} onClose={() => setImporting(false)} />
 
       {list.length > 0 && (
         <div className="mini-stats">

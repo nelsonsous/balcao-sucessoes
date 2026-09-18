@@ -7,7 +7,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 3 — «10 vezes seguidas com melhorias e testes» (iterações 21–30)
 
-**Estado do ciclo 3: iterações 21–24 concluídas (4/10).**
+**Estado do ciclo 3: iterações 21–25 concluídas (5/10).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -15,7 +15,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 22 | ~~iPhone e telemóvel~~ | ✅ concluída |
 | 23 | ~~Honorários e despesas~~ | ✅ concluída |
 | 24 | ~~Regras do escritório~~ | ✅ concluída |
-| 25 | **Importar de folhas de cálculo** | Colar do Excel ou CSV para bens e interessados, com pré-visualização, validação (NIF, valores, datas) e deteção de duplicados; testes. |
+| 25 | ~~Importar de folhas de cálculo~~ | ✅ concluída |
 | 26 | **Impressão** | Estilos de impressão para dossier, checklist, agenda e análise; resumo de uma página do dossier; testes. |
 | 27 | **Diagnóstico e integridade** | Página de diagnóstico (versão, service worker, armazenamento, persistência) e verificação de integridade da base (órfãos, referências partidas) com reparação; testes. |
 | 28 | **Desempenho** | Pacote inicial mais pequeno (carregamento a pedido dos módulos pesados), orçamento de tamanho verificado no CI, listas longas fluidas; testes. |
@@ -23,6 +23,16 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 30 | **Consolidação** | Auditoria final, manual e apresentação atualizados (versão 2.2), resumo, envio. |
 
 Fora do ciclo, por depender de decisão e de uma conta do escritório: o «modo escritório» com sincronização entre dispositivos (por exemplo, Supabase na UE, num projeto próprio do escritório), que reaproveitaria a lógica de junção da iteração 14.
+
+### Iteração 25 — Importar de folhas de cálculo ✅
+
+- **Botão «Importar»** nos separadores Interessados e Património (bens ou dívidas): copiar as linhas no Excel, Numbers ou Google Sheets e colar, ou **abrir um ficheiro CSV** («;» do Excel português ou «,»; UTF-8 ou, nos CSV antigos do Excel, Windows-1252 — os acentos leem-se bem). Para ficheiros .xlsx, a indicação é copiar/colar ou guardar como «CSV UTF-8»; há **modelo em branco** para descarregar e enviar ao cliente.
+- **Colunas reconhecidas pelo cabeçalho**, sem acentos nem pontuação («N.º Contribuinte», «Valor patrimonial tributário (€)»…); sem cabeçalho, indica-se à mão o que é cada coluna (escolher um campo já usado noutra coluna troca-o de sítio). Campos: interessados (nome, NIF, parentesco, qualidade, cabeça-de-casal, menor, nascimento, nacionalidade, documento, morada, e-mail, telefone, notas), bens (descrição, tipo, valor, titularidade, titular, quota-parte, país, artigo matricial, freguesia, descrição predial, banco, IBAN, sociedade, NIPC, matrícula) e dívidas (credor, descrição, valor, garantia, estado).
+- **Validação** (`lib/sheetImport.ts`, funções puras): NIF e NIPC pelo dígito de controlo, IBAN pelo módulo 97, e-mail, valores em euros em qualquer formato («1.234,56 €», «1 234,56», «1,234.56», «1.234» = 1234 €, «(1.000,00)»), datas «dd/mm/aaaa», ISO e números de série do Excel, parentesco e qualidade por palavras («Viúva» → cônjuge; «Herdeira / Cônjuge»), tipo de bem por palavras inteiras («Fração autónoma» → imóvel) ou deduzido dos outros campos (matrícula → veículo, IBAN → conta). O que não se reconhece **não se perde**: a linha importa-se com aviso e o valor original fica nas notas do registo; só a falta do nome/descrição/credor impede a importação.
+- **Repetidos** assinalados antes de importar — no dossier (mesmo NIF ou nome; mesmo artigo e freguesia, matrícula, IBAN ou NIPC; mesmo credor e valor) e dentro da própria folha — e ignorados por omissão («Importar também as repetidas»); só um cabeça-de-casal por dossier.
+- **Pré-visualização** com o estado de cada linha (Pronta, Com avisos, Erro, Repetida) e as observações; importação num só passo, registada no histórico e com **«anular»** (remove só o que foi importado).
+- **Higiene do código-fonte**: nova verificação automática que falha se algum ficheiro tiver caracteres invisíveis ou de controlo literais (NUL, BOM, U+FFFD, espaços de largura zero) — encontrou e corrigiu BOMs literais no CSV (`lib/csv.ts`) e em dois testes; passam a usar escapes.
+- **Testes**: leitura (separadores, aspas, quebras de linha em células, BOM, cabeçalho ou não, Windows-1252, e a propriedade «um CSV bem formado volta às mesmas células» em 200 casos aleatórios), valores (euros, datas, parentesco, qualidade, tipos, titularidade, estados, IBAN), linhas (avisos que vão para as notas, erros, repetidos no dossier e na folha, cabeça-de-casal, dedução do tipo), componente (colar, colunas, pré-visualização, importar e anular; dívidas sem cabeçalho com colunas à mão) — **276 testes**; novo passo E2E «Importar interessados de uma folha de cálculo (colar do Excel)» — **20 passos**; 0 violações de acessibilidade com a pré-visualização aberta.
 
 ### Iteração 24 — Regras do escritório ✅
 

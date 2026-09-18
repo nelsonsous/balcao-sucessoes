@@ -2268,3 +2268,53 @@ dialog.palette::backdrop {
     justify-content: space-between;
   }
 }
+
+/* Importar de folhas de cálculo */
+.import-paste {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  white-space: pre;
+  overflow-x: auto;
+}
+.import-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.import-col {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.import-col.off {
+  background: var(--surface-2);
+}
+.import-col-head {
+  font-weight: 650;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.import-col-sample {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.import-table td {
+  vertical-align: top;
+}
+@media (max-width: 640px) {
+  .import-foot-count {
+    display: none;
+  }
+}
+.import-table tr.imp-erro td,
+.import-table tr.imp-repetida td {
+  color: var(--text-3);
+}

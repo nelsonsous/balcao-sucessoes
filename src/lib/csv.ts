@@ -16,7 +16,7 @@ function cell(v: CsvCell): string {
 /** Constrói o texto CSV (com BOM para o Excel reconhecer UTF-8). */
 export function toCsv(header: string[], rows: CsvCell[][]): string {
   const lines = [header, ...rows].map((r) => r.map(cell).join(';'));
-  return `﻿${lines.join('\r\n')}\r\n`;
+  return `\uFEFF${lines.join('\r\n')}\r\n`;
 }
 
 export function downloadCsv(filename: string, header: string[], rows: CsvCell[][]): void {

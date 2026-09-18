@@ -509,6 +509,26 @@ try {
     assert(row.includes('Escritório'), 'marca «Escritório» na tarefa');
   });
 
+  await step('Importar interessados de uma folha de cálculo (colar do Excel)', async () => {
+    await go(`#/dossiers/${caseId}/interessados`, 1500);
+    assert(await clickText('main button', 'Importar'), 'botão Importar');
+    await page.waitForSelector('dialog[open] #imp-text', { timeout: 5000 });
+    const tsv = 'Nome\tNIF\tParentesco\tE-mail\nPessoa Importada Um\t123456789\tFilha\tum@exemplo.pt\nPessoa Importada Dois\t123456788\tFilho\t';
+    await page.evaluate((v) => {
+      const ta = document.querySelector('#imp-text');
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(ta, v);
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+    }, tsv);
+    await page.waitForSelector('[data-testid="import-summary"]', { timeout: 5000 });
+    const summary = await page.$eval('[data-testid="import-summary"]', (e) => e.textContent || '');
+    assert(/2 a importar/.test(summary) && /1 com avisos/.test(summary), `resumo da pré-visualização (${summary})`);
+    assert(await clickText('dialog[open] .sheet-foot button', 'Importar 2'), 'botão Importar 2 interessados');
+    await page.waitForFunction(() => !document.querySelector('dialog[open] #imp-text'), { timeout: 5000 });
+    await sleep(600);
+    const text = await page.$eval('main', (m) => m.textContent || '');
+    assert(text.includes('Pessoa Importada Um') && text.includes('Pessoa Importada Dois'), 'interessados importados na lista');
+  });
+
   await step('PIN: definir, bloquear e desbloquear', async () => {
     await go('#/definicoes', 1200);
     assert(await clickText('button', 'Definir PIN'), 'botão Definir PIN');

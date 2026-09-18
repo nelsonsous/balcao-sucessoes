@@ -1024,6 +1024,10 @@ dialog.sheet::backdrop {
   animation: slide-in 0.28s var(--ease);
 }
 
+dialog.sheet.wide .sheet-panel {
+  width: min(1000px, 100%);
+}
+
 dialog.sheet.modal .sheet-panel {
   top: 50%;
   left: 50%;

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { FileSpreadsheet, FileText, Globe, Info, Landmark, Plus, Scale, Trash2, Wallet } from 'lucide-react';
+import { FileSpreadsheet, FileText, Globe, Info, Landmark, Plus, Scale, Sheet as SheetIcon, Trash2, Wallet } from 'lucide-react';
 import { deleteAsset, deleteDebt, saveAsset, saveDebt } from '../../lib/actions';
 import { db, newAsset, newDebt } from '../../lib/db';
 import {
@@ -18,6 +18,7 @@ import { Button, Card, CardHead, Empty, Field, Sheet, useConfirm } from '../../c
 import { csvName, downloadCsv } from '../../lib/csv';
 import { assetsCsvRows } from '../../lib/reports';
 import { ReportSheet } from '../reports/ReportSheet';
+import { ImportSheet } from '../import/ImportSheet';
 
 const TYPES = Object.keys(ASSET_META) as AssetType[];
 const isForeign = (a: AssetRecord) => Boolean(a.country) && a.country.trim().toLowerCase() !== 'portugal';
@@ -55,6 +56,7 @@ export function AssetsTab({ c }: { c: CaseRecord }) {
   const [asset, setAsset] = useState<{ a: AssetRecord; isNew: boolean } | null>(null);
   const [debt, setDebt] = useState<{ d: DebtRecord; isNew: boolean } | null>(null);
   const [report, setReport] = useState(false);
+  const [importing, setImporting] = useState<'assets' | 'debts' | null>(null);
 
   const assets = data?.assets ?? [];
   const debts = data?.debts ?? [];
@@ -89,6 +91,9 @@ export function AssetsTab({ c }: { c: CaseRecord }) {
         >
           CSV
         </Button>
+        <Button icon={SheetIcon} onClick={() => setImporting('assets')} title="Colar do Excel ou abrir um CSV (bens ou dívidas)">
+          Importar
+        </Button>
         <Button icon={Wallet} onClick={() => setDebt({ d: newDebt(c.id), isNew: true })}>
           Dívida
         </Button>
@@ -96,6 +101,8 @@ export function AssetsTab({ c }: { c: CaseRecord }) {
           Adicionar bem
         </Button>
       </div>
+
+      <ImportSheet c={c} entity={importing} allowed={['assets', 'debts']} onClose={() => setImporting(null)} />
 
       <div className="asset-types">
         {byType.map(({ t, count, total }) => {

@@ -61,7 +61,7 @@ describe('CSV', () => {
     fc.assert(
       fc.property(fc.array(fc.array(fc.oneof(fc.string(), fc.integer(), fc.constant(null)), { minLength: 3, maxLength: 3 }), { maxLength: 8 }), (rows) => {
         const csv = toCsv(['a', 'b', 'c'], rows);
-        expect(csv.startsWith('﻿')).toBe(true);
+        expect(csv.startsWith('\uFEFF')).toBe(true);
         const lines = csv.slice(1).split('\r\n').filter((_l, i, arr) => i < arr.length - 1);
         expect(lines.length).toBe(rows.length + 1);
         // contagem de separadores fora de aspas
