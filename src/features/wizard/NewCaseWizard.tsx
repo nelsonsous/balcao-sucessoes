@@ -26,6 +26,7 @@ import { QuestionStep } from '../dossiers/QuestionnaireForm';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../lib/db';
 import { addCustomTask } from '../../lib/actions';
+import { useActiveOfficeRules } from '../../lib/officeRules';
 import { BUILTIN_CASE_TEMPLATES, answeredCount, answersFromTemplate, toDef as caseTemplateDef, type CaseTemplateDef } from '../../lib/caseTemplates';
 import type { CustomTaskSeed } from '../../lib/types';
 
@@ -112,7 +113,8 @@ export function NewCaseWizard() {
     }
   }, [d]);
 
-  const tasks = useMemo(() => desiredTasks(d.answers), [d.answers]);
+  const officeRules = useActiveOfficeRules();
+  const tasks = useMemo(() => desiredTasks(d.answers, officeRules), [d.answers, officeRules]);
   const phases = useMemo(() => countByPhase(tasks), [tasks]);
   const critical = tasks.filter((t) => t.critical).length;
   const deadlines = useMemo(

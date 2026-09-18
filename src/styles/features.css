@@ -2108,3 +2108,163 @@ dialog.palette::backdrop {
     animation: none;
   }
 }
+
+/* Regras do escritório */
+.rule-section {
+  display: grid;
+  gap: 10px;
+}
+.rule-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cond-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.cond-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.cond-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 6px;
+}
+.rule-task {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.rule-task-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.rule-task-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.due-amount {
+  width: 84px;
+  flex: none;
+}
+.rule-issues {
+  margin: 0;
+  padding-left: 18px;
+}
+@media (max-width: 640px) {
+  .cond-fields {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .cond-fields > :first-child {
+    grid-column: 1 / -1;
+  }
+  .rule-task-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.rules-drift {
+  margin-bottom: 16px;
+}
+.rule-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.rule-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.rule-item.off {
+  background: var(--surface-2);
+}
+.rule-item.off .rule-name,
+.rule-item.off .rule-item-tasks {
+  color: var(--text-3);
+}
+.rule-item-main {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.rule-item-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rule-name {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 650;
+  font-size: 15px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.rule-name:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+.rule-item-tasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 13.5px;
+}
+.rule-item-tasks li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rule-item-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+@media (max-width: 640px) {
+  .rule-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rule-item-side {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}

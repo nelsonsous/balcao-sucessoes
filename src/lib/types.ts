@@ -375,6 +375,45 @@ export interface CaseTemplateRecord {
   updatedAt: string;
 }
 
+/** Operador de uma condição de regra do escritório (depende do tipo da pergunta). */
+export type OfficeRuleOp = 'eq' | 'neq' | 'includes' | 'excludes' | 'gte' | 'lte' | 'answered' | 'unanswered';
+
+/** Condição sobre uma resposta do questionário sucessório. */
+export interface OfficeRuleCondition {
+  question: keyof Answers;
+  op: OfficeRuleOp;
+  value: string;
+}
+
+/** Tarefa gerada por uma regra do escritório. */
+export interface OfficeRuleTask {
+  /** Identificador estável dentro da regra (a chave da tarefa no dossier é office:<regra>:<key>). */
+  key: string;
+  phase: PhaseId;
+  title: string;
+  description: string;
+  critical: boolean;
+  docs: string[];
+  legal: string[];
+  /** Prazo contado da data do óbito (sem prazo se ausente). */
+  deadline?: { kind: 'daysAfter' | 'monthsAfter' | 'endOfMonthAfter'; amount: number };
+}
+
+/** Regra própria do escritório: condições sobre o questionário → tarefas na checklist. */
+export interface OfficeRuleRecord {
+  id: string;
+  name: string;
+  /** Porque existe (aparece na tarefa como «Gerada porque…»). */
+  reason: string;
+  enabled: boolean;
+  /** Todas as condições ou qualquer uma. Sem condições, aplica-se a todos os dossiers. */
+  match: 'all' | 'any';
+  conditions: OfficeRuleCondition[];
+  tasks: OfficeRuleTask[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SettingRecord {
   key: string;
   value: unknown;

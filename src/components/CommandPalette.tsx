@@ -20,7 +20,7 @@ import {
   Wand2,
   type LucideIcon,
 } from 'lucide-react';
-import { FileText, Inbox, MessageSquare, NotebookPen, Recycle, TrendingUp } from 'lucide-react';
+import { FileText, Inbox, MessageSquare, NotebookPen, Recycle, TrendingUp, Workflow } from 'lucide-react';
 import { CHANNEL_LABELS } from '../lib/labels';
 import { DOC_STATUS } from '../lib/documents';
 import { formatDate } from '../lib/utils';
@@ -59,6 +59,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   'nav-/recebidos': Inbox,
   'nav-/reciclagem': Recycle,
   'nav-/analise': TrendingUp,
+  'nav-/regras': Workflow,
   'nav-/definicoes': Settings,
   'act-nova': Plus,
   'act-backup': Database,
@@ -110,6 +111,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'nav-/prazos', group: 'navegacao', title: 'Calculadora de prazos', keywords: 'dias úteis férias judiciais contagem termo', href: '/prazos' },
       { id: 'nav-/minutas', group: 'navegacao', title: 'Minutas', keywords: 'cartas emails modelos', href: '/minutas' },
       { id: 'nav-/analise', group: 'navegacao', title: 'Análise da equipa', subtitle: 'Métricas por mês, fase e pessoa', keywords: 'estatísticas gráficos indicadores painel equipa desempenho', href: '/analise' },
+      { id: 'nav-/regras', group: 'navegacao', title: 'Regras do escritório', subtitle: 'Tarefas próprias geradas pelo questionário', keywords: 'regras condições automatização checklist práticas escritório tarefas próprias', href: '/regras' },
       { id: 'nav-/definicoes', group: 'navegacao', title: 'Definições', keywords: 'equipa tema cópias segurança', href: '/definicoes' },
       { id: 'nav-/recebidos', group: 'navegacao', title: 'Recebidos', subtitle: 'Ficheiros partilhados para a aplicação', keywords: 'partilha telemóvel recebidos anexar inbox', href: '/recebidos' },
       { id: 'nav-/reciclagem', group: 'navegacao', title: 'Reciclagem', subtitle: 'Itens apagados nos últimos 30 dias', keywords: 'lixo apagados repor restaurar', href: '/reciclagem' },

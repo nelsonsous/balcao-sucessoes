@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { RefreshCw, Save, Sparkles, Undo2 } from 'lucide-react';
 import { saveAnswers } from '../../lib/actions';
+import { useActiveOfficeRules } from '../../lib/officeRules';
 import type { Answers, CaseRecord } from '../../lib/types';
 import { desiredTasks } from '../../engine/engine';
 import { completion } from '../../engine/questions';
@@ -13,22 +14,22 @@ export function QuestionnaireTab({ c }: { c: CaseRecord }) {
   const toast = useToast();
   const [draft, setDraft] = useState<Answers>(c.answers);
   const [busy, setBusy] = useState(false);
+  const officeRules = useActiveOfficeRules();
 
   useEffect(() => setDraft(c.answers), [c.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(c.answers);
   const impact = useMemo(() => {
     if (!dirty) return null;
-    const before = new Set(desiredTasks(c.answers).map((t) => t.key));
-    const after = desiredTasks(draft);
+    const current = desiredTasks(c.answers, officeRules);
+    const before = new Set(current.map((t) => t.key));
+    const after = desiredTasks(draft, officeRules);
     const afterKeys = new Set(after.map((t) => t.key));
     return {
       added: after.filter((t) => !before.has(t.key)).map((t) => t.title),
-      gone: desiredTasks(c.answers)
-        .filter((t) => !afterKeys.has(t.key))
-        .map((t) => t.title),
+      gone: current.filter((t) => !afterKeys.has(t.key)).map((t) => t.title),
     };
-  }, [draft, c.answers, dirty]);
+  }, [draft, c.answers, dirty, officeRules]);
 
   const prog = completion(draft);
 

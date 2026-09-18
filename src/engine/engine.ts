@@ -1,6 +1,7 @@
 // Motor da checklist adaptativa (puro, sem acesso à base de dados).
-import type { Answers, PhaseId, Status } from '../lib/types';
+import type { Answers, OfficeRuleRecord, PhaseId, Status } from '../lib/types';
 import { computeDeadline, type DeadlineSpec } from './deadlines';
+import { officeDesiredTasks } from './officeRules';
 import { PHASE_INDEX } from './phases';
 import { RULES } from './rules';
 
@@ -19,8 +20,11 @@ export interface DesiredTask {
   order: number;
 }
 
-/** Avalia todas as regras e devolve as tarefas aplicáveis (sem duplicados). */
-export function desiredTasks(a: Answers): DesiredTask[] {
+/**
+ * Avalia todas as regras (biblioteca + regras ativas do escritório) e devolve as
+ * tarefas aplicáveis, sem duplicados.
+ */
+export function desiredTasks(a: Answers, office: OfficeRuleRecord[] = []): DesiredTask[] {
   const seen = new Set<string>();
   const out: DesiredTask[] = [];
   RULES.forEach((rule, ri) => {
@@ -46,6 +50,11 @@ export function desiredTasks(a: Answers): DesiredTask[] {
       });
     });
   });
+  for (const t of officeDesiredTasks(office, a)) {
+    if (seen.has(t.key)) continue;
+    seen.add(t.key);
+    out.push(t);
+  }
   return out.sort((x, y) => x.order - y.order);
 }
 

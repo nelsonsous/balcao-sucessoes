@@ -26,6 +26,7 @@ const TABLES = [
   'timeEntries',
   'expenses',
   'provisions',
+  'officeRules',
   'files',
 ] as const;
 type TableName = (typeof TABLES)[number];

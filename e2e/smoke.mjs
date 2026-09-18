@@ -453,6 +453,28 @@ try {
     await sleep(400);
   });
 
+  await step('Regras do escritório: criar, aplicar aos dossiers e ver a tarefa na checklist', async () => {
+    await go('#/regras', 1500);
+    const h1 = await page.$eval('main h1', (e) => e.textContent || '');
+    assert(h1.includes('Regras do escritório'), 'página das regras');
+    const demo = await page.$$eval('[data-testid="rule-item"]', (r) => r.length);
+    assert(demo >= 3, `regras de exemplo da demonstração (${demo})`);
+    assert(await clickText('main button', 'Nova regra'), 'botão Nova regra');
+    await page.waitForSelector('dialog[open] #rule-name', { timeout: 5000 });
+    await page.type('#rule-name', 'Regra E2E');
+    await page.type('dialog[open] input[id$="-title"]', 'Tarefa própria E2E');
+    assert(await clickText('dialog[open] button', 'Guardar regra'), 'botão Guardar regra');
+    await page.waitForSelector('[data-testid="rules-drift"]', { timeout: 5000 });
+    assert(await clickText('[data-testid="rules-drift"] button', 'Aplicar aos dossiers'), 'botão Aplicar aos dossiers');
+    await page.waitForFunction(() => /Aplicar as regras/.test(document.querySelector('dialog[open]')?.textContent || ''), { timeout: 5000 });
+    assert(await clickText('dialog[open] .sheet-foot button', 'Aplicar'), 'confirmar Aplicar');
+    await page.waitForFunction(() => !document.querySelector('[data-testid="rules-drift"]'), { timeout: 8000 });
+    await go(`#/dossiers/${caseId}/checklist`, 1500);
+    const row = await page.$$eval('.task-row', (rs) => rs.map((r) => r.textContent || '').find((t) => t.includes('Tarefa própria E2E')) || '');
+    assert(row, 'tarefa da regra na checklist do dossier');
+    assert(row.includes('Escritório'), 'marca «Escritório» na tarefa');
+  });
+
   await step('PIN: definir, bloquear e desbloquear', async () => {
     await go('#/definicoes', 1200);
     assert(await clickText('button', 'Definir PIN'), 'botão Definir PIN');
@@ -477,7 +499,7 @@ try {
     await go('#/', 1200);
     const nav = await page.$eval('.mobile-nav', (e) => getComputedStyle(e).display);
     assert(nav !== 'none', 'barra inferior visível no telemóvel');
-    const routes = ['#/', '#/dossiers', '#/dossiers/novo', ...['checklist', 'documentos', 'quotas', 'agenda', 'honorarios', 'notas'].map((t) => `#/dossiers/${caseId}/${t}`), '#/agenda', '#/prazos', '#/analise', '#/definicoes'];
+    const routes = ['#/', '#/dossiers', '#/dossiers/novo', ...['checklist', 'documentos', 'quotas', 'agenda', 'honorarios', 'notas'].map((t) => `#/dossiers/${caseId}/${t}`), '#/agenda', '#/prazos', '#/analise', '#/regras', '#/definicoes'];
     const problems = [];
     for (const r of routes) {
       await go(r, 1100);

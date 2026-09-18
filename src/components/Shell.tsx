@@ -25,7 +25,7 @@ import {
   Wand2,
   WifiOff,
 } from 'lucide-react';
-import { Inbox, Recycle, TrendingUp } from 'lucide-react';
+import { Inbox, Recycle, TrendingUp, Workflow } from 'lucide-react';
 import { db, setSetting, useSettings } from '../lib/db';
 import { useInboxCount } from '../lib/shareInbox';
 import { useTrashCount } from '../lib/recycle';
@@ -173,6 +173,9 @@ export function Shell({ children }: { children: ReactNode }) {
           <span className="nav-label">Escritório</span>
           <NavLink href="/analise" icon={TrendingUp}>
             Análise da equipa
+          </NavLink>
+          <NavLink href="/regras" icon={Workflow}>
+            Regras do escritório
           </NavLink>
           <NavLink href="/definicoes" icon={Settings}>
             Definições

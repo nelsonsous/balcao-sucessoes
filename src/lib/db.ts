@@ -26,6 +26,8 @@ import type {
   ExpenseRecord,
   ProvisionRecord,
   ActiveTimer,
+  OfficeRuleRecord,
+  OfficeRuleTask,
 } from './types';
 import { nowIso, uid } from './utils';
 import type { SavedView } from './views';
@@ -51,6 +53,7 @@ export type BalcaoDB = Dexie & {
   timeEntries: EntityTable<TimeEntryRecord, 'id'>;
   expenses: EntityTable<ExpenseRecord, 'id'>;
   provisions: EntityTable<ProvisionRecord, 'id'>;
+  officeRules: EntityTable<OfficeRuleRecord, 'id'>;
 };
 
 export const db = new Dexie('balcao-das-sucessoes') as BalcaoDB;
@@ -95,6 +98,11 @@ db.version(6).stores({
   timeEntries: 'id, caseId, date, memberId',
   expenses: 'id, caseId, date',
   provisions: 'id, caseId, date',
+});
+
+// v7: regras próprias do escritório (condições sobre o questionário → tarefas).
+db.version(7).stores({
+  officeRules: 'id, name, updatedAt',
 });
 
 export const CASE_TABLES = ['tasks', 'parties', 'assets', 'debts', 'notes', 'contacts', 'activity', 'events', 'documents', 'timeEntries', 'expenses', 'provisions'] as const;
@@ -497,6 +505,26 @@ export function newExpense(caseId: string, partial: Partial<ExpenseRecord> = {})
 export function newProvision(caseId: string, partial: Partial<ProvisionRecord> = {}): ProvisionRecord {
   const ts = nowIso();
   return { id: uid(), caseId, date: ts.slice(0, 10), amount: 0, description: '', createdAt: ts, updatedAt: ts, ...partial };
+}
+
+export function newOfficeRuleTask(partial: Partial<OfficeRuleTask> = {}): OfficeRuleTask {
+  return { key: uid(), phase: 'abertura', title: '', description: '', critical: false, docs: [], legal: [], ...partial };
+}
+
+export function newOfficeRule(partial: Partial<OfficeRuleRecord> = {}): OfficeRuleRecord {
+  const ts = nowIso();
+  return {
+    id: uid(),
+    name: '',
+    reason: '',
+    enabled: true,
+    match: 'all',
+    conditions: [],
+    tasks: [],
+    createdAt: ts,
+    updatedAt: ts,
+    ...partial,
+  };
 }
 
 export function newCaseTemplate(partial: Partial<CaseTemplateRecord> = {}): CaseTemplateRecord {

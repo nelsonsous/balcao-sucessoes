@@ -9,7 +9,9 @@ import {
   Scale,
   Trash2,
   TriangleAlert,
+  Workflow,
 } from 'lucide-react';
+import { Link } from 'wouter';
 import { deleteTask, setTaskStatus, updateTask } from '../../lib/actions';
 import { useHolidayCalendar } from '../../lib/agenda';
 import { useMembers } from '../../lib/hooks';
@@ -18,6 +20,7 @@ import { cx, formatDate, formatDateTime, relativeDays } from '../../lib/utils';
 import { dueState } from '../../engine/deadlines';
 import { PHASES, STATUSES } from '../../engine/phases';
 import { syncCaseTasks } from '../../engine/sync';
+import { isOfficeKey, ruleIdFromKey } from '../../engine/officeRules';
 import { useToast } from '../../components/Toast';
 import { Button, Field, Sheet, useConfirm } from '../../components/ui';
 import { DeadlineCalculator } from '../prazos/DeadlineCalculator';
@@ -40,6 +43,7 @@ export function TaskDrawer({ task, onClose, caseRecord }: { task: TaskRecord | n
   if (!task) return <Sheet open={false} onClose={onClose} title="">{null}</Sheet>;
 
   const isCustom = !task.ruleKey;
+  const isOffice = isOfficeKey(task.ruleKey);
   const ds = dueState(task.dueDate, task.status);
   const notBusiness = task.dueDate ? holidays.whyNotBusiness(task.dueDate) : null;
   const nextBusiness = notBusiness ? holidays.nextBusinessDay(task.dueDate) : '';
@@ -53,7 +57,9 @@ export function TaskDrawer({ task, onClose, caseRecord }: { task: TaskRecord | n
       title: 'Remover esta tarefa?',
       message: isCustom
         ? 'A tarefa será removida da checklist.'
-        : 'Esta tarefa foi gerada pelo questionário. Em alternativa, pode marcá-la como “Não aplicável”.',
+        : isOffice
+          ? 'Esta tarefa foi gerada por uma regra do escritório e volta a ser criada quando a checklist for atualizada. Em alternativa, pode marcá-la como “Não aplicável”.'
+          : 'Esta tarefa foi gerada pelo questionário. Em alternativa, pode marcá-la como “Não aplicável”.',
       confirmLabel: 'Remover',
       danger: true,
     });
@@ -124,6 +130,14 @@ export function TaskDrawer({ task, onClose, caseRecord }: { task: TaskRecord | n
             {task.reason && (
               <div className="reason-line">
                 <Lightbulb aria-hidden /> Gerada porque: <strong>{task.reason}</strong>
+              </div>
+            )}
+            {isOffice && (
+              <div className="reason-line">
+                <Workflow aria-hidden /> Regra do escritório ·{' '}
+                <Link href={`/regras?regra=${ruleIdFromKey(task.ruleKey)}`} onClick={onClose}>
+                  ver a regra
+                </Link>
               </div>
             )}
           </div>

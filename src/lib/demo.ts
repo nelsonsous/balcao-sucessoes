@@ -1,6 +1,7 @@
 // Dados de demonstração — informação 100% fictícia.
 import { HolidayCalendar } from '../engine/calendar';
 import { syncCaseTasks } from '../engine/sync';
+import { OFFICE_RULE_EXAMPLES } from '../engine/officeRules';
 import {
   db,
   deleteCaseCascade,
@@ -13,6 +14,7 @@ import {
   newTimeEntry,
   newExpense,
   newProvision,
+  newOfficeRule,
 } from './db';
 import type {
   Answers,
@@ -483,8 +485,26 @@ async function seedFees(c: CaseRecord, i: number): Promise<void> {
   if (i === 2) await db.cases.update(c.id, { feesJson: JSON.stringify({ mode: 'fixo', fixedFee: 1500, rate: null, withholding: false, notes: 'Honorários fixos acordados na primeira reunião' }) });
 }
 
+/** Regras do escritório de demonstração (os três exemplos, com ids fixos). */
+export const DEMO_RULE_IDS = OFFICE_RULE_EXAMPLES.map((_, i) => `demo-regra-${i + 1}`);
+
+function demoRules() {
+  return OFFICE_RULE_EXAMPLES.map((ex, i) =>
+    newOfficeRule({
+      id: DEMO_RULE_IDS[i]!,
+      name: ex.name,
+      reason: ex.reason,
+      match: ex.match,
+      conditions: ex.conditions.map((c) => ({ ...c })),
+      tasks: ex.tasks.map((t, j) => ({ ...t, key: `t${j + 1}`, docs: [...t.docs], legal: [...t.legal] })),
+      createdAt: new Date(Date.now() - (90 - i) * 86_400_000).toISOString(),
+    }),
+  );
+}
+
 export async function loadDemoData(): Promise<number> {
   await db.members.bulkPut(MEMBERS);
+  await db.officeRules.bulkPut(demoRules());
   const list = demoCases();
   // Aberturas espalhadas pelos últimos meses (sempre depois do óbito), para a análise da equipa ter história.
   const SPREAD_DAYS = [30, 75, 140, 220, 400];
@@ -546,4 +566,5 @@ export async function removeDemoData(): Promise<void> {
   for (const c of demo) await deleteCaseCascade(c.id);
   await db.members.bulkDelete(MEMBERS.map((m) => m.id));
   await db.events.delete('demo-ev-equipa');
+  await db.officeRules.bulkDelete(DEMO_RULE_IDS);
 }

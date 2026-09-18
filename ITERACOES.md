@@ -7,14 +7,14 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 3 — «10 vezes seguidas com melhorias e testes» (iterações 21–30)
 
-**Estado do ciclo 3: iterações 21–23 concluídas (3/10).**
+**Estado do ciclo 3: iterações 21–24 concluídas (4/10).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
 | 21 | ~~Menus que nunca ficam cortados~~ | ✅ concluída |
 | 22 | ~~iPhone e telemóvel~~ | ✅ concluída |
 | 23 | ~~Honorários e despesas~~ | ✅ concluída |
-| 24 | **Regras do escritório** | Regras próprias (condições sobre o questionário → tarefas com fase, prazo e documentos), integradas no motor e na reconciliação da checklist; testes. |
+| 24 | ~~Regras do escritório~~ | ✅ concluída |
 | 25 | **Importar de folhas de cálculo** | Colar do Excel ou CSV para bens e interessados, com pré-visualização, validação (NIF, valores, datas) e deteção de duplicados; testes. |
 | 26 | **Impressão** | Estilos de impressão para dossier, checklist, agenda e análise; resumo de uma página do dossier; testes. |
 | 27 | **Diagnóstico e integridade** | Página de diagnóstico (versão, service worker, armazenamento, persistência) e verificação de integridade da base (órfãos, referências partidas) com reparação; testes. |
@@ -23,6 +23,15 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 30 | **Consolidação** | Auditoria final, manual e apresentação atualizados (versão 2.2), resumo, envio. |
 
 Fora do ciclo, por depender de decisão e de uma conta do escritório: o «modo escritório» com sincronização entre dispositivos (por exemplo, Supabase na UE, num projeto próprio do escritório), que reaproveitaria a lógica de junção da iteração 14.
+
+### Iteração 24 — Regras do escritório ✅
+
+- **Nova página «Regras do escritório»** (menu Escritório e paleta de comandos): o escritório define as suas próprias práticas como regras — **condições sobre as respostas do questionário** (todas ou qualquer uma; sem condições, aplica-se a todos os dossiers) → **tarefas** com fase, prazo, criticidade, «como fazer», documentos e referências legais (a validar pela equipa). Operadores conforme o tipo da pergunta: «é / não é», «inclui / não inclui», «é pelo menos / é no máximo», «está respondida / por responder»; «não é» e «não inclui» só contam em perguntas já respondidas (sem resposta nada se presume). Prazos contados do óbito: N dias, N meses ou fim do N.º mês seguinte.
+- **Editor** com pré-visualização em direto dos dossiers em curso abrangidos («Aplica-se hoje a 1 de 4…»), validação (nome, título das tarefas, valores e prazos) e três **exemplos** para começar (boas-vindas ao cliente, conflito entre interessados, passivo por confirmar); ativar/desativar, duplicar (a cópia fica desativada), remover com «anular».
+- **Integração no motor** (`engine/officeRules.ts`, puro): as tarefas das regras entram na mesma lista das da biblioteca (`desiredTasks`), no fim de cada fase, com chave própria (`office:<regra>:<tarefa>`), e passam pela mesma **reconciliação** — o assistente de novo dossier e o questionário já mostram as tarefas que vão surgir; dossiers novos e questionários guardados incluem-nas automaticamente.
+- **Nada muda nos dossiers sem confirmação**: a reconciliação passou a ter um **plano puro** (`planSync`) separado da execução; a página mostra as **alterações por aplicar** («2 tarefas por acrescentar · 1 com trabalho, que ficará “a rever”») e o botão **Aplicar aos dossiers** pede confirmação, aplica só aos dossiers em curso (ativos e suspensos) e regista no histórico de cada um. Tarefas com trabalho nunca são apagadas (ficam «a rever»); ao reativar a regra voltam.
+- **Na checklist**, as tarefas das regras têm a marca **«Escritório»**; na ficha da tarefa aparece «Regra do escritório · ver a regra», que abre a regra no editor. Regras incluídas nas cópias de segurança (base de dados v7) e nos dados de demonstração (os três exemplos).
+- **Testes**: condições por tipo de pergunta, «todas/qualquer», ordem e chaves, prazos (dias, meses, fim do mês), validação, descrições e a propriedade «as tarefas do escritório são exatamente as das regras ativas que se aplicam» (150 casos aleatórios); base de dados (diferença por aplicar, aplicação só a dossiers em curso com histórico, edição sem perder trabalho, desativar/reativar, dossiers novos e questionário, duplicar, anular, exemplos, cópia de segurança, demonstração); página (criar com validação, pré-visualização, aplicar com confirmação, ligação direta, ativar/desativar, duplicar, exemplos) — **257 testes**; novo passo E2E «Regras do escritório: criar, aplicar aos dossiers e ver a tarefa na checklist» e página incluída na verificação móvel (que apanhou um alvo de toque de 23 px, corrigido) — **19 passos**; 0 violações de acessibilidade na página e no editor.
 
 ### Iteração 23 — Honorários e despesas ✅
 

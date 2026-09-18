@@ -4,6 +4,7 @@ import { addCustomTask, bulkSetStatus, bulkUpdateTasks, deleteManualTasks, setTa
 import { useMemberMap, useMembers } from '../../lib/hooks';
 import { ChecklistBoard } from './ChecklistBoard';
 import { STATUSES } from '../../engine/phases';
+import { isOfficeKey } from '../../engine/officeRules';
 import type { CaseRecord, MemberRecord, PhaseId, Status, TaskRecord } from '../../lib/types';
 import { cx, normalize } from '../../lib/utils';
 import { dueState } from '../../engine/deadlines';
@@ -358,6 +359,7 @@ function TaskRow({
           {t.title}
         </span>
         <span className="task-sub">
+          {isOfficeKey(t.ruleKey) && <span className="badge brand">Escritório</span>}
           {t.obsolete ? (
             <span className="badge warn">Deixou de se aplicar — rever</span>
           ) : t.reason && !t.ruleKey ? (
