@@ -198,6 +198,95 @@ try {
     assert(log >= 1, 'histórico regista a anulação');
   });
 
+  await step('Menus nunca ficam cortados (checklist, fundo do ecrã, cabeçalho, folha e telemóvel)', async () => {
+    const check = () =>
+      page.evaluate(() => {
+        const m = document.querySelector('[role="menu"]');
+        if (!m) return { ok: false, why: 'sem menu aberto' };
+        const r = m.getBoundingClientRect();
+        const inside = r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight && r.width > 100 && r.height > 40;
+        const d = 12;
+        const pts = [
+          [r.left + d, r.top + d],
+          [r.right - d, r.top + d],
+          [r.left + d, r.bottom - d],
+          [r.right - d, r.bottom - d],
+          [r.left + r.width / 2, r.top + r.height / 2],
+        ];
+        const hits = pts.map(([x, y]) => {
+          const el = document.elementFromPoint(x, y);
+          return Boolean(el && m.contains(el));
+        });
+        return { ok: inside && hits.every(Boolean), inside, hits, side: m.getAttribute('data-side'), topLayer: m.matches(':popover-open'), rect: [r.left, r.top, r.right, r.bottom].map(Math.round) };
+      });
+    const expectVisible = async (label) => {
+      await sleep(300);
+      const r = await check();
+      assert(r.ok, `${label}: menu cortado ou tapado ${JSON.stringify(r)}`);
+      assert(r.topLayer, `${label}: menu fora da camada superior`);
+      return r;
+    };
+    const closeMenu = async () => {
+      await page.keyboard.press('Escape');
+      await sleep(250);
+      assert(!(await page.$('[role="menu"]')), 'Esc fecha o menu');
+    };
+    // 1) Caso reportado: semáforo da primeira tarefa da checklist
+    await go(`#/dossiers/${caseId}/checklist`, 1500);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.click('.task-row .status-pill');
+    await expectVisible('semáforo da checklist');
+    await closeMenu();
+    // 2) Semáforo encostado ao fundo do ecrã: abre para cima
+    await page.evaluate(() => {
+      const pills = [...document.querySelectorAll('.task-row .status-pill')];
+      pills[Math.min(pills.length - 1, 6)].scrollIntoView({ block: 'end' });
+      window.scrollBy(0, 4);
+    });
+    await sleep(300);
+    await page.evaluate(() => {
+      const pills = [...document.querySelectorAll('.task-row .status-pill')];
+      const vis = pills.filter((p) => {
+        const r = p.getBoundingClientRect();
+        return r.bottom <= innerHeight && r.top >= 0;
+      });
+      vis[vis.length - 1].click();
+    });
+    const low = await expectVisible('semáforo junto ao fundo');
+    assert(low.side === 'top', `abre para cima junto ao fundo (${low.side})`);
+    await closeMenu();
+    // 3) Menu «Mais ações» do cabeçalho, junto à borda direita
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.click('button[aria-label="Mais ações"]');
+    await expectVisible('mais ações');
+    await closeMenu();
+    // 4) Dentro de uma folha modal: gaveta da tarefa → Calcular… → Prazos frequentes; Esc fecha só o menu
+    await page.click('.task-main');
+    await page.waitForSelector('dialog[open]', { timeout: 5000 });
+    assert(await clickText('dialog[open] button', 'Calcular'), 'botão Calcular… na gaveta');
+    await page.waitForFunction(() => document.querySelectorAll('dialog[open]').length >= 2, { timeout: 5000 });
+    assert(await clickText('dialog[open] button', 'Prazos frequentes'), 'menu Prazos frequentes');
+    await expectVisible('menu dentro de folha modal');
+    await closeMenu();
+    const dialogs = await page.$$eval('dialog[open]', (d) => d.length);
+    assert(dialogs === 2, `Esc no menu não fecha a folha (${dialogs} folhas abertas)`);
+    await page.keyboard.press('Escape');
+    await sleep(300);
+    await page.keyboard.press('Escape');
+    await sleep(400);
+    // 5) Telemóvel
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    await go(`#/dossiers/${caseId}/checklist`, 1500);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.evaluate(() => document.querySelector('.task-row .status-pill').scrollIntoView({ block: 'center' }));
+    await sleep(300);
+    await page.click('.task-row .status-pill');
+    await expectVisible('semáforo no telemóvel');
+    await closeMenu();
+    await page.setViewport({ width: 1366, height: 900 });
+    await go(`#/dossiers/${caseId}`, 800);
+  });
+
   await step('Paleta de comandos navega para a agenda', async () => {
     await page.keyboard.down('Control');
     await page.keyboard.press('KeyK');

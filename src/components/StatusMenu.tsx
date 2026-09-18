@@ -10,6 +10,7 @@ export function StatusMenu({ status, onChange, compact }: { status: Status; onCh
   return (
     <Menu
       ariaLabel={`Estado: ${def.label}. Alterar estado`}
+      align="left"
       items={STATUSES.map((s) => ({
         label: s.label,
         description: s.description,

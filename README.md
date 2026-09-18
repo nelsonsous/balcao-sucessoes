@@ -42,7 +42,7 @@ Evolução do projeto-piloto do escritório: mantém os seus conceitos e eleva-o
 | **Análise da equipa** | Dossiers e prazos por mês, tempo até concluir cada fase (mediana), tarefas por fase e carga/desempenho por pessoa (prazos cumpridos, tempo de conclusão), com período e filtro por pessoa, gráficos SVG acessíveis com tabela alternativa e exportação CSV. |
 | **Pesquisa e vistas** | Filtros avançados (prioridade, etiqueta, fase, prazos, data do óbito, internacional) com chips e endereço partilhável, vistas predefinidas e guardadas com nome, pesquisa profunda em notas, contactos, documentos, interessados e bens, e pesquisa global na paleta. |
 | **Documentos avançados** | Validade das certidões com avisos (a expirar/expirada) e filtro, pedidos de documentos por interessado com texto pronto, e-mail e marcação como pedidos, pré-visualização de PDF/imagens/texto na aplicação e estados ou remoção em lote com «anular». |
-| **Qualidade** | 0 violações axe-core (WCAG 2.2 AA) em 23 ecrãs, divisão de código por rota e separador, fontes só em latino, 212 testes (unitários, componentes com Testing Library e propriedades com fast-check, cobertura com limiar) e 16 passos E2E com Chrome executados antes de cada publicação. |
+| **Qualidade** | 0 violações axe-core (WCAG 2.2 AA) em 23 ecrãs, divisão de código por rota e separador, fontes só em latino, 220 testes (unitários, componentes com Testing Library e propriedades com fast-check, cobertura com limiar) e 17 passos E2E com Chrome executados antes de cada publicação. |
 | **PWA** | Instalável (desktop, Android, iOS), offline, atalhos, aviso de nova versão, tema claro/escuro, responsivo com navegação inferior no telemóvel. |
 
 ## Começar

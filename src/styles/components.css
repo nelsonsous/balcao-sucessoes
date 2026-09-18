@@ -1122,11 +1122,20 @@ dialog.sheet.modal .sheet-panel {
   display: inline-flex;
 }
 
+/* Menus na camada superior (Popover API): nunca ficam cortados por cartões, tabelas ou folhas.
+   A posição (left/top/max-height) é calculada em JavaScript junto ao botão. */
 .menu {
-  position: absolute;
-  z-index: 60;
-  top: calc(100% + 6px);
+  position: fixed;
+  inset: auto;
+  top: 0;
+  left: 0;
+  margin: 0;
+  z-index: 1000;
   min-width: 220px;
+  max-width: min(360px, calc(100vw - 16px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  color: var(--text);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1135,12 +1144,23 @@ dialog.sheet.modal .sheet-panel {
   animation: rise 0.14s var(--ease);
 }
 
-.menu.align-right {
-  right: 0;
+.menu[data-side='top'] {
+  animation-name: drop;
 }
 
-.menu.align-left {
-  left: 0;
+.menu::backdrop {
+  background: transparent;
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .menu-item {
@@ -1158,9 +1178,15 @@ dialog.sheet.modal .sheet-panel {
 }
 
 .menu-item:hover,
-.menu-item:focus-visible {
+.menu-item:focus-visible,
+.menu-item:focus {
   background: var(--surface-3);
   box-shadow: none;
+  outline: none;
+}
+
+.menu-item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--primary);
 }
 
 .menu-item svg {

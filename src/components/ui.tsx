@@ -4,10 +4,12 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type ButtonHTMLAttributes,
   type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react';
 import { CalendarClock, Check, ChevronDown, X } from 'lucide-react';
@@ -17,6 +19,7 @@ import { cx, formatDate, initials, relativeDays } from '../lib/utils';
 import { dueState } from '../engine/deadlines';
 import type { Health } from '../engine/insights';
 import { STATUSES } from '../engine/phases';
+import { placePopover } from '../lib/placement';
 
 // ---------------------------------------------------------------------------
 // Botão
@@ -322,6 +325,26 @@ export interface MenuItem {
   separatorBefore?: boolean;
 }
 
+type PopoverEl = HTMLDivElement & { showPopover?: () => void; hidePopover?: () => void };
+
+/** Popover API disponível (Chrome 114+, Safari 17+, Firefox 125+). Sem ela, o menu usa posição fixa. */
+const SUPPORTS_POPOVER = typeof HTMLElement !== 'undefined' && 'showPopover' in HTMLElement.prototype;
+
+export interface MenuTriggerProps {
+  onClick: () => void;
+  onKeyDown: (e: ReactKeyboardEvent<HTMLElement>) => void;
+  'aria-expanded': boolean;
+  'aria-haspopup': 'menu';
+  'aria-controls'?: string;
+  'aria-label'?: string;
+}
+
+/**
+ * Menu de ações. Abre na camada superior do navegador (Popover API), por isso nunca fica
+ * cortado por cartões ou tabelas com `overflow: hidden`, nem por folhas/gavetas; posiciona-se
+ * junto ao botão, troca de lado quando não cabe e limita a altura ao ecrã.
+ * Teclado: ↓/↑ no botão abre; ↓ ↑ Home End navegam; Esc fecha e devolve o foco; Tab fecha.
+ */
 export function Menu({
   items,
   button,
@@ -329,39 +352,148 @@ export function Menu({
   ariaLabel,
 }: {
   items: MenuItem[];
-  button: (p: { onClick: () => void; 'aria-expanded': boolean; 'aria-haspopup': 'menu'; 'aria-label'?: string }) => ReactNode;
+  button: (p: MenuTriggerProps) => ReactNode;
   align?: 'left' | 'right';
   ariaLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
+  const menu = useRef<PopoverEl>(null);
+  const focusTrigger = useRef(false);
+  const focusLast = useRef(false);
+  const menuId = useId();
+
+  const trigger = () => (wrap.current?.firstElementChild as HTMLElement | null) ?? wrap.current;
+  const close = useCallback((returnFocus: boolean) => {
+    focusTrigger.current = returnFocus;
+    setOpen(false);
+  }, []);
+
+  const place = useCallback(() => {
+    const m = menu.current;
+    const t = (wrap.current?.firstElementChild as HTMLElement | null) ?? wrap.current;
+    if (!m || !t) return;
+    m.style.maxHeight = '';
+    m.style.maxWidth = '';
+    const a = t.getBoundingClientRect();
+    const natural = m.getBoundingClientRect();
+    const p = placePopover(a, { width: natural.width, height: m.scrollHeight || natural.height }, { width: window.innerWidth, height: window.innerHeight }, align);
+    m.style.left = `${p.left}px`;
+    m.style.top = `${p.top}px`;
+    if (p.maxHeight !== null) m.style.maxHeight = `${p.maxHeight}px`;
+    if (p.maxWidth !== null) m.style.maxWidth = `${p.maxWidth}px`;
+    m.dataset.side = p.side;
+    // Sem camada superior, um antepassado com transformação passa a ser a referência: corrige o desvio medido.
+    const got = m.getBoundingClientRect();
+    const dx = p.left - got.left;
+    const dy = p.top - got.top;
+    if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+      m.style.left = `${p.left + dx}px`;
+      m.style.top = `${p.top + dy}px`;
+    }
+  }, [align]);
+
+  useLayoutEffect(() => {
+    const m = menu.current;
+    if (!open || !m) return;
+    if (typeof m.showPopover === 'function') {
+      try {
+        m.showPopover();
+      } catch {
+        /* já aberto ou sem suporte: fica com posição fixa */
+      }
+    }
+    place();
+    const itemsEls = m.querySelectorAll<HTMLElement>('[role="menuitem"]');
+    (focusLast.current ? itemsEls[itemsEls.length - 1] : itemsEls[0])?.focus({ preventScroll: true });
+    focusLast.current = false;
+    let frame = 0;
+    const reposition = (e: Event) => {
+      if (e.target instanceof Node && m.contains(e.target)) return;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(place);
+    };
+    // Fecho leve (clique fora ou Esc tratados pelo navegador) → sincroniza o estado.
+    const onToggle = (e: Event) => {
+      if ((e as Event & { newState?: string }).newState === 'closed') close(false);
+    };
+    window.addEventListener('resize', reposition);
+    window.addEventListener('scroll', reposition, true);
+    m.addEventListener('toggle', onToggle);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', reposition);
+      window.removeEventListener('scroll', reposition, true);
+      m.removeEventListener('toggle', onToggle);
+    };
+  }, [open, place, close]);
+
+  // Navegadores sem Popover API: clique fora fecha.
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
-      if (wrap.current && !wrap.current.contains(e.target as Node)) setOpen(false);
+      if (wrap.current && !wrap.current.contains(e.target as Node)) close(false);
     };
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
     document.addEventListener('mousedown', onDoc);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDoc);
-      document.removeEventListener('keydown', onKey);
-    };
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open, close]);
+
+  useEffect(() => {
+    if (!open && focusTrigger.current) {
+      focusTrigger.current = false;
+      trigger()?.focus();
+    }
   }, [open]);
+
+  const onMenuKey = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    const els = [...(menu.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
+    const i = els.indexOf(document.activeElement as HTMLElement);
+    const go = (n: number) => {
+      e.preventDefault();
+      els[(n + els.length) % els.length]?.focus();
+    };
+    if (e.key === 'ArrowDown') go(i + 1);
+    else if (e.key === 'ArrowUp') go(i - 1);
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(els.length - 1);
+    else if (e.key === 'Escape') {
+      // Fecha só o menu (não a folha/gaveta onde está) e devolve o foco ao botão.
+      e.preventDefault();
+      e.stopPropagation();
+      close(true);
+    } else if (e.key === 'Tab') close(false);
+  };
+
+  const triggerProps: MenuTriggerProps = {
+    onClick: () => setOpen((o) => !o),
+    onKeyDown: (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        focusLast.current = e.key === 'ArrowUp';
+        setOpen(true);
+      }
+    },
+    'aria-expanded': open,
+    'aria-haspopup': 'menu',
+    ...(open ? { 'aria-controls': menuId } : {}),
+    ...(ariaLabel ? { 'aria-label': ariaLabel } : {}),
+  };
+
   return (
     <div className="menu-wrap" ref={wrap}>
-      {button({ onClick: () => setOpen((o) => !o), 'aria-expanded': open, 'aria-haspopup': 'menu', 'aria-label': ariaLabel })}
+      {button(triggerProps)}
       {open && (
-        <div className={cx('menu', align === 'right' ? 'align-right' : 'align-left')} role="menu">
+        <div ref={menu} id={menuId} className="menu" role="menu" aria-label={ariaLabel} popover={SUPPORTS_POPOVER ? 'auto' : undefined} onKeyDown={onMenuKey}>
           {items.map((it, i) => (
-            <div key={i}>
-              {it.separatorBefore && <div className="menu-sep" />}
+            <div key={i} role="none">
+              {it.separatorBefore && <div className="menu-sep" role="separator" />}
               <button
                 type="button"
                 role="menuitem"
+                tabIndex={-1}
                 className={cx('menu-item', it.danger && 'danger')}
                 onClick={() => {
-                  setOpen(false);
+                  close(false);
                   it.onSelect();
                 }}
               >

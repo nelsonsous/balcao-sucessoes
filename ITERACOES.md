@@ -3,7 +3,33 @@
 Ciclo pedido: **10 iterações seguidas** para analisar o protótipo, perceber os conceitos e construir uma aplicação muito melhor, a nível profissional, como PWA.
 Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é reaproveitado dela.
 
-**Estado do ciclo 1: 10 de 10 iterações concluídas — versão 2.0.**
+**Estado do ciclo 1: 10 de 10 iterações concluídas — versão 2.0.** · **Ciclo 2: 10 de 10 — versão 2.1.**
+
+## Ciclo 3 — «10 vezes seguidas com melhorias e testes» (iterações 21–30)
+
+**Estado do ciclo 3: iteração 21 concluída (1/10).**
+
+| # | Tema | Conteúdo previsto |
+|---|---|---|
+| 21 | ~~Menus que nunca ficam cortados~~ | ✅ concluída |
+| 22 | **iPhone e telemóvel** | Campos a 16 px (sem zoom automático no iOS), áreas seguras (notch e barra inicial), alvos de toque ≥ 44 px, folhas em ecrã inteiro, teclado virtual; E2E em 390×844 a percorrer todos os ecrãs (sem deslocamento horizontal nem elementos cortados). |
+| 23 | **Honorários e despesas** | Registo de tempo (cronómetro) e de despesas por dossier, provisões recebidas, nota de honorários em Word/PDF, totais nos relatórios e na análise; testes. |
+| 24 | **Regras do escritório** | Regras próprias (condições sobre o questionário → tarefas com fase, prazo e documentos), integradas no motor e na reconciliação da checklist; testes. |
+| 25 | **Importar de folhas de cálculo** | Colar do Excel ou CSV para bens e interessados, com pré-visualização, validação (NIF, valores, datas) e deteção de duplicados; testes. |
+| 26 | **Impressão** | Estilos de impressão para dossier, checklist, agenda e análise; resumo de uma página do dossier; testes. |
+| 27 | **Diagnóstico e integridade** | Página de diagnóstico (versão, service worker, armazenamento, persistência) e verificação de integridade da base (órfãos, referências partidas) com reparação; testes. |
+| 28 | **Desempenho** | Pacote inicial mais pequeno (carregamento a pedido dos módulos pesados), orçamento de tamanho verificado no CI, listas longas fluidas; testes. |
+| 29 | **Teclado e acessibilidade avançada** | Atalhos com ajuda (?), quadro Kanban operável por teclado, movimento reduzido e alto contraste; testes com axe e teclado. |
+| 30 | **Consolidação** | Auditoria final, manual e apresentação atualizados (versão 2.2), resumo, envio. |
+
+Fora do ciclo, por depender de decisão e de uma conta do escritório: o «modo escritório» com sincronização entre dispositivos (por exemplo, Supabase na UE, num projeto próprio do escritório), que reaproveitaria a lógica de junção da iteração 14.
+
+### Iteração 21 — Menus que nunca ficam cortados ✅
+
+- **Problema reportado**: ao clicar no semáforo «Em curso» de uma tarefa, o menu de estados ficava cortado. Causa: o menu abria dentro do cartão da fase (que corta o que sai das margens) e alinhado à direita do botão, estendendo-se para fora do cartão pela esquerda.
+- **Correção de raiz no componente `Menu`** (usado por todos os menus da aplicação): o menu abre na **camada superior do navegador** (Popover API — Chrome 114+, Safari 17+, Firefox 125+), por isso deixa de poder ser cortado por cartões, tabelas, folhas ou gavetas; em navegadores sem essa API usa posição fixa com correção medida. O posicionamento (`lib/placement.ts`, função pura) alinha com o botão, **troca de alinhamento** quando não cabe, **abre para cima** junto ao fundo do ecrã, limita a altura (com deslocamento interno) e a largura no telemóvel, e acompanha o deslocamento e o redimensionamento da página. Os menus de estado passam a abrir alinhados à esquerda do semáforo.
+- **Teclado e acessibilidade**: ↓/↑ no botão abre o menu (no primeiro ou no último item), ↓ ↑ Home End navegam de forma circular, Esc fecha **só o menu** (não a folha onde está) e devolve o foco ao botão, Tab fecha; `aria-controls`, papéis `menu`/`menuitem`/`separator` e foco visível.
+- **Testes**: posicionamento (caso reportado, troca de alinhamento, abertura para cima, altura e largura limitadas, e a propriedade «o menu fica sempre dentro do ecrã» para 400 combinações aleatórias), componente (posição calculada, teclado, Esc, clique fora) — **220 testes**; novo passo E2E «Menus nunca ficam cortados» que abre menus no Chrome real em cinco situações (semáforo da checklist, semáforo junto ao fundo, «Mais ações» do cabeçalho, menu dentro de uma folha modal e semáforo no telemóvel) e confirma, ponto a ponto, que estão visíveis e na camada superior — **17 passos**.
 
 ## Ciclo 2 — «10 vezes seguidas com melhorias e testes» (iterações 11–20)
 
