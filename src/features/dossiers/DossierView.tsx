@@ -20,6 +20,7 @@ import {
   NotebookPen,
   Pencil,
   Pin,
+  Receipt,
   Scale,
   Share2,
   Siren,
@@ -65,10 +66,11 @@ const InternationalTab = lazy(() => import('../international/InternationalTab').
 const CaseAgendaTab = lazy(() => import('../agenda/CaseAgendaTab').then((m) => ({ default: m.CaseAgendaTab })));
 const ReportSheet = lazy(() => import('../reports/ReportSheet').then((m) => ({ default: m.ReportSheet })));
 const ShareDossierSheet = lazy(() => import('./ShareSheets').then((m) => ({ default: m.ShareDossierSheet })));
+const FeesTab = lazy(() => import('../fees/FeesTab').then((m) => ({ default: m.FeesTab })));
 const TabLoading = () => <div className="skeleton" style={{ height: 260 }} aria-busy="true" aria-label="A carregar" />;
 import type { ReportKind } from '../../lib/reports';
 
-type TabId = 'checklist' | 'interessados' | 'patrimonio' | 'documentos' | 'quotas' | 'internacional' | 'agenda' | 'notas' | 'questionario' | 'historico';
+type TabId = 'checklist' | 'interessados' | 'patrimonio' | 'documentos' | 'quotas' | 'internacional' | 'agenda' | 'honorarios' | 'notas' | 'questionario' | 'historico';
 
 const STAGES: Array<{ id: CaseStage; label: string }> = [
   { id: 'ativo', label: 'Ativo' },
@@ -290,6 +292,7 @@ export function DossierView() {
               { id: 'quotas', label: 'Quotas', icon: Scale },
               { id: 'internacional', label: 'Internacional', icon: Globe },
               { id: 'agenda', label: 'Agenda', icon: CalendarDays },
+              { id: 'honorarios', label: 'Honorários', icon: Receipt },
               { id: 'notas', label: 'Notas & contactos', icon: NotebookPen, count: (data.notes?.length ?? 0) + (data.contacts ?? 0) },
               { id: 'questionario', label: 'Questionário', icon: ClipboardList },
               { id: 'historico', label: 'Histórico', icon: History },
@@ -303,6 +306,7 @@ export function DossierView() {
             {tab === 'quotas' && <CaseCalcTab c={c} />}
             {tab === 'internacional' && <InternationalTab c={c} />}
             {tab === 'agenda' && <CaseAgendaTab c={c} onOpenTask={setSelectedTask} />}
+            {tab === 'honorarios' && <FeesTab c={c} onReport={() => setReport('honorarios')} />}
           </Suspense>
           {tab === 'notas' && <NotesTab c={c} />}
           {tab === 'questionario' && <QuestionnaireTab c={c} />}

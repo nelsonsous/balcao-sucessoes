@@ -12,16 +12,18 @@ import { byCategoryThenName, clientCanProvide } from './documents';
 import { tableBlock, type DocBlock, type DocRun } from './docx';
 import { ACCEPTANCE_LABELS, CHANNEL_LABELS, DEBT_STATUS_LABELS, KINSHIP_LABELS, OWNERSHIP_LABELS, POA_LABELS, ROLE_LABELS, VALUE_BASIS_LABELS } from './labels';
 import { longDate } from './templateContext';
-import type { AssetRecord, AssetType, CaseRecord, ContactLogRecord, DebtRecord, DocumentRecord, EventRecord, MemberRecord, NoteRecord, PartyRecord, TaskRecord, TemplateLanguage } from './types';
+import type { AssetRecord, AssetType, CaseRecord, ContactLogRecord, DebtRecord, DocumentRecord, EventRecord, ExpenseRecord, MemberRecord, NoteRecord, PartyRecord, ProvisionRecord, TaskRecord, TemplateLanguage, TimeEntryRecord } from './types';
+import { categoryLabel, feeSummary, formatDuration, readFees } from './fees';
 import { daysFromToday, formatDate, formatEur, todayIso } from './utils';
 
-export type ReportKind = 'interno' | 'cliente' | 'bens' | 'partilha';
+export type ReportKind = 'interno' | 'cliente' | 'bens' | 'partilha' | 'honorarios';
 
 export const REPORT_KINDS: Array<{ id: ReportKind; label: string; description: string }> = [
   { id: 'interno', label: 'Relatório interno', description: 'Estado completo do dossier para a equipa: bloqueios, tarefas, interessados, património, documentos e agenda.' },
   { id: 'cliente', label: 'Ponto de situação (cliente)', description: 'Linguagem simples, sem notas internas: o que está feito, o que falta, o que precisamos e os próximos passos.' },
   { id: 'bens', label: 'Relação de bens', description: 'Verbas do ativo e do passivo com os elementos de identificação, para a participação do Imposto do Selo e para a partilha.' },
   { id: 'partilha', label: 'Mapa de partilha', description: 'Quotas de cada herdeiro, bens atribuídos e tornas a pagar ou a receber.' },
+  { id: 'honorarios', label: 'Nota de honorários', description: 'Tempo e honorários, despesas a reembolsar, provisões recebidas, IVA, retenção e saldo — documento de apoio à fatura.' },
 ];
 
 export const STAGE_LABELS: Record<CaseRecord['stage'], string> = { ativo: 'Ativo', suspenso: 'Suspenso', concluido: 'Concluído', arquivado: 'Arquivado' };
@@ -56,11 +58,14 @@ export interface CaseBundle {
   events: EventRecord[];
   notes: NoteRecord[];
   contacts: ContactLogRecord[];
+  timeEntries: TimeEntryRecord[];
+  expenses: ExpenseRecord[];
+  provisions: ProvisionRecord[];
   calc: CalcResult | null;
 }
 
 export async function loadCaseBundle(c: CaseRecord): Promise<CaseBundle> {
-  const [rows, members, parties, assets, debts, tasks, docs, events, notes, contacts] = await Promise.all([
+  const [rows, members, parties, assets, debts, tasks, docs, events, notes, contacts, timeEntries, expenses, provisions] = await Promise.all([
     db.settings.toArray(),
     db.members.toArray(),
     db.parties.where('caseId').equals(c.id).toArray(),
@@ -71,6 +76,9 @@ export async function loadCaseBundle(c: CaseRecord): Promise<CaseBundle> {
     db.events.where('caseId').equals(c.id).toArray(),
     db.notes.where('caseId').equals(c.id).toArray(),
     db.contacts.where('caseId').equals(c.id).toArray(),
+    db.timeEntries.where('caseId').equals(c.id).toArray(),
+    db.expenses.where('caseId').equals(c.id).toArray(),
+    db.provisions.where('caseId').equals(c.id).toArray(),
   ]);
   const settings: AppSettings = { ...DEFAULT_SETTINGS };
   for (const r of rows) (settings as unknown as Record<string, unknown>)[r.key] = r.value;
@@ -85,7 +93,9 @@ export async function loadCaseBundle(c: CaseRecord): Promise<CaseBundle> {
   }
   assets.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   debts.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  return { c, settings, members, parties, assets, debts, tasks: tasks.filter((t) => !t.obsolete).sort((a, b) => a.order - b.order), docs, events, notes, contacts, calc };
+  expenses.sort((a, b) => a.date.localeCompare(b.date));
+  provisions.sort((a, b) => a.date.localeCompare(b.date));
+  return { c, settings, members, parties, assets, debts, tasks: tasks.filter((t) => !t.obsolete).sort((a, b) => a.order - b.order), docs, events, notes, contacts, timeEntries, expenses, provisions, calc };
 }
 
 // ---------------------------------------------------------------------------
@@ -749,6 +759,64 @@ function clientBlocks(b: CaseBundle, lang: TemplateLanguage = 'pt'): DocBlock[] 
 }
 
 // ---------------------------------------------------------------------------
+// Nota de honorários e despesas
+
+function honorariosBlocks(b: CaseBundle): DocBlock[] {
+  const cfg = readFees(b.c);
+  const s = feeSummary({ entries: b.timeEntries, expenses: b.expenses, provisions: b.provisions, cfg, members: b.members, settings: b.settings });
+  const who = new Map(b.members.map((m) => [m.id, m.name]));
+  const out: DocBlock[] = [...header(b, 'Nota de honorários e despesas', `Cliente: ${dash(b.c.client.name)}${b.c.client.email ? ` · ${b.c.client.email}` : ''}`)];
+
+  out.push(h2('Honorários'));
+  if (cfg.mode === 'fixo') {
+    out.push(p('Honorários acordados (valor fixo): ', R(money(s.feesNet), true)));
+    out.push(small(`Tempo dedicado ao dossier: ${formatDuration(s.minutes)} h${s.effectiveRate !== null ? ` (equivalente a ${money(s.effectiveRate)}/h)` : ''}.`));
+  } else if (!s.lines.length) {
+    out.push(p({ text: 'Sem tempo faturável registado.' }));
+  } else {
+    out.push(
+      tableBlock(
+        ['Data', 'Serviço', 'Por', 'Tempo', 'Taxa', 'Valor'],
+        s.lines.map((l) => [formatDate(l.entry.date), dash(l.entry.description), who.get(l.entry.memberId) ?? '—', formatDuration(l.billedMinutes), `${money(l.rate)}/h`, money(l.amount)]),
+        { align: ['left', 'left', 'left', 'right', 'right', 'right'], widths: [2, 7, 3, 2, 2, 2] },
+      ),
+    );
+    if (b.settings.timeRounding > 0) out.push(small(`Tempo arredondado a blocos de ${b.settings.timeRounding} minutos por registo.`));
+  }
+
+  const billable = b.expenses.filter((x) => x.billable);
+  out.push(h2('Despesas a reembolsar'));
+  if (!billable.length) out.push(p({ text: 'Sem despesas a debitar.' }));
+  else
+    out.push(
+      tableBlock(
+        ['Data', 'Categoria', 'Descrição', 'Valor'],
+        billable.map((x) => [formatDate(x.date), categoryLabel(x.category), dash(x.description), money(x.amount)]),
+        { align: ['left', 'left', 'left', 'right'], widths: [2, 4, 8, 2] },
+      ),
+    );
+
+  if (b.provisions.length) {
+    out.push(h2('Provisões recebidas'));
+    out.push(tableBlock(['Data', 'Descrição', 'Valor'], b.provisions.map((pv) => [formatDate(pv.date), dash(pv.description), money(pv.amount)]), { align: ['left', 'left', 'right'], widths: [2, 10, 2] }));
+  }
+
+  out.push(h2('Resumo'));
+  const rows: string[][] = [
+    ['Honorários (sem IVA)', money(s.feesNet)],
+    [`IVA (${s.vatRate}%)`, money(s.vat)],
+  ];
+  if (s.withholding) rows.push([`Retenção na fonte de IRS (${s.withholdingRate}%) — a entregar pelo cliente ao Estado`, `− ${money(s.withholding)}`]);
+  rows.push(['Despesas a reembolsar', money(s.expensesBillable)]);
+  if (s.provisions) rows.push(['Provisões já recebidas', `− ${money(s.provisions)}`]);
+  rows.push([s.due >= 0 ? 'Total a pagar' : 'Saldo a favor do cliente', money(Math.abs(s.due))]);
+  out.push(tableBlock(['Rubrica', 'Valor'], rows, { align: ['left', 'right'], widths: [6, 2] }));
+  if (cfg.notes.trim()) out.push(p('Observações: ', cfg.notes.trim()));
+  out.push(small('Documento de apoio (pró-forma): não substitui a fatura, que deve ser emitida em programa de faturação certificado pela Autoridade Tributária. Honorários fixados segundo os critérios do Estatuto da Ordem dos Advogados; taxas de IVA e de retenção a validar pela equipa em cada caso.'));
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 
 export interface BuiltReport {
   kind: ReportKind;
@@ -768,7 +836,7 @@ const slug = (s: string) =>
     .slice(0, 50);
 
 export function buildReport(kind: ReportKind, b: CaseBundle, lang: TemplateLanguage = 'pt'): BuiltReport {
-  const blocks = kind === 'interno' ? internalBlocks(b) : kind === 'cliente' ? clientBlocks(b, lang) : kind === 'bens' ? relacaoBensBlocks(b) : mapaPartilhaBlocks(b);
+  const blocks = kind === 'interno' ? internalBlocks(b) : kind === 'cliente' ? clientBlocks(b, lang) : kind === 'bens' ? relacaoBensBlocks(b) : kind === 'honorarios' ? honorariosBlocks(b) : mapaPartilhaBlocks(b);
   const title = blocks[0]?.lines[0]?.map((r) => r.text).join('') ?? REPORT_KINDS.find((k) => k.id === kind)!.label;
   const label = REPORT_KINDS.find((k) => k.id === kind)!.label;
   return { kind, title, blocks, fileBase: `${slug(label)}${lang !== 'pt' ? `-${lang}` : ''}-${slug(b.c.ref)}-${todayIso()}` };

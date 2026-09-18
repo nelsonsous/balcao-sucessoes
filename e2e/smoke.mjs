@@ -428,6 +428,31 @@ try {
     assert(!(await page.$('dialog[open] #rq-body')), 'pedido registado e folha fechada');
   });
 
+  await step('Honorários: tempo, cronómetro na barra superior e nota de honorários', async () => {
+    await go(`#/dossiers/${caseId}/honorarios`, 1500);
+    await page.waitForSelector('[data-testid="fees-kpis"]', { timeout: 8000 });
+    const count = () => page.$$eval('[data-testid="time-table"] tbody tr', (r) => r.length).catch(() => 0);
+    const before = await count();
+    await page.type('#te-dur', '1:30');
+    await page.type('#te-desc', 'Reunião E2E');
+    assert(await clickText('main button', 'Registar tempo'), 'botão Registar tempo');
+    await page.waitForFunction((n) => document.querySelectorAll('[data-testid="time-table"] tbody tr').length > n, { timeout: 5000 }, before);
+    await page.type('#tm-desc', 'Cronómetro E2E');
+    assert(await clickText('main button', 'Iniciar cronómetro'), 'botão Iniciar cronómetro');
+    await page.waitForSelector('[data-testid="timer-chip"]', { timeout: 5000 });
+    await page.click('[data-testid="timer-chip"] button');
+    await page.waitForFunction(() => !document.querySelector('[data-testid="timer-chip"]'), { timeout: 5000 });
+    await sleep(500);
+    const rows = await page.$$eval('[data-testid="time-table"] tbody tr', (r) => r.map((x) => x.textContent || ''));
+    assert(rows.some((t) => t.includes('Cronómetro E2E')), 'tempo do cronómetro registado');
+    assert(await clickText('main button', 'Nota de honorários'), 'botão Nota de honorários');
+    await page.waitForFunction(() => /Nota de honorários e despesas/.test(document.querySelector('dialog[open]')?.textContent || ''), { timeout: 8000 });
+    const txt = await page.$eval('dialog[open]', (d) => d.textContent || '');
+    assert(/Reunião E2E/.test(txt) && /(Total a pagar|Saldo a favor do cliente)/.test(txt), 'nota com o tempo e o total');
+    await page.keyboard.press('Escape');
+    await sleep(400);
+  });
+
   await step('PIN: definir, bloquear e desbloquear', async () => {
     await go('#/definicoes', 1200);
     assert(await clickText('button', 'Definir PIN'), 'botão Definir PIN');
@@ -452,7 +477,7 @@ try {
     await go('#/', 1200);
     const nav = await page.$eval('.mobile-nav', (e) => getComputedStyle(e).display);
     assert(nav !== 'none', 'barra inferior visível no telemóvel');
-    const routes = ['#/', '#/dossiers', '#/dossiers/novo', ...['checklist', 'documentos', 'quotas', 'agenda', 'notas'].map((t) => `#/dossiers/${caseId}/${t}`), '#/agenda', '#/prazos', '#/analise', '#/definicoes'];
+    const routes = ['#/', '#/dossiers', '#/dossiers/novo', ...['checklist', 'documentos', 'quotas', 'agenda', 'honorarios', 'notas'].map((t) => `#/dossiers/${caseId}/${t}`), '#/agenda', '#/prazos', '#/analise', '#/definicoes'];
     const problems = [];
     for (const r of routes) {
       await go(r, 1100);

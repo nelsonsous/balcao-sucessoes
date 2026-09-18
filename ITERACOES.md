@@ -7,13 +7,13 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 3 — «10 vezes seguidas com melhorias e testes» (iterações 21–30)
 
-**Estado do ciclo 3: iterações 21–22 concluídas (2/10).**
+**Estado do ciclo 3: iterações 21–23 concluídas (3/10).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
 | 21 | ~~Menus que nunca ficam cortados~~ | ✅ concluída |
 | 22 | ~~iPhone e telemóvel~~ | ✅ concluída |
-| 23 | **Honorários e despesas** | Registo de tempo (cronómetro) e de despesas por dossier, provisões recebidas, nota de honorários em Word/PDF, totais nos relatórios e na análise; testes. |
+| 23 | ~~Honorários e despesas~~ | ✅ concluída |
 | 24 | **Regras do escritório** | Regras próprias (condições sobre o questionário → tarefas com fase, prazo e documentos), integradas no motor e na reconciliação da checklist; testes. |
 | 25 | **Importar de folhas de cálculo** | Colar do Excel ou CSV para bens e interessados, com pré-visualização, validação (NIF, valores, datas) e deteção de duplicados; testes. |
 | 26 | **Impressão** | Estilos de impressão para dossier, checklist, agenda e análise; resumo de uma página do dossier; testes. |
@@ -23,6 +23,16 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 30 | **Consolidação** | Auditoria final, manual e apresentação atualizados (versão 2.2), resumo, envio. |
 
 Fora do ciclo, por depender de decisão e de uma conta do escritório: o «modo escritório» com sincronização entre dispositivos (por exemplo, Supabase na UE, num projeto próprio do escritório), que reaproveitaria a lógica de junção da iteração 14.
+
+### Iteração 23 — Honorários e despesas ✅
+
+- **Novo separador «Honorários»** em cada dossier (`features/fees/FeesTab.tsx`): indicadores (tempo registado e faturável, honorários sem IVA, despesas a debitar, provisões recebidas e saldo a pagar ou a devolver), **cronómetro**, **acordo de honorários** (por hora ou valor fixo, taxa própria do dossier, retenção na fonte, observações), **registo de tempo** (data, duração escrita à mão — «1:30», «1h30», «45m», «1,5» —, pessoa, descrição, faturável), **despesas** (emolumentos, impostos, custas, certidões, traduções, deslocações, correio; a debitar ou internas) e **provisões** recebidas; remoções vão para a reciclagem com «anular».
+- **Cálculo** (`lib/fees.ts`, funções puras): taxa por ordem de prioridade (registo → dossier → pessoa → escritório), arredondamento a blocos por registo (6 min por omissão), IVA, retenção na fonte de IRS quando ativada, despesas a debitar, provisões, saldo; no valor fixo, o valor por hora efetivo; totais por pessoa e por categoria; exportação CSV.
+- **Cronómetro** um de cada vez por dispositivo, visível na **barra superior** em toda a aplicação (ligação ao dossier e botão para parar e registar); iniciar noutro dossier regista primeiro o anterior; mínimo de 1 minuto.
+- **Nota de honorários** como novo tipo de relatório (pré-visualização, Word, PDF, arquivo no dossier): tabela do tempo (ou honorários fixos com o tempo dedicado), despesas a reembolsar, provisões, resumo com IVA, retenção e total; aviso de que é um documento de apoio (pró-forma) — a fatura emite-se em programa certificado pela AT; taxas a validar.
+- **Definições → Honorários** (taxa horária do escritório, IVA, arredondamento, retenção) e **taxa horária por pessoa** na equipa; **análise da equipa** com horas registadas por pessoa e no período; histórico com o tipo «Honorários»; tempo, despesas e provisões incluídos nas cópias de segurança, na partilha de dossier e na reciclagem de dossiers inteiros (base de dados v6). Dados de demonstração com tempo, despesas, provisões e um dossier de valor fixo.
+- **Também corrigido**: um byte NUL literal numa expressão regular do gerador de Word (`lib/docx.ts`) fazia as ferramentas tratarem o ficheiro como binário; passou a usar escapes.
+- **Testes**: cálculo (durações, arredondamento, prioridade das taxas, por hora com IVA/despesas/provisões, retenção, valor fixo com valor por hora efetivo, saldo a favor, CSV, leitura tolerante do acordo), registo com histórico e reciclagem, cronómetro (início, paragem, troca de dossier, descarte, dossier apagado), nota de honorários e partilha; componente (registos e totais, faturável, valor fixo, cronómetro); análise com horas — **234 testes**; novo passo E2E «Honorários: tempo, cronómetro na barra superior e nota de honorários» e separador incluído na verificação móvel — **18 passos**; 0 violações de acessibilidade no novo separador.
 
 ### Iteração 22 — iPhone e telemóvel ✅
 

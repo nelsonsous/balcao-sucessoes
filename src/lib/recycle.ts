@@ -17,6 +17,9 @@ export const TRASH_LABELS: Record<TrashTable, string> = {
   contacts: 'Contacto',
   events: 'Evento',
   documents: 'Documento',
+  timeEntries: 'Registo de tempo',
+  expenses: 'Despesa',
+  provisions: 'Provisão',
   cases: 'Dossier',
 };
 
@@ -29,6 +32,9 @@ export const TRASH_KIND: Record<TrashTable, ActivityRecord['kind']> = {
   contacts: 'contacto',
   events: 'agenda',
   documents: 'documento',
+  timeEntries: 'honorarios',
+  expenses: 'honorarios',
+  provisions: 'honorarios',
   cases: 'dossier',
 };
 

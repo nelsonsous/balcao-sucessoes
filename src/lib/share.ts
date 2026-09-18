@@ -4,8 +4,8 @@
 // os registos só são acrescentados ou atualizados.
 import { blobToDataUrl, dataUrlToBlob } from './backup';
 import { decryptText, encryptText, isEncryptedEnvelope, type EncryptedEnvelope } from './crypto';
-import { CASE_TABLES, db, emptyAnswers, emptyClient, emptyDeceased, getSetting, logActivity, newAsset, newCase, newDebt, newDocument, newEvent, newParty, newTask, nextCaseRef } from './db';
-import type { ActivityRecord, AssetRecord, CaseRecord, ContactLogRecord, DebtRecord, DocumentRecord, EventRecord, FileRecord, MemberRecord, NoteRecord, PartyRecord, TaskRecord } from './types';
+import { CASE_TABLES, db, emptyAnswers, emptyClient, emptyDeceased, getSetting, logActivity, newAsset, newCase, newDebt, newDocument, newEvent, newExpense, newParty, newProvision, newTask, newTimeEntry, nextCaseRef } from './db';
+import type { ActivityRecord, AssetRecord, CaseRecord, ContactLogRecord, DebtRecord, DocumentRecord, EventRecord, ExpenseRecord, FileRecord, MemberRecord, NoteRecord, PartyRecord, ProvisionRecord, TaskRecord, TimeEntryRecord } from './types';
 import { downloadFile, formatDateTime, normalize, nowIso, todayIso, uid } from './utils';
 
 export const SHARE_APP = 'balcao-das-sucessoes/dossier';
@@ -23,6 +23,9 @@ export interface DossierTables {
   activity: ActivityRecord[];
   events: EventRecord[];
   documents: DocumentRecord[];
+  timeEntries: TimeEntryRecord[];
+  expenses: ExpenseRecord[];
+  provisions: ProvisionRecord[];
 }
 
 export interface SerializedFile extends Omit<FileRecord, 'blob'> {
@@ -53,6 +56,9 @@ export const TABLE_LABELS: Record<CaseTable, string> = {
   activity: 'Histórico',
   events: 'Agenda',
   documents: 'Documentos',
+  timeEntries: 'Tempo registado',
+  expenses: 'Despesas',
+  provisions: 'Provisões',
 };
 
 type Row = { id: string; caseId: string } & Record<string, unknown>;
@@ -67,7 +73,7 @@ export async function exportDossier(caseId: string, opts: { includeFiles?: boole
   const includeFiles = opts.includeFiles ?? true;
   const tables = {} as DossierTables;
   for (const t of CASE_TABLES) tablesOf(tables)[t] = (await db.table(t).where('caseId').equals(caseId).toArray()) as Row[];
-  const memberIds = new Set([c.responsibleId, ...tables.tasks.map((t) => t.assigneeId), ...tables.events.map((e) => e.assigneeId)].filter(Boolean));
+  const memberIds = new Set([c.responsibleId, ...tables.tasks.map((t) => t.assigneeId), ...tables.events.map((e) => e.assigneeId), ...tables.timeEntries.map((e) => e.memberId)].filter(Boolean));
   const members = (await db.members.bulkGet([...memberIds])).filter((m): m is MemberRecord => Boolean(m));
   const files: SerializedFile[] = [];
   if (includeFiles) {
@@ -142,7 +148,13 @@ function withDefaults(t: CaseTable, caseId: string, r: Row): Row {
               ? newDocument(caseId)
               : t === 'events'
                 ? newEvent({ caseId })
-                : null;
+                : t === 'timeEntries'
+                  ? newTimeEntry(caseId)
+                  : t === 'expenses'
+                    ? newExpense(caseId)
+                    : t === 'provisions'
+                      ? newProvision(caseId)
+                      : null;
   return { ...(base ?? {}), ...r, caseId } as Row;
 }
 
@@ -433,7 +445,7 @@ export interface ImportResult {
 /** Importa/junta o dossier segundo a estratégia e regista a operação no histórico. Nada é apagado. */
 export async function importDossier(pkg: DossierPackage, strategy: MergeStrategy = 'recente'): Promise<ImportResult> {
   const r = await resolve(pkg, strategy);
-  await db.transaction('rw', [db.cases, db.tasks, db.parties, db.assets, db.debts, db.notes, db.contacts, db.activity, db.events, db.documents, db.files, db.members], async () => {
+  await db.transaction('rw', [db.cases, ...CASE_TABLES.map((t) => db.table(t)), db.files, db.members], async () => {
     if (r.members.length) await db.members.bulkAdd(r.members);
     if (r.files.length) await db.files.bulkPut(r.files);
     if (r.caseAction === 'add') await db.cases.add(r.caseRecord);

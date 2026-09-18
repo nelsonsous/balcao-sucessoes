@@ -22,6 +22,10 @@ import type {
   TaskRecord,
   TemplateRecord,
   TrashRecord,
+  TimeEntryRecord,
+  ExpenseRecord,
+  ProvisionRecord,
+  ActiveTimer,
 } from './types';
 import { nowIso, uid } from './utils';
 import type { SavedView } from './views';
@@ -44,6 +48,9 @@ export type BalcaoDB = Dexie & {
   templates: EntityTable<TemplateRecord, 'id'>;
   caseTemplates: EntityTable<CaseTemplateRecord, 'id'>;
   trash: EntityTable<TrashRecord, 'id'>;
+  timeEntries: EntityTable<TimeEntryRecord, 'id'>;
+  expenses: EntityTable<ExpenseRecord, 'id'>;
+  provisions: EntityTable<ProvisionRecord, 'id'>;
 };
 
 export const db = new Dexie('balcao-das-sucessoes') as BalcaoDB;
@@ -83,7 +90,14 @@ db.version(5).stores({
   trash: 'id, caseId, table, deletedAt',
 });
 
-export const CASE_TABLES = ['tasks', 'parties', 'assets', 'debts', 'notes', 'contacts', 'activity', 'events', 'documents'] as const;
+// v6: honorários e despesas (tempo registado, despesas, provisões recebidas).
+db.version(6).stores({
+  timeEntries: 'id, caseId, date, memberId',
+  expenses: 'id, caseId, date',
+  provisions: 'id, caseId, date',
+});
+
+export const CASE_TABLES = ['tasks', 'parties', 'assets', 'debts', 'notes', 'contacts', 'activity', 'events', 'documents', 'timeEntries', 'expenses', 'provisions'] as const;
 
 // ---------------------------------------------------------------------------
 // Definições
@@ -130,6 +144,16 @@ export interface AppSettings {
   autoBackupLastError: string;
   /** Vistas guardadas da lista de dossiers (filtros com nome). */
   savedViews: SavedView[];
+  /** Honorários: taxa horária do escritório (€/h, sem IVA). */
+  hourlyRate: number;
+  /** Taxa de IVA sobre honorários (%). */
+  vatRate: number;
+  /** Arredondamento do tempo faturável, em minutos (0 = sem arredondamento). */
+  timeRounding: number;
+  /** Taxa de retenção na fonte de IRS aplicada quando o dossier a pede (%). */
+  withholdingRate: number;
+  /** Cronómetro em curso neste dispositivo. */
+  activeTimer: ActiveTimer | null;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -162,6 +186,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   lastAutoBackupAt: '',
   autoBackupLastError: '',
   savedViews: [],
+  hourlyRate: 120,
+  vatRate: 23,
+  timeRounding: 6,
+  withholdingRate: 25,
+  activeTimer: null,
 };
 
 export async function getSetting<K extends keyof AppSettings>(key: K): Promise<AppSettings[K]> {
@@ -433,7 +462,7 @@ export async function touchCase(caseId: string): Promise<void> {
 export async function deleteCaseCascade(caseId: string, opts: { keepTrash?: boolean } = {}): Promise<void> {
   await db.transaction(
     'rw',
-    [db.cases, db.tasks, db.parties, db.assets, db.debts, db.notes, db.contacts, db.activity, db.events, db.documents, db.files, db.trash],
+    [db.cases, db.tasks, db.parties, db.assets, db.debts, db.notes, db.contacts, db.activity, db.events, db.documents, db.timeEntries, db.expenses, db.provisions, db.files, db.trash],
     async () => {
       const fileIds = (await db.documents.where('caseId').equals(caseId).toArray()).map((d) => d.fileId).filter(Boolean);
       if (fileIds.length) await db.files.bulkDelete(fileIds);
@@ -453,6 +482,21 @@ export async function requestPersistence(): Promise<boolean | null> {
   } catch {
     return null;
   }
+}
+
+export function newTimeEntry(caseId: string, partial: Partial<TimeEntryRecord> = {}): TimeEntryRecord {
+  const ts = nowIso();
+  return { id: uid(), caseId, date: ts.slice(0, 10), minutes: 0, memberId: '', description: '', billable: true, rate: null, createdAt: ts, updatedAt: ts, ...partial };
+}
+
+export function newExpense(caseId: string, partial: Partial<ExpenseRecord> = {}): ExpenseRecord {
+  const ts = nowIso();
+  return { id: uid(), caseId, date: ts.slice(0, 10), category: 'outros', description: '', amount: 0, billable: true, createdAt: ts, updatedAt: ts, ...partial };
+}
+
+export function newProvision(caseId: string, partial: Partial<ProvisionRecord> = {}): ProvisionRecord {
+  const ts = nowIso();
+  return { id: uid(), caseId, date: ts.slice(0, 10), amount: 0, description: '', createdAt: ts, updatedAt: ts, ...partial };
 }
 
 export function newCaseTemplate(partial: Partial<CaseTemplateRecord> = {}): CaseTemplateRecord {

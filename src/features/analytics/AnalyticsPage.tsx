@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { CalendarClock, CircleAlert, CircleCheck, FileSpreadsheet, FolderOpen, Hourglass, Timer, TrendingUp, Users } from 'lucide-react';
+import { CalendarClock, CircleAlert, CircleCheck, Clock, FileSpreadsheet, FolderOpen, Hourglass, Timer, TrendingUp, Users } from 'lucide-react';
+import { formatDuration } from '../../lib/fees';
 import { PERIOD_LABELS, analyze, daysLabel, membersCsv, monthsCsv, pct, type Period } from '../../lib/analytics';
 import { csvName, downloadCsv } from '../../lib/csv';
 import { db } from '../../lib/db';
@@ -14,11 +15,12 @@ const PERIODS: Period[] = [3, 6, 12, 0];
 export function AnalyticsPage() {
   const cases = useLiveQuery(() => db.cases.toArray(), []);
   const tasks = useLiveQuery(() => db.tasks.toArray(), []);
+  const timeEntries = useLiveQuery(() => db.timeEntries.toArray(), []);
   const members = useMembers();
   const [period, setPeriod] = useState<Period>(12);
   const [memberId, setMemberId] = useState('');
 
-  const a = useMemo(() => analyze({ cases: cases ?? [], tasks: tasks ?? [], members, period, ...(memberId ? { memberId } : {}) }), [cases, tasks, members, period, memberId]);
+  const a = useMemo(() => analyze({ cases: cases ?? [], tasks: tasks ?? [], members, timeEntries: timeEntries ?? [], period, ...(memberId ? { memberId } : {}) }), [cases, tasks, members, timeEntries, period, memberId]);
   const loading = !cases || !tasks;
   const labels = a.months.map((m) => m.label);
   // Eixo compacto: só o mês, com o ano no primeiro ponto e em janeiro.
@@ -73,6 +75,7 @@ export function AnalyticsPage() {
             <KpiCard label="Tarefas em atraso" value={a.kpis.overdueOpen} icon={CircleAlert} tone={a.kpis.overdueOpen ? 'red' : 'grey'} foot={`${a.kpis.openTasks} em aberto`} />
             <KpiCard label="Tarefas concluídas" value={a.kpis.tasksDone} icon={Hourglass} tone="blue" foot="No período" />
             <KpiCard label="Tempo de encerramento" value={daysLabel(a.kpis.meanCloseDays)} icon={Timer} tone="orange" foot="Média, dossiers encerrados no período" />
+            <KpiCard label="Horas registadas" value={formatDuration(a.kpis.minutesLogged)} icon={Clock} tone="brand" foot="Honorários, no período" />
           </div>
 
           <div className="dash-grid" style={{ marginTop: 14 }}>
@@ -146,6 +149,7 @@ export function AnalyticsPage() {
                       <th scope="col">Concluídas (30 dias)</th>
                       <th scope="col">Prazos cumpridos</th>
                       <th scope="col">Tempo médio de conclusão</th>
+                      <th scope="col">Horas registadas</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -168,11 +172,12 @@ export function AnalyticsPage() {
                           </div>
                         </td>
                         <td>{daysLabel(m.meanCompletionDays)}</td>
+                        <td className="tabular">{formatDuration(m.minutesLogged)}</td>
                       </tr>
                     ))}
                     {!a.members.length && (
                       <tr>
-                        <td colSpan={7} className="small subtle">
+                        <td colSpan={8} className="small subtle">
                           Sem membros da equipa — acrescente-os em Definições.
                         </td>
                       </tr>

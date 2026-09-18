@@ -30,13 +30,14 @@ import { answeredCount } from '../../lib/caseTemplates';
 import { attachmentsSize, importBackup, readBackupText, storageEstimate, wipeAll, type BackupFile } from '../../lib/backup';
 import { SecurityCard } from './SecurityCard';
 import { AutoBackupCard } from './AutoBackupCard';
+import { FeesSettingsCard } from './FeesSettingsCard';
 import { useTrashCount } from '../../lib/recycle';
 import { ExportSheet, LegacyImportSheet, PassphraseSheet } from './BackupSheets';
 import { formatBytes } from '../../lib/documents';
 import { requestPersistence, setSetting, useSettings, type AppSettings } from '../../lib/db';
 import { loadDemoData, removeDemoData } from '../../lib/demo';
 import { useInstall, useMembers } from '../../lib/hooks';
-import { formatDateTime } from '../../lib/utils';
+import { formatDateTime, parseAmount } from '../../lib/utils';
 import type { MemberRecord } from '../../lib/types';
 import { MUNICIPAL_HOLIDAYS, resolveMunicipal } from '../../engine/calendar';
 import { notificationsSupported, showSystemNotification } from '../../components/Reminders';
@@ -394,6 +395,8 @@ export function SettingsPage() {
           </div>
         </Card>
 
+        <FeesSettingsCard />
+
         <AutoBackupCard />
 
         <Card className="span-2">
@@ -566,6 +569,9 @@ function MemberSheet({ member, onClose }: { member: Partial<MemberRecord> | null
         </Field>
         <Field label="Cor" htmlFor="m-color">
           <input id="m-color" type="color" className="input" style={{ padding: 4 }} value={m.color ?? '#2d39b9'} onChange={(e) => setM({ ...m, color: e.target.value })} />
+        </Field>
+        <Field label="Taxa horária (€/h)" htmlFor="m-rate" hint="Vazio = a taxa do escritório.">
+          <input id="m-rate" className="input" inputMode="decimal" placeholder="—" value={m.hourlyRate === null || m.hourlyRate === undefined ? '' : String(m.hourlyRate).replace('.', ',')} onChange={(e) => setM({ ...m, hourlyRate: parseAmount(e.target.value) })} />
         </Field>
       </div>
     </Sheet>

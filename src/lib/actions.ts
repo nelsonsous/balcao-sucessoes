@@ -241,6 +241,7 @@ export async function saveMember(m: Partial<MemberRecord> & { name: string }): P
     name: m.name.trim(),
     role: m.role ?? 'Advogada',
     color: m.color ?? PALETTE[count % PALETTE.length]!,
+    hourlyRate: typeof m.hourlyRate === 'number' && Number.isFinite(m.hourlyRate) && m.hourlyRate >= 0 ? m.hourlyRate : null,
     createdAt: m.createdAt ?? nowIso(),
   };
   await db.members.put(rec);

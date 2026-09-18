@@ -100,6 +100,8 @@ export interface CaseRecord {
   partilhaJson?: string;
   /** Módulo internacional (lei aplicável, CSE, entidades), em JSON. */
   intlJson?: string;
+  /** Acordo de honorários (FeesConfig), em JSON. */
+  feesJson?: string;
   demo?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -252,6 +254,8 @@ export interface MemberRecord {
   name: string;
   role: string;
   color: string;
+  /** Taxa horária própria (€/h); vazio = a do escritório. */
+  hourlyRate?: number | null;
   createdAt: string;
 }
 
@@ -259,7 +263,7 @@ export interface ActivityRecord {
   id: string;
   caseId: string;
   at: string;
-  kind: 'dossier' | 'tarefa' | 'interessado' | 'patrimonio' | 'passivo' | 'nota' | 'contacto' | 'questionario' | 'agenda' | 'documento';
+  kind: 'dossier' | 'tarefa' | 'interessado' | 'patrimonio' | 'passivo' | 'nota' | 'contacto' | 'questionario' | 'agenda' | 'documento' | 'honorarios';
   text: string;
   actor: string;
 }
@@ -376,7 +380,7 @@ export interface SettingRecord {
   value: unknown;
 }
 
-export type TrashTable = 'tasks' | 'parties' | 'assets' | 'debts' | 'notes' | 'contacts' | 'events' | 'documents' | 'cases';
+export type TrashTable = 'tasks' | 'parties' | 'assets' | 'debts' | 'notes' | 'contacts' | 'events' | 'documents' | 'timeEntries' | 'expenses' | 'provisions' | 'cases';
 
 /** Item da reciclagem: registo apagado (ou dossier inteiro), reposto ou expirado ao fim de 30 dias. */
 export interface TrashRecord {
@@ -391,4 +395,72 @@ export interface TrashRecord {
   files: FileRecord[];
   deletedAt: string;
   deletedBy: string;
+}
+
+// ---------------------------------------------------------------------------
+// Honorários e despesas
+
+/** Registo de tempo trabalhado num dossier. */
+export interface TimeEntryRecord {
+  id: string;
+  caseId: string;
+  /** AAAA-MM-DD */
+  date: string;
+  minutes: number;
+  memberId: string;
+  description: string;
+  /** Conta para a nota de honorários. */
+  billable: boolean;
+  /** Taxa própria desta entrada (€/h); vazio = do dossier, da pessoa ou do escritório. */
+  rate: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ExpenseCategory = 'emolumentos' | 'impostos' | 'custas' | 'certidoes' | 'traducoes' | 'deslocacoes' | 'correio' | 'outros';
+
+/** Despesa suportada pelo escritório por conta do dossier. */
+export interface ExpenseRecord {
+  id: string;
+  caseId: string;
+  date: string;
+  category: ExpenseCategory;
+  description: string;
+  /** Valor pago (€). */
+  amount: number;
+  /** A debitar ao cliente na nota de honorários. */
+  billable: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Provisão (adiantamento) recebida do cliente. */
+export interface ProvisionRecord {
+  id: string;
+  caseId: string;
+  date: string;
+  amount: number;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Acordo de honorários do dossier (guardado em CaseRecord.feesJson). */
+export interface FeesConfig {
+  mode: 'horas' | 'fixo';
+  /** Honorários fixos acordados (€, sem IVA). */
+  fixedFee: number | null;
+  /** Taxa horária acordada para este dossier (€/h); vazio = da pessoa ou do escritório. */
+  rate: number | null;
+  /** Aplicar retenção na fonte de IRS (cliente com contabilidade organizada). */
+  withholding: boolean;
+  notes: string;
+}
+
+/** Cronómetro em curso neste dispositivo. */
+export interface ActiveTimer {
+  caseId: string;
+  startedAt: string;
+  description: string;
+  memberId: string;
 }

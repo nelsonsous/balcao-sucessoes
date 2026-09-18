@@ -10,6 +10,9 @@ import {
   newDebt,
   newEvent,
   newParty,
+  newTimeEntry,
+  newExpense,
+  newProvision,
 } from './db';
 import type {
   Answers,
@@ -31,9 +34,9 @@ const workCalendar = new HolidayCalendar();
 const workdayAhead = (n: number): string => workCalendar.nextBusinessDay(daysAhead(n));
 
 const MEMBERS: MemberRecord[] = [
-  { id: 'demo-ana', name: 'Ana Marques', role: 'Advogada', color: '#2d39b9', createdAt: nowIso() },
-  { id: 'demo-joana', name: 'Joana Pires', role: 'Advogada', color: '#0b7a5e', createdAt: nowIso() },
-  { id: 'demo-rita', name: 'Rita Sousa', role: 'Solicitadora', color: '#b4531f', createdAt: nowIso() },
+  { id: 'demo-ana', name: 'Ana Marques', role: 'Advogada', color: '#2d39b9', hourlyRate: 150, createdAt: nowIso() },
+  { id: 'demo-joana', name: 'Joana Pires', role: 'Advogada', color: '#0b7a5e', hourlyRate: 130, createdAt: nowIso() },
+  { id: 'demo-rita', name: 'Rita Sousa', role: 'Solicitadora', color: '#b4531f', hourlyRate: 80, createdAt: nowIso() },
 ];
 
 interface DemoCase {
@@ -454,6 +457,32 @@ function demoCases(): DemoCase[] {
   ];
 }
 
+/** Honorários fictícios: tempo ao longo da vida do dossier, despesas típicas e uma provisão. */
+async function seedFees(c: CaseRecord, i: number): Promise<void> {
+  const start = new Date(c.createdAt).getTime();
+  const span = Math.max(86_400_000, Date.now() - start);
+  const at = (f: number) => todayIso(new Date(start + span * f));
+  const works: Array<[number, number, string]> = [
+    [0.02, 60, 'Primeira reunião com o cliente e recolha de elementos'],
+    [0.15, 45, 'Análise do questionário sucessório e plano de trabalho'],
+    [0.35, 90, 'Preparação da habilitação de herdeiros'],
+    [0.6, 30, 'Contactos com bancos e pedidos de saldos'],
+    [0.85, 75, 'Relação de bens e participação do Imposto do Selo'],
+  ];
+  const helper = c.responsibleId === 'demo-rita' ? 'demo-ana' : 'demo-rita';
+  const entries = works.slice(0, 3 + (i % 3)).map(([f, minutes, description], k) =>
+    newTimeEntry(c.id, { date: at(f), minutes, description, memberId: k === 3 ? helper : c.responsibleId, billable: k !== 1 || i % 2 === 0, createdAt: nowIso(), updatedAt: nowIso() }),
+  );
+  await db.timeEntries.bulkPut(entries);
+  await db.expenses.bulkPut([
+    newExpense(c.id, { date: at(0.1), category: 'certidoes', description: 'Certidão de óbito e certidões de nascimento', amount: 40, billable: true }),
+    newExpense(c.id, { date: at(0.4), category: 'emolumentos', description: 'Emolumentos da habilitação de herdeiros', amount: 150, billable: true }),
+    ...(i % 2 === 0 ? [newExpense(c.id, { date: at(0.5), category: 'deslocacoes', description: 'Deslocação à conservatória', amount: 18.6, billable: false })] : []),
+  ]);
+  if (i % 3 !== 2) await db.provisions.put(newProvision(c.id, { date: at(0.03), amount: 500, description: 'Provisão inicial' }));
+  if (i === 2) await db.cases.update(c.id, { feesJson: JSON.stringify({ mode: 'fixo', fixedFee: 1500, rate: null, withholding: false, notes: 'Honorários fixos acordados na primeira reunião' }) });
+}
+
 export async function loadDemoData(): Promise<number> {
   await db.members.bulkPut(MEMBERS);
   const list = demoCases();
@@ -504,6 +533,7 @@ export async function loadDemoData(): Promise<number> {
     await db.activity.bulkPut([
       { id: uid(), caseId: d.c.id, at: d.c.createdAt, kind: 'dossier', text: 'Dossier criado (demonstração)', actor: 'Equipa' },
     ]);
+    await seedFees(d.c, list.indexOf(d));
   }
   await db.events.put(
     newEvent({ id: 'demo-ev-equipa', title: 'Reunião de equipa — ponto de situação dos dossiers', kind: 'reuniao', date: workdayAhead(4), time: '09:30', endTime: '10:15', location: 'Sala de reuniões' }),

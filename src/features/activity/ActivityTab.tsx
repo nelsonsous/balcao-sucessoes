@@ -11,6 +11,7 @@ import {
   ListChecks,
   MessageSquare,
   NotebookPen,
+  Receipt,
   Recycle,
   Search,
   Users,
@@ -36,6 +37,7 @@ const KIND_ICON: Record<Kind, LucideIcon> = {
   questionario: ClipboardList,
   agenda: CalendarDays,
   documento: FileText,
+  honorarios: Receipt,
 };
 
 export const KIND_LABELS: Record<Kind, string> = {
@@ -49,6 +51,7 @@ export const KIND_LABELS: Record<Kind, string> = {
   questionario: 'Questionário',
   agenda: 'Agenda',
   documento: 'Documentos',
+  honorarios: 'Honorários',
 };
 
 /** Entradas de anulação, reposição ou reciclagem. */

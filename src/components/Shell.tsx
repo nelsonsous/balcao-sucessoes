@@ -36,6 +36,7 @@ import { cx, normalize } from '../lib/utils';
 import { groupMyTasks } from '../lib/myTasks';
 import { lockNow } from '../lib/lock';
 import { ErrorBoundary } from './ErrorBoundary';
+import { TimerChip } from './TimerChip';
 
 const CommandPalette = lazy(() => import('./CommandPalette').then((m) => ({ default: m.CommandPalette })));
 import { Avatar, Button, Sheet } from './ui';
@@ -257,6 +258,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <span className="kbd desktop-only">⌘K</span>
           </button>
           <span className="spacer" />
+          <TimerChip />
           {!online && (
             <span className="badge warn" title="Sem ligação à internet — a aplicação continua a funcionar">
               <WifiOff aria-hidden /> Offline

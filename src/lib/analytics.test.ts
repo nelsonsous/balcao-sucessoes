@@ -102,13 +102,25 @@ describe('análise da equipa', () => {
     expect(soRui.kpis.tasksDone).toBe(2);
     const csv = membersCsv(a);
     expect(csv.header[0]).toBe('Pessoa');
-    expect(csv.rows.find((r) => r[0] === 'Rui')).toEqual(['Rui', 0, 1, 0, 0, 50, 88]);
+    expect(csv.rows.find((r) => r[0] === 'Rui')).toEqual(['Rui', 0, 1, 0, 0, 50, 88, 0]);
+  });
+
+  it('soma o tempo registado (honorários) por pessoa e no âmbito, dentro do período', () => {
+    const { cases, tasks } = fixture();
+    const mk = (id: string, caseId: string, memberId: string, date: string, minutes: number) => ({ id, caseId, memberId, date, minutes, description: '', billable: true, rate: null, createdAt: '', updatedAt: '' });
+    const timeEntries = [mk('e1', 'c1', 'ana', '2026-09-10', 90), mk('e2', 'c2', 'rui', '2026-08-01', 60), mk('e3', 'c1', 'rui', '2025-01-01', 600), mk('e4', 'fora', 'ana', '2026-09-10', 30)];
+    const a = analyze({ cases, tasks, members, timeEntries, period: 3, now: NOW });
+    expect(a.members.find((m) => m.id === 'ana')!.minutesLogged).toBe(90); // e4 é de um dossier inexistente
+    expect(a.members.find((m) => m.id === 'rui')!.minutesLogged).toBe(60); // e3 fora do período
+    expect(a.kpis.minutesLogged).toBe(150);
+    expect(analyze({ cases, tasks, members, timeEntries, period: 3, memberId: 'rui', now: NOW }).kpis.minutesLogged).toBe(60);
+    expect(membersCsv(a).rows.find((r) => r[0] === 'Ana')!.at(-1)).toBe(1.5);
   });
 
   it('sem dados devolve zeros e nulos sem falhar', () => {
     const a = analyze({ cases: [], tasks: [], members: [], period: 3, now: NOW });
     expect(a.months).toHaveLength(3);
-    expect(a.kpis).toEqual({ activeCases: 0, closedCases: 0, openTasks: 0, overdueOpen: 0, tasksDone: 0, onTimeRate: null, meanCloseDays: null });
+    expect(a.kpis).toEqual({ activeCases: 0, closedCases: 0, openTasks: 0, overdueOpen: 0, tasksDone: 0, onTimeRate: null, meanCloseDays: null, minutesLogged: 0 });
     expect(a.phases.every((p) => p.total === 0 && p.medianDays === null)).toBe(true);
     expect(a.members).toEqual([]);
   });

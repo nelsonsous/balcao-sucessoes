@@ -2,7 +2,7 @@
 // por mês, por fase e por pessoa. Gestão interna do escritório; não substitui a
 // contabilidade nem os registos oficiais.
 import { PHASES, isOpen } from '../engine/phases';
-import type { CaseRecord, MemberRecord, PhaseId, TaskRecord } from './types';
+import type { CaseRecord, MemberRecord, PhaseId, TaskRecord, TimeEntryRecord } from './types';
 import { todayIso } from './utils';
 
 /** Meses a analisar (0 = tudo). */
@@ -14,6 +14,8 @@ export interface AnalyticsInput {
   cases: CaseRecord[];
   tasks: TaskRecord[];
   members: MemberRecord[];
+  /** Tempo registado (honorários), opcional. */
+  timeEntries?: TimeEntryRecord[];
   period?: Period;
   /** Restringe aos dossiers/tarefas desta pessoa (responsável ou atribuída). */
   memberId?: string;
@@ -58,6 +60,8 @@ export interface MemberStat {
   onTimeRate: number | null;
   /** Dias, em média, entre a criação e a conclusão das tarefas concluídas no período. */
   meanCompletionDays: number | null;
+  /** Minutos registados (honorários) no período. */
+  minutesLogged: number;
 }
 
 export interface Analytics {
@@ -73,6 +77,8 @@ export interface Analytics {
     tasksDone: number;
     onTimeRate: number | null;
     meanCloseDays: number | null;
+    /** Minutos registados no período (no âmbito atual). */
+    minutesLogged: number;
   };
 }
 
@@ -184,6 +190,8 @@ export function analyze(input: AnalyticsInput): Analytics {
 
   // Por pessoa
   const recentSince = todayIso(new Date(now.getTime() - 30 * DAY));
+  const scopeCases = new Set(cases.map((c) => c.id));
+  const logged = (input.timeEntries ?? []).filter((e) => caseById.has(e.caseId) && inPeriod(e.date));
   const memberList = input.memberId ? input.members.filter((m) => m.id === input.memberId) : input.members;
   const members: MemberStat[] = memberList.map((m) => {
     const mine = input.tasks.filter((t) => !t.obsolete && t.status !== 'na' && caseById.has(t.caseId) && belongs(t, m.id));
@@ -200,6 +208,7 @@ export function analyze(input: AnalyticsInput): Analytics {
       doneRecent: mine.filter((t) => t.status === 'concluido' && t.completedAt.slice(0, 10) >= recentSince).length,
       onTimeRate: rate(withDue.filter(isOnTime).length, withDue.length),
       meanCompletionDays: mean(donePeriod.map((t) => days(t.createdAt, t.completedAt))),
+      minutesLogged: logged.filter((e) => e.memberId === m.id).reduce((s, e) => s + e.minutes, 0),
     };
   });
 
@@ -221,6 +230,7 @@ export function analyze(input: AnalyticsInput): Analytics {
       tasksDone: donePeriod.length,
       onTimeRate: rate(withDue.filter(isOnTime).length, withDue.length),
       meanCloseDays: mean(closedPeriod.map((c) => days(c.createdAt, c.updatedAt))),
+      minutesLogged: logged.filter((e) => (input.memberId ? e.memberId === input.memberId : scopeCases.has(e.caseId))).reduce((s, e) => s + e.minutes, 0),
     },
   };
 }
@@ -231,8 +241,8 @@ export const daysLabel = (d: number | null): string => (d === null ? '—' : d >
 /** Linhas para exportação CSV da tabela por pessoa. */
 export function membersCsv(a: Analytics): { header: string[]; rows: (string | number)[][] } {
   return {
-    header: ['Pessoa', 'Dossiers ativos', 'Tarefas em aberto', 'Em atraso', 'Concluídas (30 dias)', 'Prazos cumpridos', 'Tempo médio de conclusão (dias)'],
-    rows: a.members.map((m) => [m.name, m.activeCases, m.openTasks, m.overdue, m.doneRecent, m.onTimeRate === null ? '' : Math.round(m.onTimeRate * 100), m.meanCompletionDays ?? '']),
+    header: ['Pessoa', 'Dossiers ativos', 'Tarefas em aberto', 'Em atraso', 'Concluídas (30 dias)', 'Prazos cumpridos', 'Tempo médio de conclusão (dias)', 'Horas registadas'],
+    rows: a.members.map((m) => [m.name, m.activeCases, m.openTasks, m.overdue, m.doneRecent, m.onTimeRate === null ? '' : Math.round(m.onTimeRate * 100), m.meanCompletionDays ?? '', Math.round((m.minutesLogged / 60) * 10) / 10]),
   };
 }
 
