@@ -1,4 +1,4 @@
-import type { AssetRecord, Channel, DebtRecord, Kinship, PartyRecord, PartyRole } from './types';
+import type { AssetRecord, CaseRecord, Channel, DebtRecord, Kinship, PartyRecord, PartyRole } from './types';
 
 export const ROLE_LABELS: Record<PartyRole, string> = {
   herdeiro: 'Herdeiro',
@@ -75,4 +75,16 @@ export const DEBT_STATUS_LABELS: Record<DebtRecord['status'], string> = {
   confirmado: 'Confirmado',
   pago: 'Pago',
   contestado: 'Contestado',
+};
+
+export const STAGE_LABELS: Record<CaseRecord['stage'], string> = { ativo: 'Ativo', suspenso: 'Suspenso', concluido: 'Concluído', arquivado: 'Arquivado' };
+export const PRIORITY_LABELS: Record<CaseRecord['priority'], string> = { normal: 'Normal', alta: 'Alta', urgente: 'Urgente' };
+
+/** Tipos de registo que se importam de folhas de cálculo. */
+export type ImportEntity = 'parties' | 'assets' | 'debts';
+
+export const ENTITY_LABELS: Record<ImportEntity, { one: string; many: string }> = {
+  parties: { one: 'interessado', many: 'interessados' },
+  assets: { one: 'bem', many: 'bens' },
+  debts: { one: 'dívida', many: 'dívidas' },
 };

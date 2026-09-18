@@ -703,6 +703,112 @@ try {
     await page.setViewport({ width: 1366, height: 900 });
     assert(problems.length === 0, problems.slice(0, 8).join(' | '));
   });
+  await step('Desempenho: 300 dossiers e 18 000 tarefas continuam fluidos', async () => {
+    // Um escritório grande, escrito diretamente na base a partir de um dossier e de uma tarefa reais.
+    const inject = (count) =>
+      page.evaluate(
+        (n) =>
+          new Promise((resolve, reject) => {
+            const r = indexedDB.open('balcao-das-sucessoes');
+            r.onerror = () => reject(r.error);
+            r.onsuccess = () => {
+              const db = r.result;
+              const read = db.transaction(['cases', 'tasks'], 'readonly');
+              const caseReq = read.objectStore('cases').getAll();
+              const taskReq = read.objectStore('tasks').getAll();
+              read.oncomplete = () => {
+                const [c0] = caseReq.result;
+                const [t0] = taskReq.result;
+                const tx = db.transaction(['cases', 'tasks', 'settings'], 'readwrite');
+                // Sem PIN: mede-se o arranque a frio real (o PIN já foi testado no passo anterior).
+                tx.objectStore('settings').put({ key: 'pinJson', value: '' });
+                for (let i = 0; i < n; i++) {
+                  const id = `perf-${i}`;
+                  tx.objectStore('cases').put({ ...c0, id, ref: `PERF-${String(i).padStart(3, '0')}`, name: `Herança Desempenho ${i}`, stage: 'ativo', demo: true });
+                  for (let j = 0; j < 60; j++) tx.objectStore('tasks').put({ ...t0, id: `${id}-t${j}`, caseId: id, title: `Tarefa de desempenho ${j}`, ruleKey: `perf-${j}`, status: j % 3 ? 'pendente' : 'concluido', order: j });
+                }
+                tx.oncomplete = () => {
+                  db.close();
+                  resolve(true);
+                };
+                tx.onerror = () => reject(tx.error);
+              };
+            };
+          }),
+        count,
+      );
+    await inject(300);
+    await page.evaluate(() => localStorage.setItem('bs-list-prefs', JSON.stringify({ view: 'cards', sort: 'recentes' })));
+    // A base mudou por fora da aplicação: arranque a frio (como no dia seguinte), a desbloquear se houver PIN.
+    // Arranque a frio: do recarregar até o conteúdo estar pronto, sem contar o tempo de escrever o PIN
+    // (se o ecrã de bloqueio aparecer, desbloqueia-se; a lista pode ir-se preparando por trás).
+    const coldStart = async (hash, ready) => {
+      // Endereço limpo: os filtros da lista vivem na parte «?…» e um passo anterior pode tê-los deixado.
+      await page.evaluate((h) => history.replaceState(null, '', location.pathname + h), hash);
+      const t = Date.now();
+      let pin = 0;
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      for (let i = 0; i < 300; i++) {
+        const st = await page.evaluate(`({ ready: Boolean((${ready})()), lock: Boolean(document.querySelector('.lock-screen')) })`);
+        if (st.ready && !st.lock) return Date.now() - t - pin;
+        if (st.lock) {
+          const u = Date.now();
+          await page.type('.lock-input', '2580');
+          await page.keyboard.press('Enter');
+          await page.waitForFunction(() => !document.querySelector('.lock-screen'), { timeout: 5000 });
+          pin += Date.now() - u;
+          continue;
+        }
+        await sleep(50);
+      }
+      throw new Error('conteúdo não ficou pronto em 15 s');
+    };
+    const phase = async (name, run) => {
+      try {
+        return await run();
+      } catch (e) {
+        const st = await page.evaluate(() => ({ cards: document.querySelectorAll('.case-card').length, rows: document.querySelectorAll('.task-row').length, lock: Boolean(document.querySelector('.lock-screen')), h1: document.querySelector('main h1')?.textContent, hash: location.hash })).catch(() => ({}));
+        throw new Error(`${name}: ${e.message} ${JSON.stringify(st)}`);
+      }
+    };
+    const listMs = await phase('arranque com 300 dossiers', () => coldStart('#/dossiers', '() => document.querySelectorAll(".case-card").length >= 300'));
+    let t0 = Date.now();
+    await phase('pesquisa', async () => {
+      await page.type('input[aria-label="Pesquisar dossiers"]', 'Desempenho 173');
+      await page.waitForFunction(() => document.querySelectorAll('.case-card').length === 1 && /Desempenho 173/.test(document.querySelector('.case-card')?.textContent || ''), { timeout: 8000 });
+    });
+    const searchMs = Date.now() - t0;
+    t0 = Date.now();
+    await phase('dossier com 60 tarefas', async () => {
+      await go('#/dossiers/perf-7/checklist', 0);
+      await page.waitForFunction(() => document.querySelectorAll('.task-row').length >= 40, { timeout: 10000 });
+    });
+    const caseMs = Date.now() - t0;
+    // limpeza (e novo arranque, para a aplicação deixar de ver o escritório grande)
+    await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const r = indexedDB.open('balcao-das-sucessoes');
+          r.onsuccess = () => {
+            const db = r.result;
+            const tx = db.transaction(['cases', 'tasks'], 'readwrite');
+            tx.objectStore('cases').delete(IDBKeyRange.bound('perf-', 'perf-~'));
+            tx.objectStore('tasks').delete(IDBKeyRange.bound('perf-', 'perf-~'));
+            tx.oncomplete = () => {
+              db.close();
+              resolve(true);
+            };
+          };
+        }),
+    );
+    await phase('arranque depois da limpeza', () => coldStart('#/', '() => Boolean(document.querySelector("main h1"))'));
+    await sleep(800);
+    results.push(`  (lista de 300 dossiers: ${listMs} ms · pesquisa: ${searchMs} ms · dossier com 60 tarefas: ${caseMs} ms)`);
+    assert(listMs < 6000, `lista de 300 dossiers em ${listMs} ms`);
+    assert(searchMs < 3000, `pesquisa em ${searchMs} ms`);
+    assert(caseMs < 4000, `dossier em ${caseMs} ms`);
+  });
+
   await step('Funciona offline (service worker)', async () => {
     const sw = await page.evaluate(async () => {
       if (!('serviceWorker' in navigator)) return 'unsupported';

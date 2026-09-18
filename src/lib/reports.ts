@@ -10,7 +10,7 @@ import { readCalc } from './calcImport';
 import { DEFAULT_SETTINGS, db, type AppSettings } from './db';
 import { byCategoryThenName, clientCanProvide } from './documents';
 import { tableBlock, type DocBlock, type DocRun } from './docx';
-import { ACCEPTANCE_LABELS, CHANNEL_LABELS, DEBT_STATUS_LABELS, KINSHIP_LABELS, OWNERSHIP_LABELS, POA_LABELS, ROLE_LABELS, VALUE_BASIS_LABELS } from './labels';
+import { ACCEPTANCE_LABELS, CHANNEL_LABELS, DEBT_STATUS_LABELS, KINSHIP_LABELS, OWNERSHIP_LABELS, POA_LABELS, PRIORITY_LABELS, ROLE_LABELS, STAGE_LABELS, VALUE_BASIS_LABELS } from './labels';
 import { longDate } from './templateContext';
 import type { AssetRecord, AssetType, CaseRecord, ContactLogRecord, DebtRecord, DocumentRecord, EventRecord, ExpenseRecord, MemberRecord, NoteRecord, PartyRecord, ProvisionRecord, TaskRecord, TemplateLanguage, TimeEntryRecord } from './types';
 import { categoryLabel, feeSummary, formatDuration, readFees } from './fees';
@@ -27,8 +27,7 @@ export const REPORT_KINDS: Array<{ id: ReportKind; label: string; description: s
   { id: 'honorarios', label: 'Nota de honorários', description: 'Tempo e honorários, despesas a reembolsar, provisões recebidas, IVA, retenção e saldo — documento de apoio à fatura.' },
 ];
 
-export const STAGE_LABELS: Record<CaseRecord['stage'], string> = { ativo: 'Ativo', suspenso: 'Suspenso', concluido: 'Concluído', arquivado: 'Arquivado' };
-export const PRIORITY_LABELS: Record<CaseRecord['priority'], string> = { normal: 'Normal', alta: 'Alta', urgente: 'Urgente' };
+export { PRIORITY_LABELS, STAGE_LABELS } from './labels';
 
 // ---------------------------------------------------------------------------
 // Blocos utilitários

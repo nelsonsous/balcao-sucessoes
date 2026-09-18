@@ -7,13 +7,8 @@ import { KINSHIP_LABELS, ROLE_LABELS } from './labels';
 import type { AssetRecord, AssetType, DebtRecord, Kinship, PartyRecord, PartyRole } from './types';
 import { normalize, parseAmount } from './utils';
 
-export type ImportEntity = 'parties' | 'assets' | 'debts';
-
-export const ENTITY_LABELS: Record<ImportEntity, { one: string; many: string }> = {
-  parties: { one: 'interessado', many: 'interessados' },
-  assets: { one: 'bem', many: 'bens' },
-  debts: { one: 'dívida', many: 'dívidas' },
-};
+export { ENTITY_LABELS, type ImportEntity } from './labels';
+import type { ImportEntity } from './labels';
 
 // ---------------------------------------------------------------------------
 // Leitura da tabela

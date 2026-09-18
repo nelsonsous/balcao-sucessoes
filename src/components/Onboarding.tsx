@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Lock, Sparkles, WifiOff } from 'lucide-react';
 import { requestPersistence, setSetting, useSettings } from '../lib/db';
-import { loadDemoData } from '../lib/demo';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../lib/db';
 import { Button, Field, Sheet } from './ui';
@@ -25,6 +24,7 @@ export function Onboarding() {
       await setSetting('onboarded', true);
       void requestPersistence();
       if (demo) {
+        const { loadDemoData } = await import('../lib/demo');
         const n = await loadDemoData();
         toast({ tone: 'success', title: 'Pronto!', description: `${n} dossiers fictícios para explorar` });
       }

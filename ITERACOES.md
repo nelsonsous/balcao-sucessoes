@@ -7,7 +7,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 3 — «10 vezes seguidas com melhorias e testes» (iterações 21–30)
 
-**Estado do ciclo 3: iterações 21–27 concluídas (7/10).**
+**Estado do ciclo 3: iterações 21–28 concluídas (8/10).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -18,11 +18,20 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 25 | ~~Importar de folhas de cálculo~~ | ✅ concluída |
 | 26 | ~~Impressão~~ | ✅ concluída |
 | 27 | ~~Diagnóstico e integridade~~ | ✅ concluída |
-| 28 | **Desempenho** | Pacote inicial mais pequeno (carregamento a pedido dos módulos pesados), orçamento de tamanho verificado no CI, listas longas fluidas; testes. |
+| 28 | ~~Desempenho~~ | ✅ concluída |
 | 29 | **Teclado e acessibilidade avançada** | Atalhos com ajuda (?), quadro Kanban operável por teclado, movimento reduzido e alto contraste; testes com axe e teclado. |
 | 30 | **Consolidação** | Auditoria final, manual e apresentação atualizados (versão 2.2), resumo, envio. |
 
 Fora do ciclo, por depender de decisão e de uma conta do escritório: o «modo escritório» com sincronização entre dispositivos (por exemplo, Supabase na UE, num projeto próprio do escritório), que reaproveitaria a lógica de junção da iteração 14.
+
+### Iteração 28 — Desempenho ✅
+
+- **Arranque com metade do peso**: o JavaScript que o navegador tem de descarregar e executar para abrir a aplicação passou de ~251 kB para **134 kB** (comprimido; o ficheiro de entrada de 637 kB para 299 kB). Tudo o resto carrega **a pedido**: visão geral, lista e ficha do dossier (com pré-carregamento assim que o navegador fica livre, para a navegação continuar instantânea), os separadores Interessados, Património, Notas, Questionário e Histórico, os relatórios e o Word, a importação de folhas de cálculo, o motor da checklist (59 regras, carregado ao criar ou reconciliar), os dados de demonstração, o cronómetro (só com um em curso) e as cópias automáticas (só quando ativas). Rótulos leves separados dos módulos pesados (`lib/labels.ts`).
+- **Orçamento de tamanho no CI** (`scripts/bundle-budget.ts`, `npm run size`, novo passo do workflow): falha a publicação se o arranque passar de 148 kB, o CSS de 22 kB, o maior pedaço a pedido de 16 kB ou o total (o que fica guardado para uso offline) de 420 kB — com a indicação do que fazer.
+- **Listas longas fluidas**: tarefas, cartões de dossier e dias da agenda só são desenhados quando entram no ecrã (`content-visibility`), e na impressão desenha-se tudo; a lista de dossiers segue a pesquisa com prioridade baixa (a escrita nunca espera pela lista).
+- **Pesquisa corrigida**: o passo de desempenho apanhou um defeito antigo — **não era possível escrever um espaço na pesquisa de dossiers** (o texto era aparado ao ir para o endereço e o espaço acabado de escrever desaparecia: «Maria Silva» ficava «MariaSilva»). Corrigido, e a pesquisa passou a procurar **palavras em qualquer ordem** e em qualquer campo («silva maria», «bs-2026 silva»; as palavras de 1–2 letras contam no início das palavras).
+- **Medido num escritório grande** (300 dossiers e 18 000 tarefas escritos diretamente na base): arranque a frio até à lista completa em ~0,4 s (~0,8 s com o processador 4× mais lento), pesquisa em ~0,2 s, dossier com 60 tarefas em ~0,3 s.
+- **Testes**: orçamento (leitura do index.html, avaliação dentro e fora dos limites), escala (400 dossiers e 24 000 tarefas: resumos e filtros, análise da equipa, alterações por aplicar das regras, integridade e uma folha de 2 000 linhas — todos em milissegundos, com limites largos para apanhar algoritmos quadráticos), pesquisa (espaços no endereço, palavras em qualquer ordem) — **303 testes**; novo passo E2E «Desempenho: 300 dossiers e 18 000 tarefas continuam fluidos» (arranque a frio, pesquisa e dossier, com os tempos no relatório) — **23 passos**, também com o processador 4× mais lento.
 
 ### Iteração 27 — Diagnóstico e integridade ✅
 

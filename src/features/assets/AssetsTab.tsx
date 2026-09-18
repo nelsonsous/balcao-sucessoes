@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { FileSpreadsheet, FileText, Globe, Info, Landmark, Plus, Scale, Sheet as SheetIcon, Trash2, Wallet } from 'lucide-react';
 import { deleteAsset, deleteDebt, saveAsset, saveDebt } from '../../lib/actions';
@@ -16,9 +16,10 @@ import { MoneyInput } from '../../components/MoneyInput';
 import { useToast } from '../../components/Toast';
 import { Button, Card, CardHead, Empty, Field, Sheet, useConfirm } from '../../components/ui';
 import { csvName, downloadCsv } from '../../lib/csv';
-import { assetsCsvRows } from '../../lib/reports';
-import { ReportSheet } from '../reports/ReportSheet';
-import { ImportSheet } from '../import/ImportSheet';
+
+// Relatórios (Word/PDF) e importação de folhas de cálculo carregam só quando se abrem.
+const ReportSheet = lazy(() => import('../reports/ReportSheet').then((m) => ({ default: m.ReportSheet })));
+const ImportSheet = lazy(() => import('../import/ImportSheet').then((m) => ({ default: m.ImportSheet })));
 
 const TYPES = Object.keys(ASSET_META) as AssetType[];
 const isForeign = (a: AssetRecord) => Boolean(a.country) && a.country.trim().toLowerCase() !== 'portugal';
@@ -84,10 +85,12 @@ export function AssetsTab({ c }: { c: CaseRecord }) {
         <Button
           icon={FileSpreadsheet}
           disabled={assets.length === 0 && debts.length === 0}
-          onClick={() => {
-            const { header, rows } = assetsCsvRows(c, assets, debts);
-            downloadCsv(csvName(`relacao-bens-${c.ref}`), header, rows);
-          }}
+          onClick={() =>
+            void import('../../lib/reports').then(({ assetsCsvRows }) => {
+              const { header, rows } = assetsCsvRows(c, assets, debts);
+              downloadCsv(csvName(`relacao-bens-${c.ref}`), header, rows);
+            })
+          }
         >
           CSV
         </Button>
@@ -102,7 +105,11 @@ export function AssetsTab({ c }: { c: CaseRecord }) {
         </Button>
       </div>
 
-      <ImportSheet c={c} entity={importing} allowed={['assets', 'debts']} onClose={() => setImporting(null)} />
+      {importing && (
+        <Suspense fallback={null}>
+          <ImportSheet c={c} entity={importing} allowed={['assets', 'debts']} onClose={() => setImporting(null)} />
+        </Suspense>
+      )}
 
       <div className="asset-types">
         {byType.map(({ t, count, total }) => {
@@ -290,7 +297,11 @@ export function AssetsTab({ c }: { c: CaseRecord }) {
 
       <AssetSheet state={asset} onClose={() => setAsset(null)} />
       <DebtSheet state={debt} onClose={() => setDebt(null)} />
-      <ReportSheet c={c} kind={report ? 'bens' : null} onClose={() => setReport(false)} onKind={() => undefined} />
+      {report && (
+        <Suspense fallback={null}>
+          <ReportSheet c={c} kind="bens" onClose={() => setReport(false)} onKind={() => undefined} />
+        </Suspense>
+      )}
     </div>
   );
 }

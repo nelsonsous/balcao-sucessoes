@@ -1,6 +1,6 @@
 // Operações de escrita. Cada alteração relevante fica no histórico do dossier.
 import { phaseLabel, statusLabel } from '../engine/phases';
-import { syncCaseTasks, type SyncReport } from '../engine/sync';
+import type { SyncReport } from '../engine/sync';
 import {
   db,
   deleteCaseCascade,
@@ -13,7 +13,11 @@ import {
   nextCaseRef,
   touchCase,
 } from './db';
-import { ENTITY_LABELS, type ImportEntity, type ImportRow } from './sheetImport';
+import { ENTITY_LABELS, type ImportEntity } from './labels';
+import type { ImportRow } from './sheetImport';
+
+/** O motor da checklist (59 regras) só se carrega quando é preciso reconciliar. */
+const loadSync = () => import('../engine/sync');
 import type { AssetRecord, CaseRecord, CaseTemplateRecord, ContactLogRecord, DebtRecord, EventRecord, MemberRecord, NoteRecord, PartyRecord, Status, TaskRecord, TrashRecord } from './types';
 import { restoreTrash, trashCase, trashRecord } from './recycle';
 import { pushUndo } from './undo';
@@ -24,6 +28,7 @@ import { formatDate, nowIso, uid } from './utils';
 export async function createCase(data: Partial<CaseRecord>): Promise<{ c: CaseRecord; report: SyncReport }> {
   const c = newCase({ ...data, ref: data.ref || (await nextCaseRef()) });
   await db.cases.add(c);
+  const { syncCaseTasks } = await loadSync();
   const report = await syncCaseTasks(c);
   await logActivity(c.id, 'dossier', `Dossier criado com ${report.added.length} tarefas geradas pelo questionário`);
   return { c, report };
@@ -39,6 +44,7 @@ export async function saveAnswers(c: CaseRecord, answers: CaseRecord['answers'])
   const next = { ...c, answers, updatedAt: nowIso() };
   await db.cases.put(next);
   await logActivity(c.id, 'questionario', 'Questionário sucessório atualizado');
+  const { syncCaseTasks } = await loadSync();
   return syncCaseTasks(next, { log: true });
 }
 
@@ -47,7 +53,7 @@ export async function saveCaseDetails(c: CaseRecord, patch: Partial<CaseRecord>)
   const next = { ...c, ...patch, updatedAt: nowIso() };
   await db.cases.put(next);
   await logActivity(c.id, 'dossier', 'Dados do dossier atualizados');
-  if (patch.deceased && patch.deceased.deathDate !== c.deceased.deathDate) await syncCaseTasks(next);
+  if (patch.deceased && patch.deceased.deathDate !== c.deceased.deathDate) await (await loadSync()).syncCaseTasks(next);
 }
 
 /** Elimina um dossier para a reciclagem (30 dias), com «anular». */

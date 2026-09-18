@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
   Baby,
@@ -24,7 +24,9 @@ import type { CaseRecord, Kinship, PartyRecord, PartyRole } from '../../lib/type
 import { cx } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
 import { Avatar, Button, Card, Empty, Field, Sheet, useConfirm } from '../../components/ui';
-import { ImportSheet } from '../import/ImportSheet';
+
+/** A importação de folhas de cálculo (leitura, validação, pré-visualização) só carrega quando se abre. */
+const ImportSheet = lazy(() => import('../import/ImportSheet').then((m) => ({ default: m.ImportSheet })));
 
 interface Suggestion {
   label: string;
@@ -87,7 +89,11 @@ export function PartiesTab({ c }: { c: CaseRecord }) {
           Adicionar interessado
         </Button>
       </div>
-      <ImportSheet c={c} entity={importing ? 'parties' : null} allowed={['parties']} onClose={() => setImporting(false)} />
+      {importing && (
+        <Suspense fallback={null}>
+          <ImportSheet c={c} entity="parties" allowed={['parties']} onClose={() => setImporting(false)} />
+        </Suspense>
+      )}
 
       {list.length > 0 && (
         <div className="mini-stats">

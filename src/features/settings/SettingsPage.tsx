@@ -35,7 +35,6 @@ import { useTrashCount } from '../../lib/recycle';
 import { ExportSheet, LegacyImportSheet, PassphraseSheet } from './BackupSheets';
 import { formatBytes } from '../../lib/documents';
 import { requestPersistence, setSetting, useSettings, type AppSettings } from '../../lib/db';
-import { loadDemoData, removeDemoData } from '../../lib/demo';
 import { useInstall, useMembers } from '../../lib/hooks';
 import { formatDateTime, parseAmount } from '../../lib/utils';
 import type { MemberRecord } from '../../lib/types';
@@ -357,6 +356,7 @@ export function SettingsPage() {
               <Button
                 icon={Sparkles}
                 onClick={async () => {
+                  const { loadDemoData } = await import('../../lib/demo');
                   const n = await loadDemoData();
                   toast({ tone: 'success', title: 'Dados de demonstração carregados', description: `${n} dossiers fictícios` });
                 }}
@@ -366,6 +366,7 @@ export function SettingsPage() {
               <Button
                 variant="ghost"
                 onClick={async () => {
+                  const { removeDemoData } = await import('../../lib/demo');
                   await removeDemoData();
                   toast({ title: 'Dados de demonstração removidos' });
                 }}

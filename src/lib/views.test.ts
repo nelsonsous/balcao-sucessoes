@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { wipeAll } from './backup';
 import { db, emptyAnswers, newAsset, newCase, newDocument, newParty, newTask } from './db';
 import { buildOverview } from './hooks';
-import { EMPTY_FILTERS, PRESET_VIEWS, applyFilters, buildDeepIndex, countActive, deleteView, describeFilters, filtersFromSearch, filtersToSearch, isInternational, listViews, presetFilters, sameFilters, saveView, type Filters } from './views';
+import { EMPTY_FILTERS, PRESET_VIEWS, applyFilters, buildDeepIndex, countActive, deleteView, describeFilters, filtersFromSearch, filtersToSearch, isInternational, listViews, matchesWords, presetFilters, sameFilters, saveView, type Filters } from './views';
 
 const TODAY = new Date(2026, 8, 17, 12);
 const iso = (d: number) => new Date(TODAY.getTime() + d * 86_400_000).toISOString().slice(0, 10);
@@ -89,6 +89,22 @@ describe('filtros avançados da lista de dossiers', () => {
     expect(filtersToSearch(EMPTY_FILTERS)).toBe('');
     expect(filtersFromSearch('')).toEqual(EMPTY_FILTERS);
     expect(filtersFromSearch('prio=maxima&prazo=amanha&fase=inventada&importar=1&intl=sim')).toEqual({ ...EMPTY_FILTERS, intl: 'sim' });
+  });
+
+  it('o texto da pesquisa vai para o endereço sem ser aparado (o espaço acabado de escrever fica)', () => {
+    expect(filtersToSearch({ ...EMPTY_FILTERS, q: 'Maria ' })).toBe('q=Maria+');
+    expect(filtersFromSearch(filtersToSearch({ ...EMPTY_FILTERS, q: 'Maria S' })).q).toBe('Maria S');
+    expect(filtersToSearch({ ...EMPTY_FILTERS, q: '   ' })).toBe('');
+  });
+
+  it('palavras em qualquer ordem: curtas no início de uma palavra, longas em qualquer sítio', () => {
+    const text = 'sucessao urgente bs-2026-004 maria silva';
+    expect(matchesWords(text, ['silva', 'maria'])).toBe(true);
+    expect(matchesWords(text, ['u'])).toBe(true);
+    expect(matchesWords('sucessao normal', ['u'])).toBe(false);
+    expect(matchesWords(text, ['004'])).toBe(true);
+    expect(matchesWords(text, ['bs', '2026'])).toBe(true);
+    expect(matchesWords(text, ['silva', 'costa'])).toBe(false);
   });
 
   it('vistas predefinidas e guardadas (com substituição pelo nome e remoção)', async () => {

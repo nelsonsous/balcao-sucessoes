@@ -32,6 +32,21 @@ describe('Lista de dossiers: filtros avançados, endereço e vistas', () => {
     expect(await screen.findByText('Sucessão Normal')).toBeInTheDocument();
   });
 
+  it('a pesquisa guarda os espaços enquanto se escreve e procura palavras em qualquer ordem', async () => {
+    renderApp(<DossierList />);
+    const input = await screen.findByLabelText('Pesquisar dossiers');
+    // escrever letra a letra: o espaço acabado de escrever não pode desaparecer
+    for (const v of ['S', 'Su', 'Suc', 'Sucessão', 'Sucessão ', 'Sucessão U']) fireEvent.change(input, { target: { value: v } });
+    await waitFor(() => expect(input).toHaveValue('Sucessão U'));
+    expect(location.search).toBe('?q=Sucess%C3%A3o+U');
+    await waitFor(() => expect(screen.queryByText('Sucessão Normal')).not.toBeInTheDocument());
+    expect(screen.getByText('Sucessão Urgente')).toBeInTheDocument();
+    // palavras fora de ordem e noutro campo (referência)
+    fireEvent.change(input, { target: { value: 'bs-n sucessao' } });
+    expect(await screen.findByText('Sucessão Normal')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Sucessão Urgente')).not.toBeInTheDocument());
+  });
+
   it('lê os filtros do endereço e a pesquisa profunda encontra notas', async () => {
     history.replaceState(null, '', '/?q=xavier#/dossiers');
     renderApp(<DossierList />);

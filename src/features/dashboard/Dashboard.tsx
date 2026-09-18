@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { useAgendaItems } from '../../lib/agenda';
 import { db, useSettings } from '../../lib/db';
-import { loadDemoData } from '../../lib/demo';
 import { isActiveCase, useMemberMap, useOverviews, type CaseOverview } from '../../lib/hooks';
 import type { MemberRecord, TaskRecord } from '../../lib/types';
 import { cx, formatDate, greeting, relativeDays, todayIso } from '../../lib/utils';
@@ -118,6 +117,7 @@ export function Dashboard() {
             size="lg"
             icon={Sparkles}
             onClick={async () => {
+              const { loadDemoData } = await import('../../lib/demo');
               const n = await loadDemoData();
               toast({ tone: 'success', title: 'Dados de demonstração carregados', description: `${n} dossiers fictícios` });
             }}

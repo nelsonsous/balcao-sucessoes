@@ -77,9 +77,23 @@ const daysSince = (iso: string, today: Date): number | null => {
 };
 
 /** Aplica os filtros a uma lista de dossiers (sem ordenar). */
+/**
+ * Todas as palavras têm de aparecer: as curtas (1–2 letras) no início de uma palavra do texto
+ * («u» encontra «urgente», não «sucessão»); as outras em qualquer sítio («004» encontra BS-2026-004).
+ */
+export function matchesWords(text: string, words: string[]): boolean {
+  let tokens: string[] | null = null;
+  return words.every((w) => {
+    if (w.length >= 3) return text.includes(w);
+    tokens ??= text.split(/[\s,.;:()/·]+/);
+    return tokens.some((t) => t.startsWith(w));
+  });
+}
+
 export function applyFilters(overviews: CaseOverview[], f: Filters, opts: { today?: Date; deep?: DeepIndex } = {}): CaseOverview[] {
   const today = opts.today ?? new Date();
-  const n = normalize(f.q);
+  // Pesquisa por palavras, em qualquer ordem e em qualquer campo («silva bs-2026» encontra o dossier).
+  const words = normalize(f.q).split(/\s+/).filter(Boolean);
   return overviews.filter((o) => {
     const c = o.c;
     if (f.stage === 'abertos' ? !(c.stage === 'ativo' || c.stage === 'suspenso') : f.stage !== 'todos' && c.stage !== f.stage) return false;
@@ -106,10 +120,10 @@ export function applyFilters(overviews: CaseOverview[], f: Filters, opts: { toda
     }
     if (f.intl === 'sim' && !isInternational(c)) return false;
     if (f.intl === 'nao' && isInternational(c)) return false;
-    if (n) {
+    if (words.length) {
       const base = normalize([c.name, c.ref, c.deceased.name, c.client.name, c.tags.join(' ')].join(' '));
-      const deep = f.deep ? (opts.deep?.get(c.id) ?? '') : '';
-      if (!base.includes(n) && !deep.includes(n)) return false;
+      const text = f.deep ? `${base} ${opts.deep?.get(c.id) ?? ''}` : base;
+      if (!matchesWords(text, words)) return false;
     }
     return true;
   });
@@ -162,7 +176,9 @@ const ALLOWED: Record<Exclude<keyof Filters, 'q' | 'deep' | 'resp' | 'tag'>, rea
 
 export function filtersToSearch(f: Filters): string {
   const p = new URLSearchParams();
-  if (f.q.trim()) p.set('q', f.q.trim());
+  // O texto vai tal como está escrito: aparar aqui apagava o espaço acabado de escrever
+  // (o campo lê o valor do endereço), e «Maria Silva» ficava «MariaSilva».
+  if (f.q.trim()) p.set('q', f.q);
   for (const k of Object.keys(PARAM) as Array<keyof typeof PARAM>) if (f[k] !== EMPTY_FILTERS[k]) p.set(PARAM[k], String(f[k]));
   if (f.deep) p.set('deep', '1');
   return p.toString();

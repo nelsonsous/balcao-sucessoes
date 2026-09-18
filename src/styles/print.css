@@ -187,6 +187,13 @@
     display: table-header-group;
   }
 
+  /* No papel desenha-se tudo (sem o atalho das listas longas). */
+  .task-row,
+  .case-card,
+  .agenda-group {
+    content-visibility: visible;
+  }
+
   /* Nada fica escondido atrás de barras de deslocamento. */
   .table-wrap,
   [role='region'],

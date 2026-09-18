@@ -2452,3 +2452,18 @@ dialog.palette::backdrop {
     margin-bottom: 6px;
   }
 }
+
+/* Listas longas fluidas: o navegador só desenha as linhas que estão no ecrã (as restantes
+   ocupam o tamanho estimado). Centenas de tarefas, dossiers ou dias da agenda não pesam. */
+.task-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 58px;
+}
+.case-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 190px;
+}
+.agenda-group {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 160px;
+}

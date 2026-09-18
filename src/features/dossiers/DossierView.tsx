@@ -51,17 +51,17 @@ import {
   Tabs,
   useConfirm,
 } from '../../components/ui';
-import { ActivityTab } from '../activity/ActivityTab';
-import { AssetsTab } from '../assets/AssetsTab';
-import { NotesTab } from '../notes/NotesTab';
-import { PartiesTab } from '../parties/PartiesTab';
 import { CaseEditSheet } from './CaseEditSheet';
 import { ChecklistTab, type ChecklistFilter } from './ChecklistTab';
-import { QuestionnaireTab } from './QuestionnaireTab';
 import { TaskDrawer } from './TaskDrawer';
 import { SaveTemplateSheet } from './SaveTemplateSheet';
 
-// Separadores pesados (calculadora, documentos, internacional, agenda) e relatórios carregam à parte.
+// Só a checklist (separador de entrada) vem com o dossier; os outros separadores e os relatórios carregam à parte.
+const PartiesTab = lazy(() => import('../parties/PartiesTab').then((m) => ({ default: m.PartiesTab })));
+const AssetsTab = lazy(() => import('../assets/AssetsTab').then((m) => ({ default: m.AssetsTab })));
+const NotesTab = lazy(() => import('../notes/NotesTab').then((m) => ({ default: m.NotesTab })));
+const QuestionnaireTab = lazy(() => import('./QuestionnaireTab').then((m) => ({ default: m.QuestionnaireTab })));
+const ActivityTab = lazy(() => import('../activity/ActivityTab').then((m) => ({ default: m.ActivityTab })));
 const CaseCalcTab = lazy(() => import('../calculator/CaseCalcTab').then((m) => ({ default: m.CaseCalcTab })));
 const DocumentsTab = lazy(() => import('../documents/DocumentsTab').then((m) => ({ default: m.DocumentsTab })));
 const InternationalTab = lazy(() => import('../international/InternationalTab').then((m) => ({ default: m.InternationalTab })));
@@ -305,18 +305,18 @@ export function DossierView() {
             ]}
           />
           {tab === 'checklist' && <ChecklistTab c={c} tasks={tasks} filter={filter} onFilter={setFilter} onOpen={openTask} />}
-          {tab === 'interessados' && <PartiesTab c={c} />}
-          {tab === 'patrimonio' && <AssetsTab c={c} />}
           <Suspense fallback={<TabLoading />}>
+            {tab === 'interessados' && <PartiesTab c={c} />}
+            {tab === 'patrimonio' && <AssetsTab c={c} />}
             {tab === 'documentos' && <DocumentsTab c={c} />}
             {tab === 'quotas' && <CaseCalcTab c={c} />}
             {tab === 'internacional' && <InternationalTab c={c} />}
             {tab === 'agenda' && <CaseAgendaTab c={c} onOpenTask={setSelectedTask} />}
             {tab === 'honorarios' && <FeesTab c={c} onReport={() => setReport('honorarios')} />}
+            {tab === 'notas' && <NotesTab c={c} />}
+            {tab === 'questionario' && <QuestionnaireTab c={c} />}
+            {tab === 'historico' && <ActivityTab caseId={c.id} />}
           </Suspense>
-          {tab === 'notas' && <NotesTab c={c} />}
-          {tab === 'questionario' && <QuestionnaireTab c={c} />}
-          {tab === 'historico' && <ActivityTab caseId={c.id} />}
         </div>
 
         <aside className="stack case-aside" style={{ gap: 16 }}>

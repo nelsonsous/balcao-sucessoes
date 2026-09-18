@@ -1,4 +1,4 @@
-import { Suspense, lazy, useMemo, useState } from 'react';
+import { Suspense, lazy, useDeferredValue, useMemo, useState } from 'react';
 import { Link, useLocation, useSearch } from 'wouter';
 import { ArrowRight, Bookmark, CalendarClock, FileSpreadsheet, FolderOpen, KanbanSquare, LayoutGrid, List, Plus, Search, SlidersHorizontal, TriangleAlert, Upload, X } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -27,7 +27,7 @@ function loadPrefs(): { view: ListView; sort: SortKey } {
 }
 
 import { csvName, downloadCsv } from '../../lib/csv';
-import { STAGE_LABELS, PRIORITY_LABELS } from '../../lib/reports';
+import { STAGE_LABELS, PRIORITY_LABELS } from '../../lib/labels';
 const ImportDossierSheet = lazy(() => import('./ShareSheets').then((m) => ({ default: m.ImportDossierSheet })));
 
 export function DossierList() {
@@ -64,8 +64,10 @@ export function DossierList() {
     }
   };
 
+  // A lista segue os filtros com prioridade baixa: a escrita na pesquisa nunca espera pela lista.
+  const listFilters = useDeferredValue(filters);
   const filtered = useMemo(() => {
-    const list = applyFilters(overviews ?? [], filters, deepIndex ? { deep: deepIndex } : {});
+    const list = applyFilters(overviews ?? [], listFilters, deepIndex ? { deep: deepIndex } : {});
     const s = prefs.sort;
     return list.sort((a, b) => {
       if (s === 'nome') return a.c.name.localeCompare(b.c.name, 'pt');
@@ -74,7 +76,7 @@ export function DossierList() {
       if (s === 'prazo') return (a.nextDeadline?.dueDate || '9999').localeCompare(b.nextDeadline?.dueDate || '9999');
       return b.c.updatedAt.localeCompare(a.c.updatedAt);
     });
-  }, [overviews, filters, deepIndex, prefs.sort]);
+  }, [overviews, listFilters, deepIndex, prefs.sort]);
 
   const base = (overviews ?? []).filter((o) => o.c.stage === 'ativo' || o.c.stage === 'suspenso');
   const counts = {

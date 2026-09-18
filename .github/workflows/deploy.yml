@@ -28,6 +28,8 @@ jobs:
       - name: Testes unitários, de componentes e de propriedades (com limiar de cobertura)
         run: npm run test:coverage
       - run: npm run build
+      - name: Orçamento de tamanho do pacote
+        run: npm run size
       - name: Testes ponta a ponta (Chrome do runner)
         run: npm run e2e
         env:

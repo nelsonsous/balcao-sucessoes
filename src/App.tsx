@@ -2,12 +2,11 @@ import { Suspense, lazy, useEffect } from 'react';
 import { Route, Router, Switch } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import { FileQuestion } from 'lucide-react';
-import { applyTheme, getSetting } from './lib/db';
+import { applyTheme, getSetting, useSettings } from './lib/db';
 import { initLock } from './lib/lock';
 import { LockScreen } from './components/LockScreen';
 import { Onboarding } from './components/Onboarding';
 import { Reminders } from './components/Reminders';
-import { AutoBackupRunner } from './components/AutoBackupRunner';
 import { UndoToasts } from './components/UndoToasts';
 import { purgeTrash } from './lib/recycle';
 import { watchVirtualKeyboard } from './lib/keyboard';
@@ -15,11 +14,21 @@ import { PwaPrompts } from './components/PwaPrompts';
 import { Shell } from './components/Shell';
 import { ToastProvider } from './components/Toast';
 import { Button, Card, ConfirmProvider, Empty } from './components/ui';
-import { Dashboard } from './features/dashboard/Dashboard';
-import { DossierList } from './features/dossiers/DossierList';
-import { DossierView } from './features/dossiers/DossierView';
+// Todas as páginas carregam à parte (divisão de código): a app arranca só com o essencial
+// (React, base de dados e moldura) e o resto chega quando é preciso.
+const Dashboard = lazy(() => import('./features/dashboard/Dashboard').then((m) => ({ default: m.Dashboard })));
+const DossierList = lazy(() => import('./features/dossiers/DossierList').then((m) => ({ default: m.DossierList })));
+const DossierView = lazy(() => import('./features/dossiers/DossierView').then((m) => ({ default: m.DossierView })));
 
-// Páginas menos frequentes carregam à parte (divisão de código): a app arranca mais depressa.
+/** Os ecrãs mais usados carregam-se assim que o navegador fica livre: a navegação continua instantânea. */
+const PREFETCH = [() => import('./features/dashboard/Dashboard'), () => import('./features/dossiers/DossierList'), () => import('./features/dossiers/DossierView')];
+
+function prefetchWhenIdle(): void {
+  const run = () => PREFETCH.forEach((load) => void load().catch(() => undefined));
+  const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number };
+  if (w.requestIdleCallback) w.requestIdleCallback(run, { timeout: 4000 });
+  else setTimeout(run, 1500);
+}
 const AgendaPage = lazy(() => import('./features/agenda/AgendaPage').then((m) => ({ default: m.AgendaPage })));
 const CalculatorPage = lazy(() => import('./features/calculator/CalculatorPage').then((m) => ({ default: m.CalculatorPage })));
 const TemplatesPage = lazy(() => import('./features/templates/TemplatesPage').then((m) => ({ default: m.TemplatesPage })));
@@ -32,6 +41,18 @@ const ReceivedPage = lazy(() => import('./features/inbox/ReceivedPage').then((m)
 const RecyclePage = lazy(() => import('./features/recycle/RecyclePage').then((m) => ({ default: m.RecyclePage })));
 const AnalyticsPage = lazy(() => import('./features/analytics/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 const RulesPage = lazy(() => import('./features/rules/RulesPage').then((m) => ({ default: m.RulesPage })));
+/** As cópias automáticas (cifra, ficheiros, pasta local) só carregam quando estão ativas. */
+const AutoBackupRunner = lazy(() => import('./components/AutoBackupRunner').then((m) => ({ default: m.AutoBackupRunner })));
+
+function AutoBackupWhenEnabled() {
+  const { autoBackupEnabled } = useSettings();
+  return autoBackupEnabled ? (
+    <Suspense fallback={null}>
+      <AutoBackupRunner />
+    </Suspense>
+  ) : null;
+}
+
 const DiagnosticsPage = lazy(() => import('./features/diagnostics/DiagnosticsPage').then((m) => ({ default: m.DiagnosticsPage })));
 
 const Loading = () => <div className="skeleton" style={{ height: 320 }} aria-busy="true" aria-label="A carregar" />;
@@ -58,6 +79,7 @@ export default function App() {
     void initLock();
     void getSetting('privacyMode').then((on) => document.body.classList.toggle('privacy', on));
     void purgeTrash().catch(() => undefined);
+    prefetchWhenIdle();
     return watchVirtualKeyboard();
   }, []);
 
@@ -89,7 +111,7 @@ export default function App() {
             </Suspense>
           </Shell>
           <Reminders />
-          <AutoBackupRunner />
+          <AutoBackupWhenEnabled />
           <UndoToasts />
         </Router>
         <Onboarding />
