@@ -10,6 +10,7 @@ import { Reminders } from './components/Reminders';
 import { AutoBackupRunner } from './components/AutoBackupRunner';
 import { UndoToasts } from './components/UndoToasts';
 import { purgeTrash } from './lib/recycle';
+import { watchVirtualKeyboard } from './lib/keyboard';
 import { PwaPrompts } from './components/PwaPrompts';
 import { Shell } from './components/Shell';
 import { ToastProvider } from './components/Toast';
@@ -55,6 +56,7 @@ export default function App() {
     void initLock();
     void getSetting('privacyMode').then((on) => document.body.classList.toggle('privacy', on));
     void purgeTrash().catch(() => undefined);
+    return watchVirtualKeyboard();
   }, []);
 
   return (

@@ -7,12 +7,12 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 3 — «10 vezes seguidas com melhorias e testes» (iterações 21–30)
 
-**Estado do ciclo 3: iteração 21 concluída (1/10).**
+**Estado do ciclo 3: iterações 21–22 concluídas (2/10).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
 | 21 | ~~Menus que nunca ficam cortados~~ | ✅ concluída |
-| 22 | **iPhone e telemóvel** | Campos a 16 px (sem zoom automático no iOS), áreas seguras (notch e barra inicial), alvos de toque ≥ 44 px, folhas em ecrã inteiro, teclado virtual; E2E em 390×844 a percorrer todos os ecrãs (sem deslocamento horizontal nem elementos cortados). |
+| 22 | ~~iPhone e telemóvel~~ | ✅ concluída |
 | 23 | **Honorários e despesas** | Registo de tempo (cronómetro) e de despesas por dossier, provisões recebidas, nota de honorários em Word/PDF, totais nos relatórios e na análise; testes. |
 | 24 | **Regras do escritório** | Regras próprias (condições sobre o questionário → tarefas com fase, prazo e documentos), integradas no motor e na reconciliação da checklist; testes. |
 | 25 | **Importar de folhas de cálculo** | Colar do Excel ou CSV para bens e interessados, com pré-visualização, validação (NIF, valores, datas) e deteção de duplicados; testes. |
@@ -23,6 +23,15 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 30 | **Consolidação** | Auditoria final, manual e apresentação atualizados (versão 2.2), resumo, envio. |
 
 Fora do ciclo, por depender de decisão e de uma conta do escritório: o «modo escritório» com sincronização entre dispositivos (por exemplo, Supabase na UE, num projeto próprio do escritório), que reaproveitaria a lógica de junção da iteração 14.
+
+### Iteração 22 — iPhone e telemóvel ✅
+
+- **Auditoria automática** em tamanho de iPhone (390×844, toque) a 23 ecrãs, também na horizontal (844×390): nenhum deslocamento lateral nem elementos a sair do ecrã, mas **107 campos com letra de 14 px** — o Safari do iOS amplia a página sempre que se toca num campo com menos de 16 px — e **49 alvos de toque com menos de 24 px** (caixas de verificação, ligações de e-mail e telefone, migalhas, pontos do calendário, botões de ícone encolhidos).
+- **Folha de estilos para ecrãs tácteis** (`styles/touch.css`): campos, listas e caixas de texto a **16 px** em ecrãs tácteis e estreitos (acaba o zoom automático); alvos maiores com ponteiro grosso — botões 42 px (pequenos 36), campos 44 px, semáforos 34 px, itens de menu e separadores 44 px, caixas de verificação 24 px, ligações de e-mail/telefone e migalhas com 32 px; botões só com ícone nunca encolhem; sem realce azul ao tocar e sem atraso de duplo toque; datas no iOS alinhadas e com altura mínima (não colapsam vazias).
+- **Áreas seguras** também laterais (iPhone na horizontal) na barra superior, no conteúdo, na barra inferior e nas folhas; folhas inferiores abaixo da Dynamic Island e folhas modais com altura que desconta as áreas seguras.
+- **Teclado virtual** (`lib/keyboard.ts`): no iOS a janela não encolhe quando o teclado abre; a aplicação deteta a redução da área visível com um campo de texto focado e esconde a barra inferior e o botão flutuante, que tapavam o campo; no Android, o conteúdo passa a redimensionar com o teclado (`interactive-widget=resizes-content`).
+- **Calendário no telemóvel**: os pontos coloridos do mês passam a ser indicadores e o toque vai para o dia (lista do dia por baixo).
+- **Testes**: teclado virtual (campos que abrem o teclado, limiar, marcação e desmarcação do `<body>`) — **223 testes**; o passo E2E do telemóvel passou a percorrer 12 ecrãs em 390×844 com toque e a falhar se houver deslocamento lateral, elementos a sair do ecrã, campos abaixo de 16 px ou alvos de toque abaixo de 24 px — **17 passos**. Depois das correções a auditoria dá **0** em todos os critérios, na vertical e na horizontal.
 
 ### Iteração 21 — Menus que nunca ficam cortados ✅
 

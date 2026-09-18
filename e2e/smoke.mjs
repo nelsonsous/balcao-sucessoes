@@ -447,14 +447,56 @@ try {
     await page.waitForFunction(() => !document.querySelector('.lock-screen'), { timeout: 5000 });
   });
 
-  await step('Telemóvel: barra inferior e painel', async () => {
+  await step('Telemóvel (390×844): sem deslocamento lateral, campos a 16 px e alvos de toque ≥ 24 px', async () => {
     await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     await go('#/', 1200);
     const nav = await page.$eval('.mobile-nav', (e) => getComputedStyle(e).display);
     assert(nav !== 'none', 'barra inferior visível no telemóvel');
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
-    assert(overflow, 'sem scroll horizontal no telemóvel');
+    const routes = ['#/', '#/dossiers', '#/dossiers/novo', ...['checklist', 'documentos', 'quotas', 'agenda', 'notas'].map((t) => `#/dossiers/${caseId}/${t}`), '#/agenda', '#/prazos', '#/analise', '#/definicoes'];
+    const problems = [];
+    for (const r of routes) {
+      await go(r, 1100);
+      const res = await page.evaluate(() => {
+        const vw = innerWidth;
+        const visible = (el) => {
+          const s = getComputedStyle(el);
+          if (s.visibility === 'hidden' || s.display === 'none' || Number(s.opacity) === 0) return false;
+          const b = el.getBoundingClientRect();
+          return b.width > 0 && b.height > 0;
+        };
+        const clipsX = (el) => ['auto', 'scroll', 'hidden', 'clip'].includes(getComputedStyle(el).overflowX);
+        const name = (el) => `${el.tagName.toLowerCase()}«${(el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 24)}»`;
+        const out = [];
+        if (document.documentElement.scrollWidth > vw + 1) out.push(`deslocamento lateral ${document.documentElement.scrollWidth - vw}px`);
+        for (const el of document.querySelectorAll('main *')) {
+          if (!visible(el)) continue;
+          const b = el.getBoundingClientRect();
+          if (b.right <= vw + 1 && b.left >= -1) continue;
+          let p = el.parentElement;
+          let contained = false;
+          while (p && p !== document.body) {
+            if (clipsX(p)) {
+              contained = true;
+              break;
+            }
+            p = p.parentElement;
+          }
+          if (!contained) out.push(`sai do ecrã: ${name(el)}`);
+        }
+        for (const el of document.querySelectorAll('main input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), main select, main textarea')) {
+          if (visible(el) && parseFloat(getComputedStyle(el).fontSize) < 16) out.push(`letra < 16 px: ${name(el)}`);
+        }
+        for (const el of document.querySelectorAll('main button, main a[href], main [role=button], main input[type=checkbox], main input[type=radio], main select, .mobile-nav a')) {
+          if (!visible(el) || getComputedStyle(el).pointerEvents === 'none' || (el.tagName === 'A' && el.closest('p'))) continue;
+          const b = el.getBoundingClientRect();
+          if (b.width < 24 || b.height < 24) out.push(`alvo pequeno ${Math.round(b.width)}×${Math.round(b.height)}: ${name(el)}`);
+        }
+        return out.slice(0, 5);
+      });
+      for (const x of res) problems.push(`${r} → ${x}`);
+    }
     await page.setViewport({ width: 1366, height: 900 });
+    assert(problems.length === 0, problems.slice(0, 8).join(' | '));
   });
 
   await step('Funciona offline (service worker)', async () => {

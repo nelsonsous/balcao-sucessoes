@@ -1,0 +1,203 @@
+/* ==========================================================================
+   Ecrãs tácteis e iPhone
+   - campos com letra de 16 px: o Safari do iOS amplia a página ao focar campos mais pequenos;
+   - alvos de toque maiores (botões, semáforos, caixas, separadores, itens de menu);
+   - áreas seguras (notch, Dynamic Island, barra inicial) também na horizontal;
+   - teclado virtual aberto: a barra inferior esconde-se para não tapar o campo.
+   ========================================================================== */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+button,
+a,
+summary,
+label,
+select,
+[role='button'],
+[role='menuitem'],
+[role='tab'] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Botões só com ícone nunca encolhem (num contentor apertado ficavam com menos de 24 px). */
+.btn.icon {
+  flex-shrink: 0;
+}
+
+/* Datas no iOS: sem aspeto nativo o campo vazio colapsa e o texto fica centrado. */
+input[type='date'].input,
+input[type='time'].input,
+input[type='datetime-local'].input {
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+}
+
+input[type='date'].input::-webkit-date-and-time-value,
+input[type='time'].input::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0;
+}
+
+@media (pointer: coarse), (max-width: 860px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+  select,
+  textarea,
+  .input,
+  .select,
+  .textarea {
+    font-size: 16px;
+  }
+}
+
+@media (pointer: coarse) {
+  .input,
+  .select {
+    height: 44px;
+  }
+
+  input[type='date'].input,
+  input[type='time'].input {
+    min-height: 44px;
+  }
+
+  .btn {
+    height: 42px;
+  }
+
+  .btn.sm {
+    height: 36px;
+  }
+
+  .btn.lg {
+    height: 48px;
+  }
+
+  .btn.icon {
+    width: 42px;
+  }
+
+  .btn.sm.icon {
+    width: 36px;
+  }
+
+  .status-pill {
+    height: 34px;
+  }
+
+  .menu-item {
+    min-height: 44px;
+  }
+
+  .tab {
+    min-height: 44px;
+  }
+
+  .segmented button {
+    min-height: 36px;
+  }
+
+  .chip {
+    min-height: 36px;
+    padding: 6px 12px;
+  }
+
+  .checkbox {
+    min-height: 32px;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'],
+  .checkbox input,
+  .agenda-check {
+    width: 24px;
+    height: 24px;
+    flex: none;
+  }
+
+  /* Ligações de e-mail e telefone: no telemóvel são botões de ação. */
+  a[href^='mailto:'],
+  a[href^='tel:'] {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+  }
+
+  .breadcrumb a,
+  .callout a,
+  .link-btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+  }
+
+  .next-title {
+    padding-block: 6px;
+  }
+
+  .doc-check {
+    width: 24px;
+    height: 24px;
+    flex: none;
+  }
+}
+
+/* Mês da agenda no telemóvel: os pontos coloridos são indicadores; o toque vai para o dia. */
+@media (max-width: 760px) {
+  .cal-chip {
+    pointer-events: none;
+  }
+}
+
+/* Áreas seguras laterais (iPhone na horizontal) e superior das folhas. */
+@media (max-width: 860px) {
+  .topbar {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  .content {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  .mobile-nav {
+    padding-left: max(6px, env(safe-area-inset-left));
+    padding-right: max(6px, env(safe-area-inset-right));
+  }
+
+  dialog.sheet:not(.modal) .sheet-panel {
+    top: max(6dvh, calc(env(safe-area-inset-top) + 8px));
+  }
+
+  dialog.sheet.modal .sheet-panel {
+    max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .sheet-head,
+  .sheet-body,
+  .sheet-foot {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+
+  /* Teclado virtual aberto: esconde a barra inferior e o botão flutuante, que taparia o campo. */
+  body.keyboard-open .mobile-nav,
+  body.keyboard-open .fab {
+    display: none;
+  }
+
+  body.keyboard-open .content {
+    padding-bottom: 24px;
+  }
+
+  body.keyboard-open .toasts {
+    bottom: 12px;
+  }
+}
