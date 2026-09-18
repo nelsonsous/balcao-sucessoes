@@ -286,7 +286,9 @@ export function SettingsPage() {
                 </div>
               </div>
             )}
-            <p className="subtle small">Versão {__APP_VERSION__} · funciona offline depois da primeira visita.</p>
+            <p className="subtle small">
+              Versão {__APP_VERSION__} · funciona offline depois da primeira visita · <Link href="/diagnostico">Diagnóstico e integridade dos dados</Link>
+            </p>
             <p className="subtle small">
               No Android, com a aplicação instalada, pode partilhar PDFs, fotografias e ligações diretamente para o Balcão (Partilhar → Balcão das Sucessões) e anexá-los a um dossier em <Link href="/recebidos">Recebidos</Link>.
             </p>

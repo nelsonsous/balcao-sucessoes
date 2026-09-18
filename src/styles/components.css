@@ -133,10 +133,22 @@
 
 .card-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   padding: 18px 20px 0;
+}
+
+/* O título encolhe primeiro; quando não há espaço, as ações passam para a linha seguinte
+   (em vez de saírem do cartão no telemóvel). */
+.card-head > .row:first-child {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.card-head > .row:last-child:not(:first-child) {
+  flex-wrap: wrap;
 }
 
 .card-head p {

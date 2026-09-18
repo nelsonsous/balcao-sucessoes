@@ -32,6 +32,7 @@ const ReceivedPage = lazy(() => import('./features/inbox/ReceivedPage').then((m)
 const RecyclePage = lazy(() => import('./features/recycle/RecyclePage').then((m) => ({ default: m.RecyclePage })));
 const AnalyticsPage = lazy(() => import('./features/analytics/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 const RulesPage = lazy(() => import('./features/rules/RulesPage').then((m) => ({ default: m.RulesPage })));
+const DiagnosticsPage = lazy(() => import('./features/diagnostics/DiagnosticsPage').then((m) => ({ default: m.DiagnosticsPage })));
 
 const Loading = () => <div className="skeleton" style={{ height: 320 }} aria-busy="true" aria-label="A carregar" />;
 
@@ -82,6 +83,7 @@ export default function App() {
               <Route path="/reciclagem" component={RecyclePage} />
               <Route path="/analise" component={AnalyticsPage} />
               <Route path="/regras" component={RulesPage} />
+              <Route path="/diagnostico" component={DiagnosticsPage} />
               <Route component={NotFound} />
               </Switch>
             </Suspense>

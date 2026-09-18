@@ -69,6 +69,7 @@ const ROUTE_TITLES: Array<[RegExp, string]> = [
   [/^\/reciclagem/, 'Reciclagem'],
   [/^\/analise/, 'Análise da equipa'],
   [/^\/regras/, 'Regras do escritório'],
+  [/^\/diagnostico/, 'Diagnóstico'],
 ];
 
 export function routeTitle(path: string): string | undefined {

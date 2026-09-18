@@ -353,7 +353,7 @@ export function FeesTab({ c, onReport }: { c: CaseRecord; onReport: () => void }
                   .sort((a, b) => b.date.localeCompare(a.date))
                   .map((x) => (
                     <li key={x.id}>
-                      <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ minWidth: 0, flex: 1, overflowWrap: 'anywhere' }}>
                         <strong>{x.description || categoryLabel(x.category)}</strong>
                         <div className="tiny subtle">
                           {formatDate(x.date)} · {categoryLabel(x.category)}
@@ -404,7 +404,7 @@ export function FeesTab({ c, onReport }: { c: CaseRecord; onReport: () => void }
                   .sort((a, b) => b.date.localeCompare(a.date))
                   .map((x) => (
                     <li key={x.id}>
-                      <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ minWidth: 0, flex: 1, overflowWrap: 'anywhere' }}>
                         <strong>{x.description || 'Provisão'}</strong>
                         <div className="tiny subtle">{formatDate(x.date)}</div>
                       </div>

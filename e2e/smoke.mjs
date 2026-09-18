@@ -578,6 +578,40 @@ try {
     assert(pages === 1, `resumo numa só página A4 (${pages})`);
   });
 
+  await step('Diagnóstico: integridade em ordem e reparação de avarias', async () => {
+    await go('#/diagnostico', 1500);
+    await page.waitForFunction(() => /Tudo em ordem|problema|Registos|Anexos|Documentos/.test(document.querySelector('[data-testid="integrity"]')?.textContent || ''), { timeout: 8000 });
+    const first = await page.$eval('[data-testid="integrity"]', (e) => e.textContent || '');
+    assert(/Tudo em ordem/.test(first), `dados de demonstração sem problemas de integridade (${first.slice(0, 160)})`);
+    // Avarias escritas diretamente na base (fora da aplicação): uma tarefa órfã e um documento com anexo inexistente.
+    await page.evaluate(
+      (cid) =>
+        new Promise((resolve, reject) => {
+          const r = indexedDB.open('balcao-das-sucessoes');
+          r.onsuccess = () => {
+            const tx = r.result.transaction(['tasks', 'documents'], 'readwrite');
+            const ts = new Date().toISOString();
+            tx.objectStore('tasks').put({ id: 'e2e-orfa', caseId: 'nao-existe', title: 'Órfã E2E', status: 'pendente', ruleKey: '', notes: '', assigneeId: '', phase: 'abertura', createdAt: ts, updatedAt: ts });
+            tx.objectStore('documents').put({ id: 'e2e-doc', caseId: cid, name: 'Documento E2E', category: 'outros', status: 'recebido', source: 'manual', key: 'e2e', partyId: '', requestedAt: '', receivedAt: '', notes: '', fileId: 'e2e-sem-ficheiro', fileName: 'perdido.pdf', fileType: 'application/pdf', fileSize: 10, createdAt: ts, updatedAt: ts });
+            tx.oncomplete = () => {
+              r.result.close();
+              resolve(true);
+            };
+            tx.onerror = () => reject(tx.error);
+          };
+          r.onerror = () => reject(r.error);
+        }),
+      caseId,
+    );
+    assert(await clickText('main button', 'Verificar de novo'), 'botão Verificar de novo');
+    await page.waitForSelector('[data-issue="orfaos"]', { timeout: 5000 });
+    assert(await page.$('[data-issue="anexos-perdidos"]'), 'anexo perdido detetado');
+    assert(await clickText('main button', 'Reparar tudo'), 'botão Reparar tudo');
+    await page.waitForFunction(() => /Reparar/.test(document.querySelector('dialog[open]')?.textContent || ''), { timeout: 5000 });
+    assert(await clickText('dialog[open] .sheet-foot button', 'Reparar'), 'confirmar Reparar');
+    await page.waitForFunction(() => /Tudo em ordem/.test(document.querySelector('[data-testid="integrity"]')?.textContent || ''), { timeout: 8000 });
+  });
+
   await step('PIN: definir, bloquear e desbloquear', async () => {
     await go('#/definicoes', 1200);
     assert(await clickText('button', 'Definir PIN'), 'botão Definir PIN');
@@ -597,58 +631,78 @@ try {
     await page.waitForFunction(() => !document.querySelector('.lock-screen'), { timeout: 5000 });
   });
 
-  await step('Telemóvel (390×844): sem deslocamento lateral, campos a 16 px e alvos de toque ≥ 24 px', async () => {
-    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-    await go('#/', 1200);
-    const nav = await page.$eval('.mobile-nav', (e) => getComputedStyle(e).display);
-    assert(nav !== 'none', 'barra inferior visível no telemóvel');
-    const routes = ['#/', '#/dossiers', '#/dossiers/novo', ...['checklist', 'documentos', 'quotas', 'agenda', 'honorarios', 'notas'].map((t) => `#/dossiers/${caseId}/${t}`), '#/agenda', '#/prazos', '#/analise', '#/regras', '#/definicoes'];
+  await step('Telemóvel (360 e 390 px): sem deslocamento lateral, nada fora do ecrã ou do cartão, campos a 16 px e alvos de toque ≥ 24 px', async () => {
+    const tabs = ['checklist', 'interessados', 'patrimonio', 'documentos', 'quotas', 'internacional', 'agenda', 'honorarios', 'notas', 'questionario'];
+    const routes = ['#/', '#/dossiers', '#/dossiers/novo', ...tabs.map((t) => `#/dossiers/${caseId}/${t}`), '#/agenda', '#/tarefas', '#/minhas', '#/calculadora', '#/prazos', '#/minutas', '#/analise', '#/regras', '#/diagnostico', '#/definicoes'];
     const problems = [];
-    for (const r of routes) {
-      await go(r, 1100);
-      const res = await page.evaluate(() => {
-        const vw = innerWidth;
-        const visible = (el) => {
-          const s = getComputedStyle(el);
-          if (s.visibility === 'hidden' || s.display === 'none' || Number(s.opacity) === 0) return false;
-          const b = el.getBoundingClientRect();
-          return b.width > 0 && b.height > 0;
-        };
-        const clipsX = (el) => ['auto', 'scroll', 'hidden', 'clip'].includes(getComputedStyle(el).overflowX);
-        const name = (el) => `${el.tagName.toLowerCase()}«${(el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 24)}»`;
-        const out = [];
-        if (document.documentElement.scrollWidth > vw + 1) out.push(`deslocamento lateral ${document.documentElement.scrollWidth - vw}px`);
-        for (const el of document.querySelectorAll('main *')) {
-          if (!visible(el)) continue;
-          const b = el.getBoundingClientRect();
-          if (b.right <= vw + 1 && b.left >= -1) continue;
-          let p = el.parentElement;
-          let contained = false;
-          while (p && p !== document.body) {
-            if (clipsX(p)) {
-              contained = true;
-              break;
+    for (const [w, h] of [
+      [360, 780],
+      [390, 844],
+    ]) {
+      await page.setViewport({ width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+      await go('#/', 1200);
+      const nav = await page.$eval('.mobile-nav', (e) => getComputedStyle(e).display);
+      assert(nav !== 'none', `barra inferior visível no telemóvel (${w} px)`);
+      for (const r of routes) {
+        await go(r, 1100);
+        const res = await page.evaluate(() => {
+          const vw = innerWidth;
+          const visible = (el) => {
+            const s = getComputedStyle(el);
+            if (s.visibility === 'hidden' || s.display === 'none' || Number(s.opacity) === 0) return false;
+            const b = el.getBoundingClientRect();
+            return b.width > 0 && b.height > 0;
+          };
+          const clipsX = (el) => ['auto', 'scroll', 'hidden', 'clip'].includes(getComputedStyle(el).overflowX);
+          const name = (el) => `${el.tagName.toLowerCase()}«${(el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 24)}»`;
+          const out = [];
+          if (document.documentElement.scrollWidth > vw + 1) out.push(`deslocamento lateral ${document.documentElement.scrollWidth - vw}px`);
+          for (const el of document.querySelectorAll('main *')) {
+            if (!visible(el)) continue;
+            const b = el.getBoundingClientRect();
+            if (b.right <= vw + 1 && b.left >= -1) continue;
+            let p = el.parentElement;
+            let contained = false;
+            while (p && p !== document.body) {
+              if (clipsX(p)) {
+                contained = true;
+                break;
+              }
+              p = p.parentElement;
             }
-            p = p.parentElement;
+            if (!contained) out.push(`sai do ecrã: ${name(el)}`);
           }
-          if (!contained) out.push(`sai do ecrã: ${name(el)}`);
-        }
-        for (const el of document.querySelectorAll('main input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), main select, main textarea')) {
-          if (visible(el) && parseFloat(getComputedStyle(el).fontSize) < 16) out.push(`letra < 16 px: ${name(el)}`);
-        }
-        for (const el of document.querySelectorAll('main button, main a[href], main [role=button], main input[type=checkbox], main input[type=radio], main select, .mobile-nav a')) {
-          if (!visible(el) || getComputedStyle(el).pointerEvents === 'none' || (el.tagName === 'A' && el.closest('p'))) continue;
-          const b = el.getBoundingClientRect();
-          if (b.width < 24 || b.height < 24) out.push(`alvo pequeno ${Math.round(b.width)}×${Math.round(b.height)}: ${name(el)}`);
-        }
-        return out.slice(0, 5);
-      });
-      for (const x of res) problems.push(`${r} → ${x}`);
+          // Controlos que saem do cartão onde estão (sem deslocamento horizontal pelo meio).
+          for (const el of document.querySelectorAll('main button, main a[href], main select, main input:not([type=hidden]), main textarea')) {
+            if (!visible(el)) continue;
+            const b = el.getBoundingClientRect();
+            if (b.width <= 1 || b.height <= 1) continue;
+            for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+              const ox = getComputedStyle(p).overflowX;
+              if (ox === 'auto' || ox === 'scroll') break;
+              if (p.classList.contains('card')) {
+                const pb = p.getBoundingClientRect();
+                if (b.right > pb.right + 1 || b.left < pb.left - 1) out.push(`fora do cartão: ${name(el)}`);
+                break;
+              }
+            }
+          }
+          for (const el of document.querySelectorAll('main input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), main select, main textarea')) {
+            if (visible(el) && parseFloat(getComputedStyle(el).fontSize) < 16) out.push(`letra < 16 px: ${name(el)}`);
+          }
+          for (const el of document.querySelectorAll('main button, main a[href], main [role=button], main input[type=checkbox], main input[type=radio], main select, .mobile-nav a')) {
+            if (!visible(el) || getComputedStyle(el).pointerEvents === 'none' || (el.tagName === 'A' && el.closest('p'))) continue;
+            const b = el.getBoundingClientRect();
+            if (b.width < 24 || b.height < 24) out.push(`alvo pequeno ${Math.round(b.width)}×${Math.round(b.height)}: ${name(el)}`);
+          }
+          return out.slice(0, 5);
+        });
+        for (const x of res) problems.push(`${w}px ${r} → ${x}`);
+      }
     }
     await page.setViewport({ width: 1366, height: 900 });
     assert(problems.length === 0, problems.slice(0, 8).join(' | '));
   });
-
   await step('Funciona offline (service worker)', async () => {
     const sw = await page.evaluate(async () => {
       if (!('serviceWorker' in navigator)) return 'unsupported';

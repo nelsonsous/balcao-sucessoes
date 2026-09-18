@@ -7,7 +7,7 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 
 ## Ciclo 3 — «10 vezes seguidas com melhorias e testes» (iterações 21–30)
 
-**Estado do ciclo 3: iterações 21–26 concluídas (6/10).**
+**Estado do ciclo 3: iterações 21–27 concluídas (7/10).**
 
 | # | Tema | Conteúdo previsto |
 |---|---|---|
@@ -17,12 +17,20 @@ Nota: a EscolaPlay foi referida apenas como exemplo de formato (PWA) — nada é
 | 24 | ~~Regras do escritório~~ | ✅ concluída |
 | 25 | ~~Importar de folhas de cálculo~~ | ✅ concluída |
 | 26 | ~~Impressão~~ | ✅ concluída |
-| 27 | **Diagnóstico e integridade** | Página de diagnóstico (versão, service worker, armazenamento, persistência) e verificação de integridade da base (órfãos, referências partidas) com reparação; testes. |
+| 27 | ~~Diagnóstico e integridade~~ | ✅ concluída |
 | 28 | **Desempenho** | Pacote inicial mais pequeno (carregamento a pedido dos módulos pesados), orçamento de tamanho verificado no CI, listas longas fluidas; testes. |
 | 29 | **Teclado e acessibilidade avançada** | Atalhos com ajuda (?), quadro Kanban operável por teclado, movimento reduzido e alto contraste; testes com axe e teclado. |
 | 30 | **Consolidação** | Auditoria final, manual e apresentação atualizados (versão 2.2), resumo, envio. |
 
 Fora do ciclo, por depender de decisão e de uma conta do escritório: o «modo escritório» com sincronização entre dispositivos (por exemplo, Supabase na UE, num projeto próprio do escritório), que reaproveitaria a lógica de junção da iteração 14.
+
+### Iteração 27 — Diagnóstico e integridade ✅
+
+- **Nova página «Diagnóstico»** (Definições → Aplicação, ou a paleta de comandos): versão da aplicação e da base de dados, estado do service worker (ativo, a instalar, atualização à espera), ficheiros guardados para uso offline, ligação, instalação, armazenamento usado e disponível (com «Proteger dados»), contagem de registos por tabela e tamanho dos anexos, e as **funcionalidades do navegador** (service worker, IndexedDB, persistência, Web Crypto, Popover API, pastas locais, partilha, notificações, contador no ícone, área de transferência) com o que cada uma permite. **«Copiar diagnóstico» / «Descarregar»** geram um texto só com dados técnicos e contagens — nunca nomes nem conteúdos — para enviar a quem dá apoio.
+- **Verificação de integridade** (`lib/integrity.ts`, pura sobre uma fotografia da base; corre ao abrir a página): registos de dossiers que já não existem, documentos com anexo em falta, anexos que nenhum documento usa, tarefas/eventos/dossiers/registos de tempo atribuídos a pessoas removidas, documentos associados a interessados removidos, **tarefas repetidas** na checklist, questionários com perguntas em falta, cronómetro ou «quem usa este dispositivo» a apontar para o que já não existe, itens expirados na reciclagem e regras do escritório incompletas — com gravidade (erro, aviso, informação), contagem e exemplos.
+- **Reparação** por problema ou «Reparar tudo», com confirmação e sugestão de exportar antes uma cópia: relê a base e corrige numa só transação — apaga só o que já não se vê na aplicação, limpa referências partidas, junta tarefas repetidas na que tem mais trabalho feito (com as notas das outras), completa questionários, deixa nota nos documentos cujo anexo se perdeu — e **regista no histórico** de cada dossier afetado.
+- **Ecrãs estreitos (360 px)**: a auditoria do telemóvel passou a correr também a 360 px (Android pequeno) e a verificar **controlos que saem do cartão**; apanhou três defeitos que existiam: o cabeçalho dos cartões não deixava as ações passar para a linha seguinte (botões fora do cartão na visão geral, quotas, definições e diagnóstico, mesmo a 390 px), a grelha da calculadora de prazos esmagava o formulário (só se adaptava dentro dos dossiers) e as linhas de despesas/provisões dos honorários não encolhiam — todos corrigidos na origem (`card-head` com quebra, grelhas com `minmax(0, 1fr)`, regra de largura do ecrã para a grelha fora dos dossiers). Confirmado que a nova verificação falha se o defeito voltar.
+- **Testes**: integridade (base em ordem, cada tipo de problema com contagens e exemplos, reparação completa sem perder trabalho e com histórico, reparação só do pedido, escolha da tarefa a manter, e a propriedade «com quaisquer avarias, depois de reparar só ficam avisos sem reparação» em 25 combinações aleatórias), diagnóstico (recolha tolerante, texto sem dados pessoais, tamanhos), página (tudo em ordem; problemas e «Reparar tudo») — **292 testes**; novo passo E2E «Diagnóstico: integridade em ordem e reparação de avarias» (avarias escritas diretamente no IndexedDB) e auditoria do telemóvel a 360 e 390 px em 24 ecrãs — **22 passos**; 0 violações de acessibilidade na nova página.
 
 ### Iteração 26 — Impressão ✅
 
