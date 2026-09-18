@@ -25,6 +25,8 @@ if (!chrome) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
 const results = [];
+// Depois de um passo falhado: volta ao ecrã de computador e fecha menus/folhas, para a falha não contaminar os passos seguintes.
+let afterFailure = async () => {};
 async function step(name, fn) {
   const t0 = Date.now();
   try {
@@ -33,6 +35,11 @@ async function step(name, fn) {
   } catch (e) {
     failures += 1;
     results.push(`✗ ${name}: ${e.message}`);
+    try {
+      await afterFailure();
+    } catch {
+      /* ignora */
+    }
   }
 }
 const assert = (cond, msg) => {
@@ -59,6 +66,17 @@ try {
   await ready();
   browser = await puppeteer.launch({ executablePath: chrome, headless: true, args: ['--no-sandbox', '--no-first-run', '--lang=pt-PT'], defaultViewport: { width: 1366, height: 900 } });
   const page = await browser.newPage();
+  // Movimento reduzido: deslocamentos instantâneos (sem «scroll» suave), para os cliques não caírem a meio de uma animação.
+  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  // E2E_THROTTLE=4 simula uma máquina lenta (como os runners do CI) para apanhar testes instáveis.
+  if (process.env.E2E_THROTTLE) await page.emulateCPUThrottling(Number(process.env.E2E_THROTTLE));
+  afterFailure = async () => {
+    await page.setViewport({ width: 1366, height: 900 });
+    for (let i = 0; i < 3; i++) {
+      await page.keyboard.press('Escape');
+      await sleep(150);
+    }
+  };
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   const go = async (hash, settle = 800) => {
@@ -67,6 +85,21 @@ try {
     }, hash);
     await sleep(settle);
   };
+  // Espera que o elemento deixe de se mexer (posição igual em duas leituras seguidas) antes de clicar por coordenadas.
+  const settle = (sel) =>
+    page.waitForFunction(
+      (s) => {
+        const el = document.querySelector(s);
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        const key = `${Math.round(r.top)}:${Math.round(r.left)}:${Math.round(scrollY)}`;
+        const same = window.__e2eSettle === key;
+        window.__e2eSettle = key;
+        return same;
+      },
+      { polling: 120, timeout: 8000 },
+      sel,
+    );
   const clickText = (sel, text) =>
     page.evaluate(
       (s, t) => {
@@ -234,6 +267,7 @@ try {
     // 1) Caso reportado: semáforo da primeira tarefa da checklist
     await go(`#/dossiers/${caseId}/checklist`, 1500);
     await page.evaluate(() => window.scrollTo(0, 0));
+    await settle('.task-row .status-pill');
     await page.click('.task-row .status-pill');
     await expectVisible('semáforo da checklist');
     await closeMenu();
@@ -279,7 +313,7 @@ try {
     await go(`#/dossiers/${caseId}/checklist`, 1500);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.evaluate(() => document.querySelector('.task-row .status-pill').scrollIntoView({ block: 'center' }));
-    await sleep(300);
+    await settle('.task-row .status-pill');
     await page.click('.task-row .status-pill');
     await expectVisible('semáforo no telemóvel');
     await closeMenu();

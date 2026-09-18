@@ -168,3 +168,7 @@ export function maskName(name: string): string {
   if (!parts.length) return '';
   return parts.map((p) => (/^[a-zà-ÿ]{1,3}$/i.test(p) && parts.length > 1 ? p.toLowerCase() : `${p[0]!.toUpperCase()}.`)).join(' ');
 }
+
+/** «smooth», exceto quando o sistema pede movimento reduzido. */
+export const scrollBehavior = (): ScrollBehavior =>
+  typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';

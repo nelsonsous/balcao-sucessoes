@@ -15,7 +15,7 @@ import { emptyAnswers, emptyClient, emptyDeceased } from '../../lib/db';
 import { useMembers } from '../../lib/hooks';
 import { checkNif } from '../../lib/nif';
 import type { Answers, ClientInfo, Deceased, Priority } from '../../lib/types';
-import { cx, formatDate, relativeDays, todayIso } from '../../lib/utils';
+import { cx, formatDate, relativeDays, scrollBehavior, todayIso } from '../../lib/utils';
 import { countByPhase, desiredTasks, dueFor } from '../../engine/engine';
 import { PHASES, phaseLabel } from '../../engine/phases';
 import { STEPS, answerLabel, completion, visibleQuestions } from '../../engine/questions';
@@ -153,7 +153,7 @@ export function NewCaseWizard() {
       return;
     }
     setD((x) => ({ ...x, step: Math.max(0, Math.min(WIZ_STEPS.length - 1, step)) }));
-    top.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    top.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
   };
 
   const patchDeceased = (p: Partial<Deceased>) => setD((x) => ({ ...x, deceased: { ...x.deceased, ...p } }));
